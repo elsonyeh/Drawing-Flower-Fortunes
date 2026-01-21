@@ -9,7 +9,11 @@
       "Bash(npm run build:*)",
       "Bash(git init:*)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: 花語解籤 \\(Drawing Flower Fortunes\\)\n\nFeatures:\n- Gacha animation with card shuffle, draw, and flip effects\n- 3D flower display using React Three Fiber\n- SSR \\(Super Rare\\) cards with special effects\n- Flower collection system with card flip animations\n- 15 common flowers + 5 SSR flowers\n- Dark themed UI with purple color scheme\n- Mobile responsive design\n- Smooth animations with Framer Motion\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

@@ -4,39 +4,30 @@ import CardBack from './CardBack'
 import FlowerBloom from './FlowerBloom'
 
 const GachaAnimation = ({ flower, onComplete, onOpenCollection }) => {
-  const [stage, setStage] = useState('shuffle') // shuffle -> draw -> flip -> reveal
+  const [stage, setStage] = useState('flip') // flip -> reveal
   const [showFlower, setShowFlower] = useState(false)
   const isSSR = flower?.rarity === 'ssr'
 
   useEffect(() => {
     const timers = []
 
-    // Stage 1: Shuffle cards (2s)
-    timers.push(setTimeout(() => setStage('draw'), 2000))
-
-    // Stage 2: Draw one card (1.5s)
-    timers.push(setTimeout(() => setStage('flip'), 3500))
-
-    // Stage 3: Card flip (1.5s)
+    // Stage 1: Card flip (1.5s)
     timers.push(setTimeout(() => {
       setStage('reveal')
-    }, 5000))
+    }, 1500))
 
-    // Stage 3.5: Delay flower rendering (400ms after reveal starts)
+    // Stage 1.5: Delay flower rendering (400ms after reveal starts)
     timers.push(setTimeout(() => {
       setShowFlower(true)
-    }, 5400))
+    }, 1900))
 
-    // Stage 4: Complete (3s display time)
+    // Stage 2: Complete (3s display time)
     timers.push(setTimeout(() => {
       onComplete?.()
-    }, 8400))
+    }, 4900))
 
     return () => timers.forEach(clearTimeout)
   }, [onComplete, isSSR])
-
-  // Multiple cards for shuffle effect
-  const cards = Array.from({ length: 7 }, (_, i) => ({ id: i }))
 
   return (
     <motion.div
@@ -99,78 +90,6 @@ const GachaAnimation = ({ flower, onComplete, onOpenCollection }) => {
 
       {/* Main card animation area */}
       <div className="relative w-full max-w-[320px] aspect-[2/3]">
-        {stage === 'shuffle' && (
-          <div className="relative w-full h-full">
-            {cards.map((card, index) => (
-              <motion.div
-                key={card.id}
-                className="absolute inset-0 w-full h-full"
-                initial={{
-                  x: 0,
-                  y: 0,
-                  rotate: 0,
-                  scale: 1,
-                  zIndex: index,
-                  opacity: 1,
-                }}
-                animate={{
-                  x: [0, (index - 3) * 30, 0],
-                  y: [0, Math.sin(index) * 20, 0],
-                  rotate: [0, (index - 3) * 10, 0],
-                  scale: 1,
-                  opacity: 1,
-                }}
-                transition={{
-                  duration: 2,
-                  times: [0, 0.5, 1],
-                  ease: 'easeInOut',
-                }}
-              >
-                <div className="w-full h-full rounded-2xl shadow-2xl">
-                  <CardBack flower={flower} />
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-
-        {stage === 'draw' && (
-          <motion.div
-            className="absolute inset-0"
-            initial={{ y: 0, scale: 1, rotateY: 0 }}
-            animate={{
-              y: [0, -50, 0],
-              scale: [1, 1.05, 1]
-            }}
-            transition={{
-              duration: 1.5,
-              times: [0, 0.5, 1],
-              ease: ['easeOut', 'easeInOut']
-            }}
-          >
-            <div className="w-full h-full rounded-2xl shadow-2xl">
-              <CardBack flower={flower} />
-            </div>
-
-            {/* Glow effect when drawing */}
-            <motion.div
-              className="absolute -inset-4 rounded-3xl blur-xl"
-              style={{
-                background: isSSR
-                  ? `linear-gradient(135deg, ${flower.gradientColors?.[0] || '#FFD700'}, ${flower.gradientColors?.[1] || '#FFA500'})`
-                  : `radial-gradient(circle, ${flower.color}60, transparent)`,
-              }}
-              animate={{
-                opacity: [0.3, 0.7, 0.3],
-              }}
-              transition={{
-                duration: 1,
-                repeat: Infinity,
-              }}
-            />
-          </motion.div>
-        )}
-
         {(stage === 'flip' || stage === 'reveal') && (
           <div className="absolute inset-0" style={{ perspective: '1000px' }}>
             <motion.div
