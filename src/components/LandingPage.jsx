@@ -107,7 +107,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      exit={{ opacity: 1 }}
+      transition={{ exit: { duration: 0 } }}
       className="relative min-h-screen flex flex-col items-center justify-center px-4 md:px-6 overflow-hidden"
     >
       {/* Collection button */}

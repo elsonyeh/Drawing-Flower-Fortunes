@@ -31,11 +31,19 @@ const GachaAnimation = ({ flower, onComplete, onOpenCollection }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden"
     >
+      {/* 白光消散效果 */}
+      <motion.div
+        className="absolute inset-0 bg-white pointer-events-none"
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        style={{ zIndex: 100 }}
+      />
       {/* SSR special effects */}
       {isSSR && stage === 'reveal' && (
         <>
