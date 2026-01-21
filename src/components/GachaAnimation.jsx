@@ -11,20 +11,20 @@ const GachaAnimation = ({ flower, onComplete, onOpenCollection }) => {
   useEffect(() => {
     const timers = []
 
-    // Stage 1: Card flip (1.5s)
+    // Stage 1: Card flip (2s)
     timers.push(setTimeout(() => {
       setStage('reveal')
-    }, 1500))
+    }, 2000))
 
-    // Stage 1.5: Delay flower rendering (400ms after reveal starts)
+    // Stage 1.5: Delay flower rendering (500ms after reveal starts)
     timers.push(setTimeout(() => {
       setShowFlower(true)
-    }, 1900))
+    }, 2500))
 
-    // Stage 2: Complete (3s display time)
+    // Stage 2: Complete (3.5s display time)
     timers.push(setTimeout(() => {
       onComplete?.()
-    }, 4900))
+    }, 6000))
 
     return () => timers.forEach(clearTimeout)
   }, [onComplete, isSSR])
@@ -41,7 +41,7 @@ const GachaAnimation = ({ flower, onComplete, onOpenCollection }) => {
         className="absolute inset-0 bg-white pointer-events-none"
         initial={{ opacity: 1 }}
         animate={{ opacity: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
+        transition={{ duration: 1.2, ease: 'easeOut' }}
         style={{ zIndex: 100 }}
       />
       {/* SSR special effects */}
@@ -105,7 +105,7 @@ const GachaAnimation = ({ flower, onComplete, onOpenCollection }) => {
               initial={{ rotateY: 0 }}
               animate={{ rotateY: stage === 'reveal' ? 180 : 90 }}
               transition={{
-                duration: 1.5,
+                duration: 2,
                 ease: 'easeInOut',
               }}
             >

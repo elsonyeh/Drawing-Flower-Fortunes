@@ -87,10 +87,10 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
     setSelectedIndex(index)
     setIsTransforming(true)
 
-    // 加快抽卡動畫時間
+    // 抽卡動畫時間
     setTimeout(() => {
       onPetalSelect()
-    }, 1800)
+    }, 2800)
   }
 
   const getFlowerPosition = (angle) => {
@@ -205,7 +205,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 0.7, 0.7, 0] }}
           transition={{
-            duration: 1.8,
+            duration: 2.8,
             times: [0, 0.2, 0.65, 1],
             ease: 'easeInOut',
           }}
@@ -222,7 +222,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
             opacity: [0, 0, 0, 0.4, 1],
           }}
           transition={{
-            duration: 1.8,
+            duration: 2.8,
             times: [0, 0.55, 0.65, 0.85, 1],
             ease: 'easeIn',
           }}
@@ -288,7 +288,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
               }}
               transition={{
                 delay: isTransforming ? 0 : index * 0.08,
-                duration: isTransforming && isSelected ? 1.8 : isTransforming ? 0.6 : 0.5,
+                duration: isTransforming && isSelected ? 2.8 : isTransforming ? 0.8 : 0.5,
                 times: isTransforming && isSelected ? [0, 0.3, 0.7, 1] : undefined,
                 type: isTransforming && isSelected ? 'tween' : 'spring',
                 stiffness: 200,
@@ -308,7 +308,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                     {/* 抽卡特效 */}
                     {isTransforming && (
                       <>
-                        {/* 第一階段：紫色能量聚集 (0-0.6s) */}
+                        {/* 第一階段：紫色能量聚集 */}
                         <motion.div
                           className="absolute inset-0 rounded-full"
                           initial={{ scale: 3, opacity: 0 }}
@@ -317,7 +317,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                             opacity: [0, 0.8, 0.8, 0],
                           }}
                           transition={{
-                            duration: 1.8,
+                            duration: 2.8,
                             times: [0, 0.3, 0.7, 1],
                             ease: 'easeInOut',
                           }}
@@ -327,7 +327,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                           }}
                         />
 
-                        {/* 脈動能量環 (0-0.9s) */}
+                        {/* 脈動能量環 */}
                         {[...Array(3)].map((_, i) => (
                           <motion.div
                             key={i}
@@ -338,14 +338,14 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                               opacity: [0.8, 0],
                             }}
                             transition={{
-                              duration: 0.9,
-                              delay: i * 0.2,
+                              duration: 1.3,
+                              delay: i * 0.3,
                               ease: 'easeOut',
                             }}
                           />
                         ))}
 
-                        {/* 第二階段：金色光芒閃現 (0.6-1.1s) */}
+                        {/* 第二階段：金色光芒閃現 */}
                         <motion.div
                           className="absolute inset-0 rounded-full"
                           initial={{ scale: 1, opacity: 0 }}
@@ -354,7 +354,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                             opacity: [0, 0, 1, 0],
                           }}
                           transition={{
-                            duration: 1.8,
+                            duration: 2.8,
                             times: [0, 0.3, 0.45, 0.6],
                             ease: 'easeOut',
                           }}
@@ -364,7 +364,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                           }}
                         />
 
-                        {/* 第三階段：強烈白光爆發 (1.1-1.8s) */}
+                        {/* 第三階段：強烈白光爆發 */}
                         <motion.div
                           className="absolute inset-0 rounded-full bg-white"
                           initial={{ scale: 1, opacity: 0 }}
@@ -373,7 +373,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                             opacity: [0, 0, 0, 0.8, 1, 1],
                           }}
                           transition={{
-                            duration: 1.8,
+                            duration: 2.8,
                             times: [0, 0.6, 0.6, 0.75, 0.9, 1],
                             ease: 'easeOut',
                           }}
@@ -391,7 +391,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                             opacity: [0, 0, 0, 0.8, 1],
                           }}
                           transition={{
-                            duration: 1.8,
+                            duration: 2.8,
                             times: [0, 0.6, 0.6, 0.85, 1],
                             ease: 'easeOut',
                           }}
@@ -423,7 +423,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                                 ],
                               }}
                               transition={{
-                                duration: 1.8,
+                                duration: 2.8,
                                 times: [0, 0.6, 0.6, 0.85, 1],
                                 ease: 'easeOut',
                               }}
@@ -583,7 +583,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                                 }
                           }
                           transition={{
-                            duration: isTransforming ? 1.8 : 0.6,
+                            duration: isTransforming ? 2.8 : 0.6,
                             times: isTransforming ? [0, 0.4, 0.75, 1] : undefined,
                             repeat: isSelected && !isTransforming ? Infinity : 0,
                             delay: isTransforming ? petalIndex * 0.02 : petalIndex * 0.04,
@@ -645,7 +645,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                             }
                       }
                       transition={{
-                        duration: isTransforming ? 1.8 : 0.6,
+                        duration: isTransforming ? 2.8 : 0.6,
                         times: isTransforming ? [0, 0.4, 0.75, 1] : undefined,
                         repeat: isSelected && !isTransforming ? Infinity : 0,
                       }}
