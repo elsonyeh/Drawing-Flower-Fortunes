@@ -1,17 +1,24 @@
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import LandingPage from './components/LandingPage'
+import PetalSelection from './components/PetalSelection'
 import GachaAnimation from './components/GachaAnimation'
 import FortuneResult from './components/FortuneResult'
 import CollectionPage from './components/CollectionPage'
 import { getRandomFlower, saveCollectedFlower } from './utils/fortuneHelper'
 
 function App() {
-  const [stage, setStage] = useState('landing') // 'landing', 'gacha', 'result', 'collection'
+  const [stage, setStage] = useState('landing') // 'landing', 'petalSelection', 'gacha', 'result', 'collection'
   const [selectedFlower, setSelectedFlower] = useState(null)
   const [viewingFlower, setViewingFlower] = useState(null) // For viewing from collection
 
   const handleDraw = () => {
+    // 先進入花瓣選擇界面
+    setStage('petalSelection')
+  }
+
+  const handlePetalSelect = () => {
+    // 選擇花瓣後，生成花卉並進入抽卡動畫
     const flower = getRandomFlower()
     setSelectedFlower(flower)
     setStage('gacha')
@@ -57,6 +64,13 @@ function App() {
             key="landing"
             onDraw={handleDraw}
             onOpenCollection={handleOpenCollection}
+          />
+        )}
+
+        {stage === 'petalSelection' && (
+          <PetalSelection
+            key="petalSelection"
+            onSelect={handlePetalSelect}
           />
         )}
 
