@@ -202,9 +202,30 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
         <motion.div
           className="fixed inset-0 bg-black pointer-events-none"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.7 }}
-          transition={{ duration: 0.8 }}
+          animate={{ opacity: [0, 0.7, 0.7, 0] }}
+          transition={{
+            duration: 2.5,
+            times: [0, 0.2, 0.7, 1],
+            ease: 'easeInOut',
+          }}
           style={{ zIndex: 5 }}
+        />
+      )}
+
+      {/* 全屏亮白閃光銜接 */}
+      {isTransforming && (
+        <motion.div
+          className="fixed inset-0 bg-white pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{
+            opacity: [0, 0, 0, 0.3, 1],
+          }}
+          transition={{
+            duration: 2.5,
+            times: [0, 0.6, 0.7, 0.85, 1],
+            ease: 'easeIn',
+          }}
+          style={{ zIndex: 15 }}
         />
       )}
 
@@ -260,14 +281,14 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
               animate={{
                 x: isTransforming && isSelected ? '-50%' : `calc(-50% + ${pos.x}px)`,
                 y: isTransforming && isSelected ? '-50%' : `calc(-50% + ${pos.y}px)`,
-                scale: isTransforming && isSelected ? [1, 2, 4] : 1,
+                scale: isTransforming && isSelected ? [1, 2, 4, 4] : 1,
                 opacity: isTransforming ? (isSelected ? 1 : 0) : 1,
                 rotate: pos.rotate,
               }}
               transition={{
                 delay: isTransforming ? 0 : index * 0.08,
                 duration: isTransforming && isSelected ? 2.5 : isTransforming ? 0.6 : 0.5,
-                times: isTransforming && isSelected ? [0, 0.4, 1] : undefined,
+                times: isTransforming && isSelected ? [0, 0.3, 0.7, 1] : undefined,
                 type: isTransforming && isSelected ? 'tween' : 'spring',
                 stiffness: 200,
                 ease: isTransforming ? 'easeInOut' : 'easeInOut',
@@ -342,21 +363,21 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                           }}
                         />
 
-                        {/* 第三階段：強烈白光爆發 (1.5-2.2s) */}
+                        {/* 第三階段：強烈白光爆發 (1.5-2.5s) */}
                         <motion.div
                           className="absolute inset-0 rounded-full bg-white"
                           initial={{ scale: 1, opacity: 0 }}
                           animate={{
-                            scale: [1, 1, 1, 10, 15],
-                            opacity: [0, 0, 0, 1, 0],
+                            scale: [1, 1, 1, 8, 20, 25],
+                            opacity: [0, 0, 0, 0.8, 1, 1],
                           }}
                           transition={{
                             duration: 2.5,
-                            times: [0, 0.6, 0.6, 0.76, 0.88],
+                            times: [0, 0.6, 0.6, 0.75, 0.9, 1],
                             ease: 'easeOut',
                           }}
                           style={{
-                            filter: 'blur(25px)',
+                            filter: 'blur(30px)',
                           }}
                         />
 
@@ -365,12 +386,12 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                           className="absolute inset-0 rounded-full border-4 border-white"
                           initial={{ scale: 1, opacity: 0 }}
                           animate={{
-                            scale: [1, 1, 1, 8],
-                            opacity: [0, 0, 0, 1, 0],
+                            scale: [1, 1, 1, 12, 15],
+                            opacity: [0, 0, 0, 0.8, 1],
                           }}
                           transition={{
                             duration: 2.5,
-                            times: [0, 0.6, 0.6, 1],
+                            times: [0, 0.6, 0.6, 0.85, 1],
                             ease: 'easeOut',
                           }}
                         />
@@ -389,10 +410,10 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                               }}
                               initial={{ scale: 0, opacity: 0 }}
                               animate={{
-                                x: [0, 0, 0, Math.cos(angle) * distance],
-                                y: [0, 0, 0, Math.sin(angle) * distance],
-                                scale: [0, 0, 0, 1, 0],
-                                opacity: [0, 0, 0, 1, 0],
+                                x: [0, 0, 0, Math.cos(angle) * distance, Math.cos(angle) * distance],
+                                y: [0, 0, 0, Math.sin(angle) * distance, Math.sin(angle) * distance],
+                                scale: [0, 0, 0, 1.2, 1.5],
+                                opacity: [0, 0, 0, 1, 1],
                               }}
                               transition={{
                                 duration: 2.5,
@@ -531,18 +552,20 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                                 }
                               : isTransforming && isSelected
                               ? {
-                                  scale: [1, 1.3, 1.5],
+                                  scale: [1, 1.3, 1.5, 1.8, 1.8],
                                   boxShadow: [
                                     '0 0 25px rgba(168, 85, 247, 1)',
                                     '0 0 40px rgba(251, 191, 36, 1)',
                                     '0 0 60px rgba(255, 255, 255, 1)',
+                                    '0 0 80px rgba(255, 255, 255, 1)',
+                                    '0 0 100px rgba(255, 255, 255, 1)',
                                   ],
                                 }
                               : {}
                           }
                           transition={{
                             duration: isTransforming ? 2.5 : 0.6,
-                            times: isTransforming ? [0, 0.4, 1] : undefined,
+                            times: isTransforming ? [0, 0.3, 0.6, 0.85, 1] : undefined,
                             repeat: isSelected && !isTransforming ? Infinity : 0,
                             delay: isTransforming ? petalIndex * 0.02 : petalIndex * 0.04,
                           }}
@@ -579,18 +602,20 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                             }
                           : isTransforming && isSelected
                           ? {
-                              scale: [1, 1.5, 2.5],
+                              scale: [1, 1.5, 2.5, 3.5, 3.5],
                               boxShadow: [
                                 '0 0 25px rgba(251, 191, 36, 1)',
                                 '0 0 50px rgba(251, 191, 36, 1)',
                                 '0 0 80px rgba(255, 255, 255, 1)',
+                                '0 0 120px rgba(255, 255, 255, 1)',
+                                '0 0 150px rgba(255, 255, 255, 1)',
                               ],
                             }
                           : {}
                       }
                       transition={{
                         duration: isTransforming ? 2.5 : 0.6,
-                        times: isTransforming ? [0, 0.4, 1] : undefined,
+                        times: isTransforming ? [0, 0.3, 0.6, 0.85, 1] : undefined,
                         repeat: isSelected && !isTransforming ? Infinity : 0,
                       }}
                     />
