@@ -87,9 +87,10 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
     setSelectedIndex(index)
     setIsTransforming(true)
 
+    // 閃光後快速切換
     setTimeout(() => {
       onPetalSelect()
-    }, 2000)
+    }, 800)
   }
 
   const getFlowerPosition = (angle) => {
@@ -231,15 +232,16 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
               animate={{
                 x: isTransforming && isSelected ? 0 : pos.x,
                 y: isTransforming && isSelected ? 0 : pos.y,
-                scale: isTransforming && isSelected ? 2.8 : 1,
+                scale: isTransforming && isSelected ? 3.5 : 1,
                 opacity: isTransforming ? (isSelected ? 1 : 0) : 1,
-                rotate: isTransforming && isSelected ? 1080 : pos.rotate,
+                rotate: pos.rotate,
               }}
               transition={{
                 delay: isTransforming ? 0 : index * 0.08,
-                duration: isTransforming ? 1.8 : 0.5,
-                type: 'spring',
-                stiffness: isTransforming ? 80 : 200,
+                duration: isTransforming ? 0.5 : 0.5,
+                type: isTransforming ? 'tween' : 'spring',
+                stiffness: 200,
+                ease: isTransforming ? 'easeOut' : 'easeInOut',
               }}
             >
               <motion.button
@@ -252,51 +254,92 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                 {/* 發光光環 */}
                 {isSelected && (
                   <>
-                    {/* 脈動光環 */}
-                    <motion.div
-                      className="absolute inset-0 rounded-full"
-                      animate={{
-                        scale: [1, 2.5, 1],
-                        opacity: [0.8, 0, 0.8],
-                      }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                      }}
-                      style={{
-                        boxShadow: '0 0 60px rgba(168, 85, 247, 1)',
-                      }}
-                    />
-
-                    {/* 旋轉光線 */}
-                    <motion.div
-                      className="absolute inset-0 rounded-full"
-                      animate={{
-                        rotate: [0, 360],
-                      }}
-                      transition={{
-                        duration: 2.5,
-                        repeat: Infinity,
-                        ease: 'linear',
-                      }}
-                    >
-                      {[...Array(16)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute w-0.5 h-10 md:h-12 bg-gradient-to-t from-transparent via-purple-300 to-transparent"
+                    {/* 閃光效果 */}
+                    {isTransforming && (
+                      <>
+                        {/* 強烈白光閃爍 */}
+                        <motion.div
+                          className="absolute inset-0 rounded-full bg-white"
+                          initial={{ scale: 1, opacity: 0 }}
+                          animate={{
+                            scale: [1, 8, 12],
+                            opacity: [0, 1, 0],
+                          }}
+                          transition={{
+                            duration: 0.6,
+                            times: [0, 0.3, 1],
+                            ease: 'easeOut',
+                          }}
                           style={{
-                            left: '50%',
-                            top: '50%',
-                            transformOrigin: 'center -25px',
-                            transform: `translateX(-50%) rotate(${(i * 360) / 16}deg)`,
-                            opacity: 0.7,
+                            filter: 'blur(20px)',
                           }}
                         />
-                      ))}
-                    </motion.div>
+
+                        {/* 光環擴散 */}
+                        <motion.div
+                          className="absolute inset-0 rounded-full border-4 border-white"
+                          initial={{ scale: 1, opacity: 1 }}
+                          animate={{
+                            scale: [1, 6],
+                            opacity: [1, 0],
+                          }}
+                          transition={{
+                            duration: 0.5,
+                            ease: 'easeOut',
+                          }}
+                        />
+                      </>
+                    )}
+
+                    {/* 脈動光環 */}
+                    {!isTransforming && (
+                      <motion.div
+                        className="absolute inset-0 rounded-full"
+                        animate={{
+                          scale: [1, 2.5, 1],
+                          opacity: [0.8, 0, 0.8],
+                        }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                        }}
+                        style={{
+                          boxShadow: '0 0 60px rgba(168, 85, 247, 1)',
+                        }}
+                      />
+                    )}
+
+                    {/* 旋轉光線 */}
+                    {!isTransforming && (
+                      <motion.div
+                        className="absolute inset-0 rounded-full"
+                        animate={{
+                          rotate: [0, 360],
+                        }}
+                        transition={{
+                          duration: 2.5,
+                          repeat: Infinity,
+                          ease: 'linear',
+                        }}
+                      >
+                        {[...Array(16)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="absolute w-0.5 h-10 md:h-12 bg-gradient-to-t from-transparent via-purple-300 to-transparent"
+                            style={{
+                              left: '50%',
+                              top: '50%',
+                              transformOrigin: 'center -25px',
+                              transform: `translateX(-50%) rotate(${(i * 360) / 16}deg)`,
+                              opacity: 0.7,
+                            }}
+                          />
+                        ))}
+                      </motion.div>
+                    )}
 
                     {/* 粒子效果 */}
-                    {[...Array(12)].map((_, i) => {
+                    {!isTransforming && [...Array(12)].map((_, i) => {
                       const particleAngle = (i / 12) * Math.PI * 2
                       return (
                         <motion.div
@@ -326,7 +369,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                 <motion.div
                   className="relative w-11 h-11 md:w-16 md:h-16 flex items-center justify-center"
                   animate={
-                    isSelected
+                    isSelected && !isTransforming
                       ? {
                           rotate: [0, 20, -20, 20, -20, 0],
                           scale: [1, 1.2, 1.15, 1.2, 1.15, 1],
@@ -335,7 +378,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                   }
                   transition={{
                     duration: 0.5,
-                    repeat: isSelected ? Infinity : 0,
+                    repeat: isSelected && !isTransforming ? Infinity : 0,
                   }}
                 >
                   {/* 花瓣 */}
@@ -363,7 +406,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                               : '0 4px 15px rgba(0, 0, 0, 0.5)',
                           }}
                           animate={
-                            isSelected
+                            isSelected && !isTransforming
                               ? {
                                   scale: [1, 1.3, 1],
                                   boxShadow: [
@@ -372,12 +415,17 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                                     '0 0 25px rgba(168, 85, 247, 1)',
                                   ],
                                 }
+                              : isTransforming && isSelected
+                              ? {
+                                  scale: 1.5,
+                                  boxShadow: '0 0 50px rgba(255, 255, 255, 1)',
+                                }
                               : {}
                           }
                           transition={{
-                            duration: 0.6,
-                            repeat: isSelected ? Infinity : 0,
-                            delay: petalIndex * 0.04,
+                            duration: isTransforming ? 0.3 : 0.6,
+                            repeat: isSelected && !isTransforming ? Infinity : 0,
+                            delay: isTransforming ? 0 : petalIndex * 0.04,
                           }}
                         />
                       )
@@ -398,7 +446,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                           : '0 3px 12px rgba(0, 0, 0, 0.5)',
                       }}
                       animate={
-                        isSelected
+                        isSelected && !isTransforming
                           ? {
                               scale: [1, 1.4, 1],
                               boxShadow: [
@@ -407,43 +455,20 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                                 '0 0 25px rgba(251, 191, 36, 1)',
                               ],
                             }
+                          : isTransforming && isSelected
+                          ? {
+                              scale: 2,
+                              boxShadow: '0 0 60px rgba(255, 255, 255, 1)',
+                            }
                           : {}
                       }
                       transition={{
-                        duration: 0.6,
-                        repeat: isSelected ? Infinity : 0,
+                        duration: isTransforming ? 0.3 : 0.6,
+                        repeat: isSelected && !isTransforming ? Infinity : 0,
                       }}
                     />
                   </div>
                 </motion.div>
-
-                {/* 變形成卡片 */}
-                {isTransforming && isSelected && (
-                  <motion.div
-                    className="absolute inset-0"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.2, duration: 0.6 }}
-                  >
-                    <motion.div
-                      className="w-20 h-32 md:w-28 md:h-44 rounded-2xl"
-                      style={{
-                        background: 'linear-gradient(135deg, #7c3aed, #6d28d9, #5b21b6)',
-                        boxShadow: '0 20px 60px rgba(124, 58, 237, 1), inset 0 0 40px rgba(255, 255, 255, 0.2)',
-                      }}
-                      initial={{ scale: 0, rotate: 0 }}
-                      animate={{
-                        scale: 1,
-                        rotate: 1080,
-                      }}
-                      transition={{
-                        duration: 0.8,
-                        type: 'spring',
-                        stiffness: 100,
-                      }}
-                    />
-                  </motion.div>
-                )}
               </motion.button>
             </motion.div>
           )
