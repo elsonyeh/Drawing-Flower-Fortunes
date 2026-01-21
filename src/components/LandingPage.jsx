@@ -182,7 +182,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
       </motion.div>
 
       {/* 花朵圓圈 */}
-      <div className="relative w-[260px] h-[260px] md:w-[380px] md:h-[380px] flex items-center justify-center mb-4 md:mb-8">
+      <div className="relative w-[260px] h-[260px] md:w-[380px] md:h-[380px] flex items-center justify-center mb-4 md:mb-8 mx-auto">
         {/* 中心發光圓 */}
         <motion.div
           className="absolute w-2 h-2 md:w-3 md:h-3 rounded-full bg-primary-400"
