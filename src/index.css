@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+body,
+#root {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Fix React Three Fiber Canvas sizing */
+canvas[data-engine*="three.js"] {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+canvas[data-engine*="three.js"] ~ div,
+canvas[data-engine*="three.js"] + div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-400 via-pink-400 to-purple-400 bg-clip-text text-transparent;
+  }
+
+  .glow {
+    text-shadow: 0 0 10px rgba(224, 60, 238, 0.5),
+                 0 0 20px rgba(224, 60, 238, 0.3),
+                 0 0 30px rgba(224, 60, 238, 0.1);
+  }
+}
