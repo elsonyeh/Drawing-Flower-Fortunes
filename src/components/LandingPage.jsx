@@ -87,10 +87,10 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
     setSelectedIndex(index)
     setIsTransforming(true)
 
-    // 更長的抽卡動畫時間
+    // 加快抽卡動畫時間
     setTimeout(() => {
       onPetalSelect()
-    }, 2500)
+    }, 1800)
   }
 
   const getFlowerPosition = (angle) => {
@@ -204,8 +204,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 0.7, 0.7, 0] }}
           transition={{
-            duration: 2.5,
-            times: [0, 0.2, 0.7, 1],
+            duration: 1.8,
+            times: [0, 0.2, 0.65, 1],
             ease: 'easeInOut',
           }}
           style={{ zIndex: 5 }}
@@ -218,11 +218,11 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
           className="fixed inset-0 bg-white pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{
-            opacity: [0, 0, 0, 0.3, 1],
+            opacity: [0, 0, 0, 0.4, 1],
           }}
           transition={{
-            duration: 2.5,
-            times: [0, 0.6, 0.7, 0.85, 1],
+            duration: 1.8,
+            times: [0, 0.55, 0.65, 0.85, 1],
             ease: 'easeIn',
           }}
           style={{ zIndex: 15 }}
@@ -287,7 +287,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
               }}
               transition={{
                 delay: isTransforming ? 0 : index * 0.08,
-                duration: isTransforming && isSelected ? 2.5 : isTransforming ? 0.6 : 0.5,
+                duration: isTransforming && isSelected ? 1.8 : isTransforming ? 0.6 : 0.5,
                 times: isTransforming && isSelected ? [0, 0.3, 0.7, 1] : undefined,
                 type: isTransforming && isSelected ? 'tween' : 'spring',
                 stiffness: 200,
@@ -307,7 +307,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                     {/* 抽卡特效 */}
                     {isTransforming && (
                       <>
-                        {/* 第一階段：紫色能量聚集 (0-0.8s) */}
+                        {/* 第一階段：紫色能量聚集 (0-0.6s) */}
                         <motion.div
                           className="absolute inset-0 rounded-full"
                           initial={{ scale: 3, opacity: 0 }}
@@ -316,8 +316,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                             opacity: [0, 0.8, 0.8, 0],
                           }}
                           transition={{
-                            duration: 2.5,
-                            times: [0, 0.32, 0.8, 1],
+                            duration: 1.8,
+                            times: [0, 0.3, 0.7, 1],
                             ease: 'easeInOut',
                           }}
                           style={{
@@ -326,7 +326,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                           }}
                         />
 
-                        {/* 脈動能量環 (0-1.2s) */}
+                        {/* 脈動能量環 (0-0.9s) */}
                         {[...Array(3)].map((_, i) => (
                           <motion.div
                             key={i}
@@ -337,14 +337,14 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                               opacity: [0.8, 0],
                             }}
                             transition={{
-                              duration: 1.2,
-                              delay: i * 0.3,
+                              duration: 0.9,
+                              delay: i * 0.2,
                               ease: 'easeOut',
                             }}
                           />
                         ))}
 
-                        {/* 第二階段：金色光芒閃現 (0.8-1.5s) */}
+                        {/* 第二階段：金色光芒閃現 (0.6-1.1s) */}
                         <motion.div
                           className="absolute inset-0 rounded-full"
                           initial={{ scale: 1, opacity: 0 }}
@@ -353,8 +353,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                             opacity: [0, 0, 1, 0],
                           }}
                           transition={{
-                            duration: 2.5,
-                            times: [0, 0.32, 0.48, 0.6],
+                            duration: 1.8,
+                            times: [0, 0.3, 0.45, 0.6],
                             ease: 'easeOut',
                           }}
                           style={{
@@ -363,7 +363,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                           }}
                         />
 
-                        {/* 第三階段：強烈白光爆發 (1.5-2.5s) */}
+                        {/* 第三階段：強烈白光爆發 (1.1-1.8s) */}
                         <motion.div
                           className="absolute inset-0 rounded-full bg-white"
                           initial={{ scale: 1, opacity: 0 }}
@@ -372,7 +372,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                             opacity: [0, 0, 0, 0.8, 1, 1],
                           }}
                           transition={{
-                            duration: 2.5,
+                            duration: 1.8,
                             times: [0, 0.6, 0.6, 0.75, 0.9, 1],
                             ease: 'easeOut',
                           }}
@@ -390,7 +390,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                             opacity: [0, 0, 0, 0.8, 1],
                           }}
                           transition={{
-                            duration: 2.5,
+                            duration: 1.8,
                             times: [0, 0.6, 0.6, 0.85, 1],
                             ease: 'easeOut',
                           }}
@@ -403,21 +403,27 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                           return (
                             <motion.div
                               key={i}
-                              className="absolute w-2 h-2 rounded-full bg-yellow-300"
+                              className="absolute w-2 h-2 rounded-full"
                               style={{
                                 left: '50%',
                                 top: '50%',
                               }}
                               initial={{ scale: 0, opacity: 0 }}
                               animate={{
-                                x: [0, 0, 0, Math.cos(angle) * distance, Math.cos(angle) * distance],
-                                y: [0, 0, 0, Math.sin(angle) * distance, Math.sin(angle) * distance],
-                                scale: [0, 0, 0, 1.2, 1.5],
-                                opacity: [0, 0, 0, 1, 1],
+                                x: [0, 0, 0, Math.cos(angle) * distance],
+                                y: [0, 0, 0, Math.sin(angle) * distance],
+                                scale: [0, 0, 0, 1.2],
+                                opacity: [0, 0, 0, 1, 0],
+                                backgroundColor: [
+                                  '#fbbf24',
+                                  '#fbbf24',
+                                  '#fbbf24',
+                                  '#ffffff',
+                                ],
                               }}
                               transition={{
-                                duration: 2.5,
-                                times: [0, 0.6, 0.6, 0.8, 1],
+                                duration: 1.8,
+                                times: [0, 0.6, 0.6, 0.85, 1],
                                 ease: 'easeOut',
                               }}
                             />
@@ -531,41 +537,53 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                           style={{
                             width: `${petalSize}px`,
                             height: `${petalSize}px`,
-                            background: isSelected
-                              ? 'linear-gradient(135deg, #d8b4fe, #c084fc, #a855f7)'
-                              : 'linear-gradient(135deg, #c084fc, #a855f7, #9333ea)',
                             x: Math.cos(petalAngle) * petalDistance - petalSize / 2,
                             y: Math.sin(petalAngle) * petalDistance - petalSize / 2,
-                            boxShadow: isSelected
-                              ? '0 0 25px rgba(168, 85, 247, 1), inset 0 0 12px rgba(255, 255, 255, 0.4)'
-                              : '0 4px 15px rgba(0, 0, 0, 0.5)',
                           }}
                           animate={
                             isSelected && !isTransforming
                               ? {
+                                  background: 'linear-gradient(135deg, #d8b4fe, #c084fc, #a855f7)',
                                   scale: [1, 1.3, 1],
                                   boxShadow: [
                                     '0 0 25px rgba(168, 85, 247, 1)',
                                     '0 0 35px rgba(168, 85, 247, 1)',
                                     '0 0 25px rgba(168, 85, 247, 1)',
                                   ],
+                                  opacity: 1,
                                 }
                               : isTransforming && isSelected
                               ? {
-                                  scale: [1, 1.3, 1.5, 1.8, 1.8],
+                                  background: [
+                                    'linear-gradient(135deg, #d8b4fe, #c084fc, #a855f7)',
+                                    'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)',
+                                    'linear-gradient(135deg, #ffffff, #ffffff, #ffffff)',
+                                    'linear-gradient(135deg, #ffffff, #ffffff, #ffffff)',
+                                  ],
+                                  scale: [1, 1.3, 1.5, 1.8],
                                   boxShadow: [
                                     '0 0 25px rgba(168, 85, 247, 1)',
                                     '0 0 40px rgba(251, 191, 36, 1)',
                                     '0 0 60px rgba(255, 255, 255, 1)',
                                     '0 0 80px rgba(255, 255, 255, 1)',
-                                    '0 0 100px rgba(255, 255, 255, 1)',
                                   ],
+                                  opacity: [1, 1, 1, 0],
                                 }
-                              : {}
+                              : isSelected
+                              ? {
+                                  background: 'linear-gradient(135deg, #d8b4fe, #c084fc, #a855f7)',
+                                  boxShadow: '0 0 25px rgba(168, 85, 247, 1), inset 0 0 12px rgba(255, 255, 255, 0.4)',
+                                  opacity: 1,
+                                }
+                              : {
+                                  background: 'linear-gradient(135deg, #c084fc, #a855f7, #9333ea)',
+                                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)',
+                                  opacity: 1,
+                                }
                           }
                           transition={{
-                            duration: isTransforming ? 2.5 : 0.6,
-                            times: isTransforming ? [0, 0.3, 0.6, 0.85, 1] : undefined,
+                            duration: isTransforming ? 1.8 : 0.6,
+                            times: isTransforming ? [0, 0.4, 0.75, 1] : undefined,
                             repeat: isSelected && !isTransforming ? Infinity : 0,
                             delay: isTransforming ? petalIndex * 0.02 : petalIndex * 0.04,
                           }}
@@ -583,39 +601,51 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                         top: '50%',
                         x: '-50%',
                         y: '-50%',
-                        background: isSelected
-                          ? 'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)'
-                          : 'radial-gradient(circle, #fef08a, #fbbf24, #eab308)',
-                        boxShadow: isSelected
-                          ? '0 0 25px rgba(251, 191, 36, 1), inset 0 0 10px rgba(255, 255, 255, 0.6)'
-                          : '0 3px 12px rgba(0, 0, 0, 0.5)',
                       }}
                       animate={
                         isSelected && !isTransforming
                           ? {
+                              background: 'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)',
                               scale: [1, 1.4, 1],
                               boxShadow: [
                                 '0 0 25px rgba(251, 191, 36, 1)',
                                 '0 0 40px rgba(251, 191, 36, 1)',
                                 '0 0 25px rgba(251, 191, 36, 1)',
                               ],
+                              opacity: 1,
                             }
                           : isTransforming && isSelected
                           ? {
-                              scale: [1, 1.5, 2.5, 3.5, 3.5],
+                              background: [
+                                'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)',
+                                'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)',
+                                'radial-gradient(circle, #ffffff, #ffffff, #ffffff, #ffffff)',
+                                'radial-gradient(circle, #ffffff, #ffffff, #ffffff, #ffffff)',
+                              ],
+                              scale: [1, 1.5, 2.5, 3.5],
                               boxShadow: [
                                 '0 0 25px rgba(251, 191, 36, 1)',
                                 '0 0 50px rgba(251, 191, 36, 1)',
                                 '0 0 80px rgba(255, 255, 255, 1)',
                                 '0 0 120px rgba(255, 255, 255, 1)',
-                                '0 0 150px rgba(255, 255, 255, 1)',
                               ],
+                              opacity: [1, 1, 1, 0],
                             }
-                          : {}
+                          : isSelected
+                          ? {
+                              background: 'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)',
+                              boxShadow: '0 0 25px rgba(251, 191, 36, 1), inset 0 0 10px rgba(255, 255, 255, 0.6)',
+                              opacity: 1,
+                            }
+                          : {
+                              background: 'radial-gradient(circle, #fef08a, #fbbf24, #eab308)',
+                              boxShadow: '0 3px 12px rgba(0, 0, 0, 0.5)',
+                              opacity: 1,
+                            }
                       }
                       transition={{
-                        duration: isTransforming ? 2.5 : 0.6,
-                        times: isTransforming ? [0, 0.3, 0.6, 0.85, 1] : undefined,
+                        duration: isTransforming ? 1.8 : 0.6,
+                        times: isTransforming ? [0, 0.4, 0.75, 1] : undefined,
                         repeat: isSelected && !isTransforming ? Infinity : 0,
                       }}
                     />
