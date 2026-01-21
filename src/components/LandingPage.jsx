@@ -125,7 +125,11 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
       </motion.button>
 
       {/* Floating petals */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <motion.div
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+        animate={{ opacity: isTransforming ? 0.2 : 1 }}
+        transition={{ duration: 0.8 }}
+      >
         {petals.map((petal) => (
           <FloatingPetal
             key={petal.id}
@@ -136,10 +140,14 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
             rotation={petal.rotation}
           />
         ))}
-      </div>
+      </motion.div>
 
       {/* Animated background particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <motion.div
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+        animate={{ opacity: isTransforming ? 0.2 : 1 }}
+        transition={{ duration: 0.8 }}
+      >
         {particles.map((particle) => (
           <motion.div
             key={particle.id}
@@ -162,14 +170,15 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
             }}
           />
         ))}
-      </div>
+      </motion.div>
 
       {/* Title */}
       <motion.div
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="text-center mb-6 md:mb-8 relative z-10"
+        className="text-center mb-6 md:mb-8 relative"
+        style={{ zIndex: isTransforming ? 5 : 10, opacity: isTransforming ? 0.3 : 1 }}
       >
         <h1 className="text-5xl md:text-7xl font-bold mb-2 md:mb-4 text-gradient glow">
           埕花
@@ -188,8 +197,19 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
         </motion.p>
       </motion.div>
 
+      {/* 背景變暗遮罩 */}
+      {isTransforming && (
+        <motion.div
+          className="fixed inset-0 bg-black pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.7 }}
+          transition={{ duration: 0.8 }}
+          style={{ zIndex: 5 }}
+        />
+      )}
+
       {/* 花朵圓圈 */}
-      <div className="relative w-[260px] h-[260px] md:w-[380px] md:h-[380px] flex items-center justify-center mb-4 md:mb-8 mx-auto">
+      <div className="relative w-[260px] h-[260px] md:w-[380px] md:h-[380px] flex items-center justify-center mb-4 md:mb-8 mx-auto" style={{ zIndex: 10 }}>
         {/* 中心發光圓 */}
         <motion.div
           className="absolute w-2 h-2 md:w-3 md:h-3 rounded-full bg-primary-400"
@@ -246,9 +266,9 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
               }}
               transition={{
                 delay: isTransforming ? 0 : index * 0.08,
-                duration: isTransforming ? 2.5 : 0.5,
-                times: isTransforming ? [0, 0.4, 1] : undefined,
-                type: isTransforming ? 'tween' : 'spring',
+                duration: isTransforming && isSelected ? 2.5 : isTransforming ? 0.6 : 0.5,
+                times: isTransforming && isSelected ? [0, 0.4, 1] : undefined,
+                type: isTransforming && isSelected ? 'tween' : 'spring',
                 stiffness: 200,
                 ease: isTransforming ? 'easeInOut' : 'easeInOut',
               }}
@@ -461,7 +481,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
 
                 {/* 花朵 */}
                 <motion.div
-                  className="relative w-11 h-11 md:w-16 md:h-16 flex items-center justify-center"
+                  className="relative w-14 h-14 md:w-20 md:h-20 flex items-center justify-center"
                   animate={
                     isSelected && !isTransforming
                       ? {
@@ -480,8 +500,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                     {[...Array(8)].map((_, petalIndex) => {
                       const petalAngle = (petalIndex / 8) * Math.PI * 2
                       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-                      const petalSize = isMobile ? 18 : 24
-                      const petalDistance = isMobile ? 11 : 16
+                      const petalSize = isMobile ? 22 : 30
+                      const petalDistance = isMobile ? 14 : 20
 
                       return (
                         <motion.div
@@ -532,11 +552,14 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
 
                     {/* 花心 */}
                     <motion.div
-                      className="absolute top-1/2 left-1/2 rounded-full"
+                      className="absolute rounded-full"
                       style={{
-                        width: typeof window !== 'undefined' && window.innerWidth < 768 ? '13px' : '18px',
-                        height: typeof window !== 'undefined' && window.innerWidth < 768 ? '13px' : '18px',
-                        transform: 'translate(-50%, -50%)',
+                        width: typeof window !== 'undefined' && window.innerWidth < 768 ? '16px' : '22px',
+                        height: typeof window !== 'undefined' && window.innerWidth < 768 ? '16px' : '22px',
+                        left: '50%',
+                        top: '50%',
+                        x: '-50%',
+                        y: '-50%',
                         background: isSelected
                           ? 'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)'
                           : 'radial-gradient(circle, #fef08a, #fbbf24, #eab308)',
@@ -585,7 +608,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="text-sm md:text-base text-gray-400 text-center relative z-10"
+          className="text-sm md:text-base text-gray-400 text-center relative"
+          style={{ zIndex: 10 }}
         >
           點擊任意一朵花開始抽籤
         </motion.p>
