@@ -47,6 +47,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
   const [petals, setPetals] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(null)
   const [isTransforming, setIsTransforming] = useState(false)
+  const [fireflyTarget, setFireflyTarget] = useState(0)
 
   useEffect(() => {
     // Generate random particles for background
@@ -71,6 +72,17 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
     }))
     setPetals(newPetals)
   }, [])
+
+  // 螢火蟲巡迴花朵
+  useEffect(() => {
+    if (isTransforming || selectedIndex !== null) return
+
+    const interval = setInterval(() => {
+      setFireflyTarget(prev => (prev + 1) % 7)
+    }, 3500) // 每3.5秒飛到下一朵花
+
+    return () => clearInterval(interval)
+  }, [isTransforming, selectedIndex])
 
   // 創建 7 枝花的位置
   const flowers = Array.from({ length: 7 }, (_, i) => {
@@ -234,14 +246,24 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
       <div className="relative w-[260px] h-[260px] md:w-[380px] md:h-[380px] flex items-center justify-center mb-4 md:mb-8 mx-auto" style={{ zIndex: 10 }}>
         {/* 螢火蟲 */}
         <motion.div
-          className="absolute"
-          animate={{
-            x: [0, 8, -8, 12, -5, 0],
-            y: [0, -10, 5, -8, 10, 0],
-          }}
+          className="absolute pointer-events-none"
+          style={{ zIndex: 20 }}
+          animate={
+            !isTransforming && selectedIndex === null
+              ? (() => {
+                  const targetAngle = (fireflyTarget / 7) * Math.PI * 2 - Math.PI / 2
+                  const radius = typeof window !== 'undefined' && window.innerWidth < 768 ? 110 : 170
+                  const targetX = Math.cos(targetAngle) * radius
+                  const targetY = Math.sin(targetAngle) * radius
+                  return {
+                    x: targetX,
+                    y: targetY,
+                  }
+                })()
+              : { x: 0, y: 0 }
+          }
           transition={{
-            duration: 6,
-            repeat: Infinity,
+            duration: 2,
             ease: 'easeInOut',
           }}
         >
@@ -327,6 +349,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
         {/* 花朵 */}
         {flowers.map((flower, index) => {
           const isSelected = selectedIndex === index
+          const isHighlightedByFirefly = !isTransforming && selectedIndex === null && fireflyTarget === index
           const pos = getFlowerPosition(flower.angle)
 
           return (
@@ -363,6 +386,26 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                 whileHover={!isTransforming ? { scale: 1.35 } : {}}
                 whileTap={!isTransforming ? { scale: 0.9 } : {}}
               >
+                {/* 螢火蟲提示發光 */}
+                {isHighlightedByFirefly && (
+                  <motion.div
+                    className="absolute inset-0 rounded-full"
+                    initial={{ opacity: 0, scale: 1 }}
+                    animate={{
+                      opacity: [0, 0.6, 0],
+                      scale: [1, 1.8, 1],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                    style={{
+                      boxShadow: '0 0 30px rgba(251, 191, 36, 0.8), 0 0 50px rgba(251, 191, 36, 0.4)',
+                    }}
+                  />
+                )}
+
                 {/* 發光光環 */}
                 {isSelected && (
                   <>
@@ -577,11 +620,16 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                           rotate: [0, 20, -20, 20, -20, 0],
                           scale: [1, 1.2, 1.15, 1.2, 1.15, 1],
                         }
+                      : isHighlightedByFirefly
+                      ? {
+                          scale: [1, 1.15, 1],
+                        }
                       : {}
                   }
                   transition={{
-                    duration: 0.5,
-                    repeat: isSelected && !isTransforming ? Infinity : 0,
+                    duration: isSelected && !isTransforming ? 0.5 : 1.5,
+                    repeat: (isSelected && !isTransforming) || isHighlightedByFirefly ? Infinity : 0,
+                    ease: 'easeInOut',
                   }}
                 >
                   {/* 花瓣 */}
@@ -637,6 +685,16 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                                   boxShadow: '0 0 25px rgba(168, 85, 247, 1), inset 0 0 12px rgba(255, 255, 255, 0.4)',
                                   opacity: 1,
                                 }
+                              : isHighlightedByFirefly
+                              ? {
+                                  background: 'linear-gradient(135deg, #d8b4fe, #c084fc, #a855f7)',
+                                  boxShadow: [
+                                    '0 0 15px rgba(251, 191, 36, 0.6)',
+                                    '0 0 25px rgba(251, 191, 36, 0.8)',
+                                    '0 0 15px rgba(251, 191, 36, 0.6)',
+                                  ],
+                                  opacity: 1,
+                                }
                               : {
                                   background: 'linear-gradient(135deg, #c084fc, #a855f7, #9333ea)',
                                   boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)',
@@ -644,10 +702,11 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                                 }
                           }
                           transition={{
-                            duration: isTransforming ? 2.8 : 0.6,
+                            duration: isTransforming ? 2.8 : isHighlightedByFirefly ? 1.5 : 0.6,
                             times: isTransforming ? [0, 0.4, 0.75, 1] : undefined,
-                            repeat: isSelected && !isTransforming ? Infinity : 0,
+                            repeat: (isSelected && !isTransforming) || isHighlightedByFirefly ? Infinity : 0,
                             delay: isTransforming ? petalIndex * 0.02 : petalIndex * 0.04,
+                            ease: 'easeInOut',
                           }}
                         />
                       )
@@ -699,6 +758,17 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                               boxShadow: '0 0 25px rgba(251, 191, 36, 1), inset 0 0 10px rgba(255, 255, 255, 0.6)',
                               opacity: 1,
                             }
+                          : isHighlightedByFirefly
+                          ? {
+                              background: 'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)',
+                              scale: [1, 1.2, 1],
+                              boxShadow: [
+                                '0 0 20px rgba(251, 191, 36, 0.8)',
+                                '0 0 35px rgba(251, 191, 36, 1)',
+                                '0 0 20px rgba(251, 191, 36, 0.8)',
+                              ],
+                              opacity: 1,
+                            }
                           : {
                               background: 'radial-gradient(circle, #fef08a, #fbbf24, #eab308)',
                               boxShadow: '0 3px 12px rgba(0, 0, 0, 0.5)',
@@ -706,9 +776,10 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                             }
                       }
                       transition={{
-                        duration: isTransforming ? 2.8 : 0.6,
+                        duration: isTransforming ? 2.8 : isHighlightedByFirefly ? 1.5 : 0.6,
                         times: isTransforming ? [0, 0.4, 0.75, 1] : undefined,
-                        repeat: isSelected && !isTransforming ? Infinity : 0,
+                        repeat: (isSelected && !isTransforming) || isHighlightedByFirefly ? Infinity : 0,
+                        ease: 'easeInOut',
                       }}
                     />
                   </div>
