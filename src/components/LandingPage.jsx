@@ -91,7 +91,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
 
     const timer = setTimeout(() => {
       setFireflyArrived(fireflyTarget)
-    }, 3500) // 3.5秒飛行時間後到達
+    }, 4500) // 4.5秒飛行時間後到達
 
     return () => clearTimeout(timer)
   }, [fireflyTarget, isTransforming, selectedIndex])
@@ -275,7 +275,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
               : { x: 0, y: 0 }
           }
           transition={{
-            duration: 3.5,
+            duration: 4.5,
             ease: 'easeInOut',
           }}
         >
@@ -427,26 +427,51 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                       }}
                     />
 
-                    {/* 粒子效果 */}
-                    {[...Array(12)].map((_, i) => {
-                      const particleAngle = (i / 12) * Math.PI * 2
+                    {/* 小螢火蟲圍繞效果 */}
+                    {[...Array(8)].map((_, i) => {
+                      const baseAngle = (i / 8) * Math.PI * 2
+                      const radius = 35
+                      const floatOffset = i * 0.5
                       return (
                         <motion.div
                           key={i}
-                          className="absolute w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-yellow-300"
+                          className="absolute w-1 h-1 md:w-1.5 md:h-1.5 rounded-full"
                           style={{
                             left: '50%',
                             top: '50%',
+                            background: 'radial-gradient(circle, #fef08a, #fbbf24)',
+                            filter: 'blur(0.5px)',
                           }}
                           animate={{
-                            x: [0, Math.cos(particleAngle) * 40, 0],
-                            y: [0, Math.sin(particleAngle) * 40, 0],
-                            opacity: [0, 1, 0],
+                            x: [
+                              Math.cos(baseAngle) * radius,
+                              Math.cos(baseAngle + 0.5) * (radius + 8),
+                              Math.cos(baseAngle + 1) * radius,
+                              Math.cos(baseAngle + 1.5) * (radius - 5),
+                              Math.cos(baseAngle + 2) * radius,
+                            ],
+                            y: [
+                              Math.sin(baseAngle) * radius,
+                              Math.sin(baseAngle + 0.5) * (radius + 8),
+                              Math.sin(baseAngle + 1) * radius,
+                              Math.sin(baseAngle + 1.5) * (radius - 5),
+                              Math.sin(baseAngle + 2) * radius,
+                            ],
+                            opacity: [0.3, 0.8, 0.5, 0.9, 0.3],
+                            scale: [0.8, 1.2, 1, 1.3, 0.8],
+                            boxShadow: [
+                              '0 0 3px rgba(251, 191, 36, 0.4)',
+                              '0 0 8px rgba(251, 191, 36, 0.8)',
+                              '0 0 5px rgba(251, 191, 36, 0.6)',
+                              '0 0 10px rgba(251, 191, 36, 1)',
+                              '0 0 3px rgba(251, 191, 36, 0.4)',
+                            ],
                           }}
                           transition={{
-                            duration: 1.5,
+                            duration: 3,
                             repeat: Infinity,
-                            delay: i * 0.1,
+                            delay: floatOffset,
+                            ease: 'easeInOut',
                           }}
                         />
                       )
