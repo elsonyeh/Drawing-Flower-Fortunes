@@ -218,8 +218,8 @@ const GachaAnimation = ({ flower, onComplete, onOpenCollection }) => {
                                 ? 'linear-gradient(90deg, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.6))'
                                 : 'linear-gradient(90deg, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.6))',
                               boxShadow: isSSR
-                                ? `0 4px 20px rgba(255, 215, 0, 0.3)`
-                                : `0 4px 20px ${flower.color}40`,
+                                ? `0 4px 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+                                : `0 4px 20px ${flower.color}40, inset 0 1px 0 rgba(255, 255, 255, 0.1)`,
                             }}
                           >
                             <div className="text-center">
