@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { motion, useAnimation } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
 import CollectionIcon from './CollectionIcon'
 
 const FloatingPetal = ({ delay, x, duration, size, rotation }) => (
@@ -49,6 +49,19 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
   const [isTransforming, setIsTransforming] = useState(false)
   const [fireflyTarget, setFireflyTarget] = useState(0)
   const [fireflyArrived, setFireflyArrived] = useState(null)
+  const [showFirefly, setShowFirefly] = useState(true)
+  const fireflyControls = useAnimation()
+  const fireflyPositionRef = useRef({ x: 0, y: 0 })
+
+  // 計算花朵位置的輔助函數
+  const getFlowerCoords = (index) => {
+    const radius = typeof window !== 'undefined' && window.innerWidth < 768 ? 110 : 170
+    const angle = (index / 7) * Math.PI * 2 - Math.PI / 2
+    return {
+      x: Math.cos(angle) * radius,
+      y: Math.sin(angle) * radius,
+    }
+  }
 
   useEffect(() => {
     // Generate random particles for background
@@ -76,8 +89,16 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
 
   // 螢火蟲巡迴花朵
   useEffect(() => {
-    if (isTransforming || selectedIndex !== null) return
+    if (isTransforming || selectedIndex !== null) {
+      // 隱藏螢火蟲
+      setShowFirefly(false)
+      setFireflyTarget(0)
+      setFireflyArrived(null)
+      fireflyPositionRef.current = { x: 0, y: 0 }
+      return
+    }
 
+    setShowFirefly(true)
     const interval = setInterval(() => {
       setFireflyTarget(prev => (prev + 1) % 7)
     }, 5000) // 每5秒飛到下一朵花
@@ -85,16 +106,35 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
     return () => clearInterval(interval)
   }, [isTransforming, selectedIndex])
 
-  // 螢火蟲到達後才點亮花朵
+  // 螢火蟲飛行動畫
   useEffect(() => {
-    if (isTransforming || selectedIndex !== null) return
+    if (isTransforming || selectedIndex !== null || !showFirefly) return
 
-    const timer = setTimeout(() => {
+    const animateFirefly = async () => {
+      const target = getFlowerCoords(fireflyTarget)
+      const current = fireflyPositionRef.current
+
+      // 計算曲線中間點
+      const midX = (current.x + target.x) / 2 + Math.sin(fireflyTarget) * 25
+      const midY = (current.y + target.y) / 2 + Math.cos(fireflyTarget) * 25
+
+      await fireflyControls.start({
+        x: [current.x, midX, target.x * 0.95, target.x],
+        y: [current.y, midY, target.y * 0.95, target.y],
+        opacity: 1,
+        transition: {
+          duration: 4.5,
+          ease: 'easeInOut',
+        }
+      })
+
+      // 更新當前位置
+      fireflyPositionRef.current = target
       setFireflyArrived(fireflyTarget)
-    }, 4500) // 4.5秒飛行時間後到達
+    }
 
-    return () => clearTimeout(timer)
-  }, [fireflyTarget, isTransforming, selectedIndex])
+    animateFirefly()
+  }, [fireflyTarget, isTransforming, selectedIndex, showFirefly, fireflyControls])
 
   // 創建 7 枝花的位置
   const flowers = Array.from({ length: 7 }, (_, i) => {
@@ -256,126 +296,92 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
 
       {/* 花朵圓圈 */}
       <div className="relative w-[260px] h-[260px] md:w-[380px] md:h-[380px] flex items-center justify-center mb-4 md:mb-8 mx-auto" style={{ zIndex: 10 }}>
-        {/* 螢火蟲 */}
-        <motion.div
-          className="absolute pointer-events-none"
-          style={{ zIndex: 20 }}
-          key={fireflyTarget}
-          animate={
-            !isTransforming && selectedIndex === null
-              ? (() => {
-                  const radius = typeof window !== 'undefined' && window.innerWidth < 768 ? 110 : 170
+        {/* 螢火蟲 - 使用 useAnimation 控制，避免重複動畫 */}
+        {showFirefly && !isTransforming && selectedIndex === null && (
+          <motion.div
+            className="absolute pointer-events-none"
+            style={{ zIndex: 20 }}
+            initial={{ opacity: 0, x: 0, y: 0 }}
+            animate={fireflyControls}
+          >
+            {/* 螢火蟲身體 */}
+            <div className="relative">
+              {/* 發光部分 - 增大尺寸讓螢火蟲更清楚 */}
+              <motion.div
+                className="w-6 h-6 md:w-8 md:h-8 rounded-full"
+                style={{
+                  background: 'radial-gradient(circle, #fffbeb, #fef9c3, #fef08a, #fbbf24)',
+                }}
+                animate={
+                  fireflyArrived === fireflyTarget
+                    ? {
+                        opacity: [0.9, 1, 0.9],
+                        scale: [1, 1.5, 1],
+                        boxShadow: [
+                          '0 0 25px rgba(251, 191, 36, 1), 0 0 45px rgba(251, 191, 36, 0.7), 0 0 65px rgba(251, 191, 36, 0.4)',
+                          '0 0 50px rgba(251, 191, 36, 1), 0 0 80px rgba(251, 191, 36, 0.8), 0 0 110px rgba(251, 191, 36, 0.5)',
+                          '0 0 25px rgba(251, 191, 36, 1), 0 0 45px rgba(251, 191, 36, 0.7), 0 0 65px rgba(251, 191, 36, 0.4)',
+                        ],
+                      }
+                    : {
+                        opacity: [0.8, 1, 0.8],
+                        scale: [1, 1.1, 1],
+                        boxShadow: [
+                          '0 0 18px rgba(251, 191, 36, 0.9), 0 0 30px rgba(251, 191, 36, 0.6)',
+                          '0 0 25px rgba(251, 191, 36, 1), 0 0 40px rgba(251, 191, 36, 0.7)',
+                          '0 0 18px rgba(251, 191, 36, 0.9), 0 0 30px rgba(251, 191, 36, 0.6)',
+                        ],
+                      }
+                }
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
 
-                  // 計算目標位置
-                  const targetAngle = (fireflyTarget / 7) * Math.PI * 2 - Math.PI / 2
-                  const targetX = Math.cos(targetAngle) * radius
-                  const targetY = Math.sin(targetAngle) * radius
+              {/* 翅膀左 */}
+              <motion.div
+                className="absolute top-0 left-0 w-4 h-5 md:w-5 md:h-6 rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(254, 249, 195, 0.5))',
+                  filter: 'blur(0.5px)',
+                  transformOrigin: 'right center',
+                  left: '-5px',
+                }}
+                animate={{
+                  scaleX: [1, 1.3, 1],
+                  opacity: [0.5, 0.8, 0.5],
+                }}
+                transition={{
+                  duration: 0.25,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
 
-                  // 第一次飛行從中間開始
-                  if (fireflyArrived === null) {
-                    return {
-                      x: [0, targetX * 0.5, targetX * 0.8, targetX],
-                      y: [0, targetY * 0.5 + (Math.sin(fireflyTarget) * 15), targetY * 0.85, targetY],
-                    }
-                  }
-
-                  // 之後從上一朵花飛到下一朵
-                  const prevTarget = fireflyTarget === 0 ? 6 : fireflyTarget - 1
-                  const prevAngle = (prevTarget / 7) * Math.PI * 2 - Math.PI / 2
-                  const prevX = Math.cos(prevAngle) * radius
-                  const prevY = Math.sin(prevAngle) * radius
-
-                  // 計算中間點（曲線飛行）
-                  const midX = (prevX + targetX) / 2
-                  const midY = (prevY + targetY) / 2
-                  const offsetX = Math.sin(fireflyTarget) * 20
-                  const offsetY = Math.cos(fireflyTarget) * 20
-
-                  return {
-                    x: [prevX, midX + offsetX, targetX * 0.9, targetX],
-                    y: [prevY, midY + offsetY, targetY * 0.9, targetY],
-                  }
-                })()
-              : { x: 0, y: 0 }
-          }
-          transition={{
-            duration: 4.5,
-            ease: 'easeInOut',
-          }}
-        >
-          {/* 螢火蟲身體 */}
-          <div className="relative">
-            {/* 發光部分 */}
-            <motion.div
-              className="w-5 h-5 md:w-6 md:h-6 rounded-full"
-              style={{
-                background: 'radial-gradient(circle, #fffbeb, #fef9c3, #fef08a, #fbbf24)',
-              }}
-              animate={
-                !isTransforming && selectedIndex === null && fireflyArrived === fireflyTarget
-                  ? {
-                      opacity: [0.9, 1, 0.9],
-                      scale: [1, 1.5, 1],
-                      boxShadow: [
-                        '0 0 20px rgba(251, 191, 36, 1), 0 0 35px rgba(251, 191, 36, 0.6), 0 0 50px rgba(251, 191, 36, 0.3)',
-                        '0 0 40px rgba(251, 191, 36, 1), 0 0 65px rgba(251, 191, 36, 0.8), 0 0 90px rgba(251, 191, 36, 0.4)',
-                        '0 0 20px rgba(251, 191, 36, 1), 0 0 35px rgba(251, 191, 36, 0.6), 0 0 50px rgba(251, 191, 36, 0.3)',
-                      ],
-                    }
-                  : {
-                      opacity: 0.7,
-                      scale: 1,
-                      boxShadow: '0 0 12px rgba(251, 191, 36, 0.7), 0 0 20px rgba(251, 191, 36, 0.4)',
-                    }
-              }
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
-
-            {/* 翅膀左 */}
-            <motion.div
-              className="absolute top-0 left-0 w-3.5 h-4 md:w-4 md:h-5 rounded-full"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(230, 230, 255, 0.4))',
-                filter: 'blur(0.5px)',
-                transformOrigin: 'right center',
-                left: '-4px',
-              }}
-              animate={{
-                scaleX: [1, 1.2, 1],
-                opacity: [0.5, 0.7, 0.5],
-              }}
-              transition={{
-                duration: 0.3,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
-
-            {/* 翅膀右 */}
-            <motion.div
-              className="absolute top-0 right-0 w-3.5 h-4 md:w-4 md:h-5 rounded-full"
-              style={{
-                background: 'linear-gradient(225deg, rgba(255, 255, 255, 0.5), rgba(230, 230, 255, 0.4))',
-                filter: 'blur(0.5px)',
-                transformOrigin: 'left center',
-                right: '-4px',
-              }}
-              animate={{
-                scaleX: [1, 1.2, 1],
-                opacity: [0.5, 0.7, 0.5],
-              }}
-              transition={{
-                duration: 0.3,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
-          </div>
-        </motion.div>
+              {/* 翅膀右 */}
+              <motion.div
+                className="absolute top-0 right-0 w-4 h-5 md:w-5 md:h-6 rounded-full"
+                style={{
+                  background: 'linear-gradient(225deg, rgba(255, 255, 255, 0.6), rgba(254, 249, 195, 0.5))',
+                  filter: 'blur(0.5px)',
+                  transformOrigin: 'left center',
+                  right: '-5px',
+                }}
+                animate={{
+                  scaleX: [1, 1.3, 1],
+                  opacity: [0.5, 0.8, 0.5],
+                }}
+                transition={{
+                  duration: 0.25,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
 
         {/* 外圈光環 */}
         <motion.div

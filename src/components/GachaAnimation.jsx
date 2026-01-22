@@ -49,7 +49,7 @@ const GachaAnimation = ({ flower, onComplete, onOpenCollection }) => {
         <>
           {/* Golden light rays */}
           <motion.div
-            className="absolute inset-0 pointer-events-none"
+            className="absolute inset-0 pointer-events-none overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 0.7] }}
             transition={{ duration: 0.5 }}
@@ -57,10 +57,11 @@ const GachaAnimation = ({ flower, onComplete, onOpenCollection }) => {
             {[...Array(12)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute top-1/2 left-1/2 w-2 h-screen origin-top"
+                className="absolute top-1/2 left-1/2 w-2 origin-bottom"
                 style={{
-                  background: `linear-gradient(to bottom, ${flower.gradientColors?.[0] || '#FFD700'}40, transparent)`,
-                  transform: `rotate(${(i * 360) / 12}deg)`,
+                  height: '50vh',
+                  background: `linear-gradient(to top, ${flower.gradientColors?.[0] || '#FFD700'}40, transparent)`,
+                  transform: `translateY(-100%) rotate(${(i * 360) / 12}deg)`,
                 }}
                 initial={{ scaleY: 0 }}
                 animate={{ scaleY: 1 }}
