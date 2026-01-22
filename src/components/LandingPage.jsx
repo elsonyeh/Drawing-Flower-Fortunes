@@ -48,6 +48,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
   const [selectedIndex, setSelectedIndex] = useState(null)
   const [isTransforming, setIsTransforming] = useState(false)
   const [fireflyTarget, setFireflyTarget] = useState(0)
+  const [fireflyArrived, setFireflyArrived] = useState(0)
 
   useEffect(() => {
     // Generate random particles for background
@@ -83,6 +84,17 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
 
     return () => clearInterval(interval)
   }, [isTransforming, selectedIndex])
+
+  // 螢火蟲到達後才點亮花朵
+  useEffect(() => {
+    if (isTransforming || selectedIndex !== null) return
+
+    const timer = setTimeout(() => {
+      setFireflyArrived(fireflyTarget)
+    }, 3500) // 3.5秒飛行時間後到達
+
+    return () => clearTimeout(timer)
+  }, [fireflyTarget, isTransforming, selectedIndex])
 
   // 創建 7 枝花的位置
   const flowers = Array.from({ length: 7 }, (_, i) => {
@@ -276,7 +288,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                 background: 'radial-gradient(circle, #fef08a, #fbbf24)',
               }}
               animate={
-                !isTransforming && selectedIndex === null && fireflyTarget >= 0
+                !isTransforming && selectedIndex === null && fireflyArrived === fireflyTarget
                   ? {
                       opacity: [0.6, 1, 0.6],
                       scale: [1, 1.3, 1],
@@ -357,7 +369,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
         {/* 花朵 */}
         {flowers.map((flower, index) => {
           const isSelected = selectedIndex === index
-          const isHighlightedByFirefly = !isTransforming && selectedIndex === null && fireflyTarget === index
+          const isHighlightedByFirefly = !isTransforming && selectedIndex === null && fireflyArrived === index
           const pos = getFlowerPosition(flower.angle)
 
           return (
@@ -414,6 +426,31 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                         boxShadow: '0 0 40px rgba(251, 191, 36, 0.9), 0 0 60px rgba(251, 191, 36, 0.5)',
                       }}
                     />
+
+                    {/* 粒子效果 */}
+                    {[...Array(12)].map((_, i) => {
+                      const particleAngle = (i / 12) * Math.PI * 2
+                      return (
+                        <motion.div
+                          key={i}
+                          className="absolute w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-yellow-300"
+                          style={{
+                            left: '50%',
+                            top: '50%',
+                          }}
+                          animate={{
+                            x: [0, Math.cos(particleAngle) * 40, 0],
+                            y: [0, Math.sin(particleAngle) * 40, 0],
+                            opacity: [0, 1, 0],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            delay: i * 0.1,
+                          }}
+                        />
+                      )
+                    })}
                   </>
                 )}
 
