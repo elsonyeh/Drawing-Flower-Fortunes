@@ -509,7 +509,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
 
                 {/* 花朵 */}
                 <motion.div
-                  className="relative w-14 h-14 md:w-20 md:h-20 flex items-center justify-center"
+                  className="relative w-16 h-16 md:w-24 md:h-24 flex items-center justify-center"
                   animate={
                     isSelected && !isTransforming
                       ? {
@@ -528,8 +528,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                     {[...Array(8)].map((_, petalIndex) => {
                       const petalAngle = (petalIndex / 8) * Math.PI * 2
                       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-                      const petalSize = isMobile ? 22 : 30
-                      const petalDistance = isMobile ? 14 : 20
+                      const petalSize = isMobile ? 26 : 36
+                      const petalDistance = isMobile ? 16 : 24
 
                       return (
                         <motion.div
@@ -596,8 +596,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                     <motion.div
                       className="absolute rounded-full"
                       style={{
-                        width: typeof window !== 'undefined' && window.innerWidth < 768 ? '16px' : '22px',
-                        height: typeof window !== 'undefined' && window.innerWidth < 768 ? '16px' : '22px',
+                        width: typeof window !== 'undefined' && window.innerWidth < 768 ? '20px' : '26px',
+                        height: typeof window !== 'undefined' && window.innerWidth < 768 ? '20px' : '26px',
                         left: '50%',
                         top: '50%',
                         x: '-50%',
