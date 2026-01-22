@@ -260,6 +260,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
         <motion.div
           className="absolute pointer-events-none"
           style={{ zIndex: 20 }}
+          key={fireflyTarget}
           animate={
             !isTransforming && selectedIndex === null
               ? (() => {
@@ -271,10 +272,10 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                   const targetY = Math.sin(targetAngle) * radius
 
                   // 第一次飛行從中間開始
-                  if (fireflyTarget === 0 && fireflyArrived === null) {
+                  if (fireflyArrived === null) {
                     return {
                       x: [0, targetX * 0.5, targetX * 0.8, targetX],
-                      y: [0, targetY * 0.5 + (Math.sin(0) * 15), targetY * 0.85, targetY],
+                      y: [0, targetY * 0.5 + (Math.sin(fireflyTarget) * 15), targetY * 0.85, targetY],
                     }
                   }
 
