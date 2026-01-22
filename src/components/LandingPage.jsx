@@ -232,23 +232,84 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
 
       {/* 花朵圓圈 */}
       <div className="relative w-[260px] h-[260px] md:w-[380px] md:h-[380px] flex items-center justify-center mb-4 md:mb-8 mx-auto" style={{ zIndex: 10 }}>
-        {/* 中心發光圓 */}
+        {/* 螢火蟲 */}
         <motion.div
-          className="absolute w-2 h-2 md:w-3 md:h-3 rounded-full bg-primary-400"
+          className="absolute"
           animate={{
-            scale: [1, 2, 1],
-            opacity: [0.3, 0.9, 0.3],
-            boxShadow: [
-              '0 0 10px rgba(139, 92, 246, 0.4)',
-              '0 0 40px rgba(139, 92, 246, 1)',
-              '0 0 10px rgba(139, 92, 246, 0.4)',
-            ],
+            x: [0, 8, -8, 12, -5, 0],
+            y: [0, -10, 5, -8, 10, 0],
           }}
           transition={{
-            duration: 2,
+            duration: 6,
             repeat: Infinity,
+            ease: 'easeInOut',
           }}
-        />
+        >
+          {/* 螢火蟲身體 */}
+          <div className="relative">
+            {/* 發光部分 */}
+            <motion.div
+              className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full"
+              style={{
+                background: 'radial-gradient(circle, #fef08a, #fbbf24)',
+              }}
+              animate={{
+                opacity: [0.6, 1, 0.6],
+                scale: [1, 1.3, 1],
+                boxShadow: [
+                  '0 0 8px rgba(251, 191, 36, 0.6)',
+                  '0 0 20px rgba(251, 191, 36, 1), 0 0 30px rgba(251, 191, 36, 0.5)',
+                  '0 0 8px rgba(251, 191, 36, 0.6)',
+                ],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+
+            {/* 翅膀左 */}
+            <motion.div
+              className="absolute top-0 left-0 w-1.5 h-2 md:w-2 md:h-2.5 rounded-full"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(200, 200, 255, 0.2))',
+                filter: 'blur(0.5px)',
+                transformOrigin: 'right center',
+                left: '-2px',
+              }}
+              animate={{
+                scaleX: [1, 1.2, 1],
+                opacity: [0.3, 0.5, 0.3],
+              }}
+              transition={{
+                duration: 0.3,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+
+            {/* 翅膀右 */}
+            <motion.div
+              className="absolute top-0 right-0 w-1.5 h-2 md:w-2 md:h-2.5 rounded-full"
+              style={{
+                background: 'linear-gradient(225deg, rgba(255, 255, 255, 0.3), rgba(200, 200, 255, 0.2))',
+                filter: 'blur(0.5px)',
+                transformOrigin: 'left center',
+                right: '-2px',
+              }}
+              animate={{
+                scaleX: [1, 1.2, 1],
+                opacity: [0.3, 0.5, 0.3],
+              }}
+              transition={{
+                duration: 0.3,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+          </div>
+        </motion.div>
 
         {/* 外圈光環 */}
         <motion.div
