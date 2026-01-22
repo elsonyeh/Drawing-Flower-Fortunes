@@ -415,7 +415,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                       initial={{ opacity: 0, scale: 1 }}
                       animate={{
                         opacity: [0, 0.7, 0.5, 0.7, 0],
-                        scale: [1, 2.5, 2.2, 2.5, 1],
+                        scale: [1, 1.8, 1.6, 1.8, 1],
                       }}
                       transition={{
                         duration: 2,
@@ -423,7 +423,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
                         ease: 'easeInOut',
                       }}
                       style={{
-                        boxShadow: '0 0 40px rgba(251, 191, 36, 0.9), 0 0 60px rgba(251, 191, 36, 0.5)',
+                        boxShadow: '0 0 30px rgba(251, 191, 36, 0.9), 0 0 45px rgba(251, 191, 36, 0.5)',
                       }}
                     />
 
