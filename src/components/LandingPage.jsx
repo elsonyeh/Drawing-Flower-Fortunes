@@ -265,16 +265,24 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
               ? (() => {
                   const radius = typeof window !== 'undefined' && window.innerWidth < 768 ? 110 : 170
 
-                  // 計算當前位置（從上一個目標）
-                  const prevTarget = fireflyTarget === 0 ? 6 : fireflyTarget - 1
-                  const prevAngle = (prevTarget / 7) * Math.PI * 2 - Math.PI / 2
-                  const prevX = Math.cos(prevAngle) * radius
-                  const prevY = Math.sin(prevAngle) * radius
-
                   // 計算目標位置
                   const targetAngle = (fireflyTarget / 7) * Math.PI * 2 - Math.PI / 2
                   const targetX = Math.cos(targetAngle) * radius
                   const targetY = Math.sin(targetAngle) * radius
+
+                  // 第一次飛行從中間開始
+                  if (fireflyTarget === 0 && fireflyArrived === null) {
+                    return {
+                      x: [0, targetX * 0.5, targetX * 0.8, targetX],
+                      y: [0, targetY * 0.5 + (Math.sin(0) * 15), targetY * 0.85, targetY],
+                    }
+                  }
+
+                  // 之後從上一朵花飛到下一朵
+                  const prevTarget = fireflyTarget === 0 ? 6 : fireflyTarget - 1
+                  const prevAngle = (prevTarget / 7) * Math.PI * 2 - Math.PI / 2
+                  const prevX = Math.cos(prevAngle) * radius
+                  const prevY = Math.sin(prevAngle) * radius
 
                   // 計算中間點（曲線飛行）
                   const midX = (prevX + targetX) / 2
@@ -298,25 +306,25 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
           <div className="relative">
             {/* 發光部分 */}
             <motion.div
-              className="w-4 h-4 md:w-5 md:h-5 rounded-full"
+              className="w-5 h-5 md:w-6 md:h-6 rounded-full"
               style={{
-                background: 'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24)',
+                background: 'radial-gradient(circle, #fffbeb, #fef9c3, #fef08a, #fbbf24)',
               }}
               animate={
                 !isTransforming && selectedIndex === null && fireflyArrived === fireflyTarget
                   ? {
-                      opacity: [0.8, 1, 0.8],
-                      scale: [1, 1.4, 1],
+                      opacity: [0.9, 1, 0.9],
+                      scale: [1, 1.5, 1],
                       boxShadow: [
-                        '0 0 15px rgba(251, 191, 36, 0.8), 0 0 25px rgba(251, 191, 36, 0.4)',
-                        '0 0 35px rgba(251, 191, 36, 1), 0 0 55px rgba(251, 191, 36, 0.6)',
-                        '0 0 15px rgba(251, 191, 36, 0.8), 0 0 25px rgba(251, 191, 36, 0.4)',
+                        '0 0 20px rgba(251, 191, 36, 1), 0 0 35px rgba(251, 191, 36, 0.6), 0 0 50px rgba(251, 191, 36, 0.3)',
+                        '0 0 40px rgba(251, 191, 36, 1), 0 0 65px rgba(251, 191, 36, 0.8), 0 0 90px rgba(251, 191, 36, 0.4)',
+                        '0 0 20px rgba(251, 191, 36, 1), 0 0 35px rgba(251, 191, 36, 0.6), 0 0 50px rgba(251, 191, 36, 0.3)',
                       ],
                     }
                   : {
-                      opacity: 0.5,
+                      opacity: 0.7,
                       scale: 1,
-                      boxShadow: '0 0 8px rgba(251, 191, 36, 0.5), 0 0 15px rgba(251, 191, 36, 0.2)',
+                      boxShadow: '0 0 12px rgba(251, 191, 36, 0.7), 0 0 20px rgba(251, 191, 36, 0.4)',
                     }
               }
               transition={{
@@ -328,16 +336,16 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
 
             {/* 翅膀左 */}
             <motion.div
-              className="absolute top-0 left-0 w-3 h-3.5 md:w-3.5 md:h-4.5 rounded-full"
+              className="absolute top-0 left-0 w-3.5 h-4 md:w-4 md:h-5 rounded-full"
               style={{
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(220, 220, 255, 0.3))',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(230, 230, 255, 0.4))',
                 filter: 'blur(0.5px)',
                 transformOrigin: 'right center',
-                left: '-3.5px',
+                left: '-4px',
               }}
               animate={{
                 scaleX: [1, 1.2, 1],
-                opacity: [0.4, 0.6, 0.4],
+                opacity: [0.5, 0.7, 0.5],
               }}
               transition={{
                 duration: 0.3,
@@ -348,16 +356,16 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
 
             {/* 翅膀右 */}
             <motion.div
-              className="absolute top-0 right-0 w-3 h-3.5 md:w-3.5 md:h-4.5 rounded-full"
+              className="absolute top-0 right-0 w-3.5 h-4 md:w-4 md:h-5 rounded-full"
               style={{
-                background: 'linear-gradient(225deg, rgba(255, 255, 255, 0.4), rgba(220, 220, 255, 0.3))',
+                background: 'linear-gradient(225deg, rgba(255, 255, 255, 0.5), rgba(230, 230, 255, 0.4))',
                 filter: 'blur(0.5px)',
                 transformOrigin: 'left center',
-                right: '-3.5px',
+                right: '-4px',
               }}
               animate={{
                 scaleX: [1, 1.2, 1],
-                opacity: [0.4, 0.6, 0.4],
+                opacity: [0.5, 0.7, 0.5],
               }}
               transition={{
                 duration: 0.3,
