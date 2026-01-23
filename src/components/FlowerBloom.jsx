@@ -1,7 +1,6 @@
 import { useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, MeshDistortMaterial, Sphere } from '@react-three/drei'
-import * as THREE from 'three'
 
 const FlowerPetals = ({ color, count = 8 }) => {
   const groupRef = useRef()

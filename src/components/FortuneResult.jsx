@@ -3,10 +3,8 @@ import { useEffect, useRef } from 'react'
 import FlowerBloom from './FlowerBloom'
 
 const FortuneResult = ({ flower, onReset, isFromCollection = false }) => {
-  if (!flower) return null
-
-  const isSSR = flower.rarity === 'ssr'
   const containerRef = useRef(null)
+  const isSSR = flower?.rarity === 'ssr'
 
   // Scroll to top when viewing from collection
   useEffect(() => {
@@ -14,6 +12,8 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false }) => {
       window.scrollTo({ top: 0, behavior: 'instant' })
     }
   }, [isFromCollection])
+
+  if (!flower) return null
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -218,7 +218,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false }) => {
             今夜的訊息
           </h2>
           <p className="text-white text-lg md:text-xl leading-relaxed italic">
-            "{flower.message}"
+            「{flower.message}」
           </p>
         </motion.div>
 

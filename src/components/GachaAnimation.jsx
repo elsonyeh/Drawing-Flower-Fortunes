@@ -1,9 +1,9 @@
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import CardBack from './CardBack'
 import FlowerBloom from './FlowerBloom'
 
-const GachaAnimation = ({ flower, onComplete, onOpenCollection }) => {
+const GachaAnimation = ({ flower, onComplete }) => {
   const [stage, setStage] = useState('flip') // flip -> reveal
   const [showFlower, setShowFlower] = useState(false)
   const isSSR = flower?.rarity === 'ssr'

@@ -34,6 +34,10 @@ export default [
         { allowConstantExport: true },
       ],
       'react/prop-types': 'off',
+      // Allow react-three-fiber properties
+      'react/no-unknown-property': ['error', {
+        ignore: ['position', 'rotation', 'args', 'intensity', 'object', 'geometry', 'material', 'castShadow', 'receiveShadow', 'dispose']
+      }],
     },
   },
 ]
