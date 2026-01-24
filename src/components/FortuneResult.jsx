@@ -122,12 +122,17 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false }) => {
             />
           )}
 
-          {/* 3D Flower */}
+          {/* 3D Flower - Larger with fixed centering */}
           <div style={{
             position: 'relative',
-            width: '300px',
-            height: '300px',
-            margin: '0 auto'
+            width: '100%',
+            height: '100%',
+            minHeight: '350px',
+            maxHeight: '400px',
+            margin: '0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}>
             <FlowerBloom flower={flower} />
           </div>

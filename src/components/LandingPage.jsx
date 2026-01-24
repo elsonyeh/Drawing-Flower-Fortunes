@@ -1,14 +1,34 @@
 import { motion, useAnimation } from 'framer-motion'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import CollectionIcon from './CollectionIcon'
 
+// 花束配置 - 7種不同的花
+const BOUQUET_FLOWERS = [
+  { id: 0, color: '#ff69b4' },  // 粉紅
+  { id: 1, color: '#ff6b6b' },  // 珊瑚紅
+  { id: 2, color: '#c084fc' },  // 紫色
+  { id: 3, color: '#f472b6' },  // 玫瑰粉
+  { id: 4, color: '#a78bfa' },  // 淡紫
+  { id: 5, color: '#fb7185' },  // 粉紅紅
+  { id: 6, color: '#e879f9' },  // 洋紅
+]
+
+// 每枝花的位置配置 - 不對稱自然排列（莖在同一水平起點）
+const FLOWER_POSITIONS = [
+  { angle: -28, stemHeight: 95, x: -48, curve1: 12, curve2: -7, mid: 0.55 },
+  { angle: -15, stemHeight: 115, x: -28, curve1: -5, curve2: 9, mid: 0.45 },
+  { angle: -5, stemHeight: 130, x: -9, curve1: 7, curve2: -3, mid: 0.5 },
+  { angle: 2, stemHeight: 140, x: 3, curve1: -4, curve2: 5, mid: 0.48 },
+  { angle: 8, stemHeight: 125, x: 12, curve1: 8, curve2: -5, mid: 0.52 },
+  { angle: 18, stemHeight: 110, x: 32, curve1: -7, curve2: 10, mid: 0.42 },
+  { angle: 30, stemHeight: 90, x: 50, curve1: 10, curve2: -8, mid: 0.58 },
+]
+
+// 背景飄落花瓣
 const FloatingPetal = ({ delay, x, duration, size, rotation }) => (
   <motion.div
     className="absolute pointer-events-none"
-    style={{
-      left: `${x}%`,
-      top: '-10%',
-    }}
+    style={{ left: `${x}%`, top: '-10%' }}
     initial={{ y: 0, rotate: 0, opacity: 0 }}
     animate={{
       y: ['0vh', '110vh'],
@@ -16,32 +36,375 @@ const FloatingPetal = ({ delay, x, duration, size, rotation }) => (
       opacity: [0, 1, 1, 0],
       x: [0, Math.sin(x) * 50, Math.sin(x * 2) * 30],
     }}
-    transition={{
-      duration: duration,
-      delay: delay,
-      repeat: Infinity,
-      ease: 'linear',
-    }}
+    transition={{ duration, delay, repeat: Infinity, ease: 'linear' }}
   >
     <div
-      className="relative"
+      className="rounded-full"
       style={{
-        width: `${size}px`,
-        height: `${size * 1.5}px`,
+        width: size,
+        height: size * 1.5,
+        background: 'radial-gradient(ellipse at center, rgba(255,183,197,0.8), rgba(255,105,180,0.4))',
+        clipPath: 'ellipse(50% 60% at 50% 40%)',
+        filter: 'blur(0.5px)',
       }}
-    >
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: `radial-gradient(ellipse at center, rgba(255, 183, 197, 0.8), rgba(255, 105, 180, 0.4))`,
-          clipPath: 'ellipse(50% 60% at 50% 40%)',
-          filter: 'blur(0.5px)',
-        }}
-      />
-    </div>
+    />
   </motion.div>
 )
 
+// 單朵花組件
+const FlowerHead = ({ color, size, isSelected, isTransforming, isHighlighted }) => {
+  const petalCount = 8
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      {/* 花瓣 */}
+      {[...Array(petalCount)].map((_, i) => {
+        const angle = (i / petalCount) * Math.PI * 2
+        const petalSize = size * 0.45
+        const dist = size * 0.28
+        return (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: petalSize,
+              height: petalSize,
+              left: '50%',
+              top: '50%',
+              marginLeft: -petalSize / 2 + Math.cos(angle) * dist,
+              marginTop: -petalSize / 2 + Math.sin(angle) * dist,
+            }}
+            animate={
+              isTransforming && isSelected
+                ? { background: [color, '#fff'], opacity: [1, 1, 0], scale: [1, 1.3, 1.5] }
+                : isSelected
+                ? { background: color, boxShadow: `0 0 15px ${color}`, scale: [1, 1.1, 1] }
+                : isHighlighted
+                ? { background: color, boxShadow: '0 0 12px rgba(251,191,36,0.7)' }
+                : { background: color, boxShadow: '0 3px 8px rgba(0,0,0,0.3)' }
+            }
+            transition={{
+              duration: isTransforming ? 2.8 : 0.5,
+              repeat: isSelected && !isTransforming ? Infinity : 0,
+            }}
+          />
+        )
+      })}
+      {/* 花蕊 */}
+      <motion.div
+        className="absolute rounded-full"
+        style={{
+          width: size * 0.32,
+          height: size * 0.32,
+          left: '50%',
+          top: '50%',
+          marginLeft: -size * 0.16,
+          marginTop: -size * 0.16,
+        }}
+        animate={
+          isTransforming && isSelected
+            ? { background: ['#ffd700', '#fff'], scale: [1, 1.5, 2], opacity: [1, 1, 0] }
+            : isSelected
+            ? { background: '#ffd700', boxShadow: '0 0 12px #ffd700', scale: [1, 1.15, 1] }
+            : { background: 'radial-gradient(circle, #ffd700, #f59e0b)', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }
+        }
+        transition={{
+          duration: isTransforming ? 2.8 : 0.5,
+          repeat: isSelected && !isTransforming ? Infinity : 0,
+        }}
+      />
+    </div>
+  )
+}
+
+// 單枝花組件（花 + 彎曲莖 + 葉子）
+const SingleFlower = ({ flower, position, index, isSelected, isTransforming, isHighlighted, onClick, isMobile }) => {
+  const stemHeight = isMobile ? position.stemHeight * 0.7 : position.stemHeight
+  const curve1 = isMobile ? position.curve1 * 0.7 : position.curve1
+  const curve2 = isMobile ? position.curve2 * 0.7 : position.curve2
+  const midPoint = position.mid
+  const flowerSize = isMobile ? 52 : 68
+
+  const stemEndX = 30 + curve2 * 0.3
+
+  return (
+    <motion.div
+      className="absolute"
+      style={{
+        left: '50%',
+        bottom: 0,
+        zIndex: 10, // 莖在花盆上面
+        transformOrigin: 'bottom center',
+      }}
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{
+        x: isMobile ? position.x * 0.7 : position.x,
+        rotate: isTransforming && isSelected ? 0 : position.angle,
+        scale: 1,
+        opacity: isTransforming ? (isSelected ? 1 : 0) : 1,
+      }}
+      transition={{
+        delay: isTransforming ? 0 : index * 0.08,
+        duration: 0.6,
+        type: 'spring',
+        stiffness: 150,
+      }}
+    >
+      {/* 彎曲花莖 SVG */}
+      <motion.div
+        className="relative"
+        style={{ width: 60, height: stemHeight, marginLeft: -30 }}
+        animate={{ opacity: isTransforming && isSelected ? [1, 1, 0] : 1 }}
+        transition={{ duration: 2.8, times: [0, 0.4, 0.6] }}
+      >
+        <svg
+          width="60"
+          height={stemHeight}
+          viewBox={`0 0 60 ${stemHeight}`}
+          style={{ position: 'absolute', overflow: 'visible' }}
+        >
+          <defs>
+            <linearGradient id={`stem-${index}`} x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#15803d" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#86efac" />
+            </linearGradient>
+          </defs>
+          <path
+            d={`M 30 ${stemHeight}
+                C ${30 + curve1 * 2} ${stemHeight * (1 - midPoint * 0.4)},
+                  ${30 + curve1 * 1.5 + curve2 * 0.5} ${stemHeight * (1 - midPoint)},
+                  ${30 + curve2 * 0.8} ${stemHeight * 0.35}
+                S ${stemEndX} ${stemHeight * 0.12}, ${stemEndX} 5`}
+            fill="none"
+            stroke={`url(#stem-${index})`}
+            strokeWidth={isMobile ? 4 : 5}
+            strokeLinecap="round"
+          />
+        </svg>
+
+        {/* 葉子 1 - 上方 */}
+        <motion.div
+          className="absolute"
+          style={{
+            width: isMobile ? 12 : 15,
+            height: isMobile ? 18 : 24,
+            left: 30 + curve1 * 0.8 + (curve1 > 0 ? 2 : -14),
+            top: stemHeight * 0.25,
+            background: 'linear-gradient(140deg, #86efac, #22c55e, #15803d)',
+            borderRadius: curve1 > 0 ? '0 80% 0 80%' : '80% 0 80% 0',
+            transformOrigin: curve1 > 0 ? 'left center' : 'right center',
+          }}
+          animate={{
+            rotate: curve1 > 0 ? [5, 12, 5] : [-5, -12, -5],
+            opacity: isTransforming && isSelected ? [1, 1, 0] : 1
+          }}
+          transition={{ rotate: { duration: 3, repeat: Infinity }, opacity: { duration: 2.8 } }}
+        />
+
+        {/* 葉子 2 - 下方 */}
+        <motion.div
+          className="absolute"
+          style={{
+            width: isMobile ? 10 : 13,
+            height: isMobile ? 16 : 20,
+            left: 30 + curve1 * 0.4 + (curve1 > 0 ? -14 : 3),
+            top: stemHeight * 0.48,
+            background: 'linear-gradient(220deg, #86efac, #22c55e, #15803d)',
+            borderRadius: curve1 > 0 ? '80% 0 80% 0' : '0 80% 0 80%',
+            transformOrigin: curve1 > 0 ? 'right center' : 'left center',
+          }}
+          animate={{
+            rotate: curve1 > 0 ? [-6, -14, -6] : [6, 14, 6],
+            opacity: isTransforming && isSelected ? [1, 1, 0] : 1
+          }}
+          transition={{ rotate: { duration: 3.5, repeat: Infinity, delay: 0.3 }, opacity: { duration: 2.8 } }}
+        />
+
+        {/* 花朵 */}
+        <motion.div
+          className="absolute flex items-center justify-center"
+          style={{
+            top: -flowerSize / 2 + 5,
+            left: stemEndX - flowerSize / 2 + 10,
+            width: flowerSize,
+            height: flowerSize,
+          }}
+          animate={isTransforming && isSelected ? {
+            x: isMobile ? -position.x * 0.7 : -position.x,
+            y: -stemHeight * 0.4,
+            scale: [1, 1.8, 2.8, 3.2],
+          } : {}}
+          transition={{ duration: 2.8, times: [0, 0.3, 0.6, 1] }}
+        >
+          <motion.button
+            onClick={onClick}
+            disabled={isTransforming}
+            className="focus:outline-none"
+            whileHover={!isTransforming ? { scale: 1.15 } : {}}
+            whileTap={!isTransforming ? { scale: 0.95 } : {}}
+          >
+            {/* 螢火蟲高亮 */}
+            {isHighlighted && (
+              <motion.div
+                className="absolute inset-[-10px] rounded-full pointer-events-none"
+                animate={{ opacity: [0, 0.6, 0.4, 0.6, 0], scale: [1, 1.4, 1.2, 1.4, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                style={{ boxShadow: '0 0 25px rgba(251,191,36,0.9), 0 0 40px rgba(251,191,36,0.5)' }}
+              />
+            )}
+
+            {/* 選中特效 */}
+            {isSelected && isTransforming && (
+              <>
+                <motion.div
+                  className="absolute inset-[-20px] rounded-full pointer-events-none"
+                  initial={{ scale: 2.5, opacity: 0 }}
+                  animate={{ scale: [2.5, 1, 1, 1], opacity: [0, 0.8, 0.8, 0] }}
+                  transition={{ duration: 2.8, times: [0, 0.3, 0.65, 1] }}
+                  style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.8), transparent 70%)', filter: 'blur(15px)' }}
+                />
+                {[0, 1, 2].map(i => (
+                  <motion.div
+                    key={i}
+                    className="absolute inset-[-12px] rounded-full border-2 border-purple-400 pointer-events-none"
+                    initial={{ scale: 1, opacity: 0 }}
+                    animate={{ scale: [1, 4.5], opacity: [0.8, 0] }}
+                    transition={{ duration: 1.4, delay: i * 0.3 }}
+                  />
+                ))}
+                <motion.div
+                  className="absolute inset-[-15px] rounded-full bg-white pointer-events-none"
+                  initial={{ scale: 1, opacity: 0 }}
+                  animate={{ scale: [1, 1, 1, 10, 20, 30], opacity: [0, 0, 0, 0.8, 1, 1] }}
+                  transition={{ duration: 2.8, times: [0, 0.55, 0.55, 0.75, 0.9, 1] }}
+                  style={{ filter: 'blur(35px)' }}
+                />
+              </>
+            )}
+
+            {isSelected && !isTransforming && (
+              <motion.div
+                className="absolute inset-[-12px] rounded-full pointer-events-none"
+                animate={{ scale: [1, 2, 1], opacity: [0.7, 0, 0.7] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                style={{ boxShadow: '0 0 45px rgba(168,85,247,1)' }}
+              />
+            )}
+
+            <FlowerHead
+              color={flower.color}
+              size={flowerSize}
+              isSelected={isSelected}
+              isTransforming={isTransforming}
+              isHighlighted={isHighlighted}
+            />
+          </motion.button>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// 台灣竹編花籃
+const BambooBasket = ({ isMobile, isTransforming }) => (
+  <motion.div
+    className="relative"
+    style={{ zIndex: 5 }} // 花盆 z-index 比莖低
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{ opacity: isTransforming ? 0.3 : 1, scale: 1 }}
+    transition={{ duration: 0.8, delay: 0.3 }}
+  >
+    <svg
+      width={isMobile ? 180 : 220}
+      height={isMobile ? 100 : 125}
+      viewBox="0 0 180 100"
+    >
+      <defs>
+        <linearGradient id="bambooLight" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#D4A574" />
+          <stop offset="100%" stopColor="#B8956E" />
+        </linearGradient>
+        <linearGradient id="bambooDark" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8B6914" />
+          <stop offset="100%" stopColor="#7A5C3C" />
+        </linearGradient>
+        <linearGradient id="bambooMid" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#C9A66B" />
+          <stop offset="100%" stopColor="#A67C52" />
+        </linearGradient>
+        <radialGradient id="soilGrad" cx="50%" cy="40%" r="50%">
+          <stop offset="0%" stopColor="#5C4033" />
+          <stop offset="100%" stopColor="#3D2914" />
+        </radialGradient>
+        <linearGradient id="redRibbon" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#8B0000" />
+          <stop offset="30%" stopColor="#DC143C" />
+          <stop offset="50%" stopColor="#FF4500" />
+          <stop offset="70%" stopColor="#DC143C" />
+          <stop offset="100%" stopColor="#8B0000" />
+        </linearGradient>
+      </defs>
+
+      {/* 籃子陰影 */}
+      <ellipse cx="90" cy="96" rx="68" ry="5" fill="rgba(0,0,0,0.15)" />
+
+      {/* 籃子主體 */}
+      <path
+        d="M90 94 C 38 94, 22 82, 22 62 C 22 42, 35 26, 55 22 L 125 22 C 145 26, 158 42, 158 62 C 158 82, 142 94, 90 94 Z"
+        fill="url(#bambooMid)"
+        stroke="#7A5C3C"
+        strokeWidth="1.5"
+      />
+
+      {/* 竹編橫紋 */}
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <path
+          key={`h-${i}`}
+          d={`M ${28 + i * 2} ${30 + i * 11} Q 90 ${26 + i * 11}, ${152 - i * 2} ${30 + i * 11}`}
+          fill="none"
+          stroke={i % 2 === 0 ? "#B8956E" : "#8B6914"}
+          strokeWidth="2.5"
+          opacity="0.6"
+        />
+      ))}
+
+      {/* 竹編斜紋 */}
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+        <path
+          key={`d-${i}`}
+          d={`M ${22 + i * 20} 24 Q ${30 + i * 19} 58, ${34 + i * 17} 92`}
+          fill="none"
+          stroke={i % 2 === 0 ? "url(#bambooLight)" : "url(#bambooDark)"}
+          strokeWidth="3"
+          opacity="0.5"
+        />
+      ))}
+
+      {/* 籃口邊緣 */}
+      <ellipse cx="90" cy="23" rx="60" ry="9" fill="none" stroke="#A67C52" strokeWidth="6" />
+      <ellipse cx="90" cy="23" rx="60" ry="9" fill="none" stroke="#C9A66B" strokeWidth="3" />
+
+      {/* 土壤 */}
+      <ellipse cx="90" cy="22" rx="54" ry="7" fill="url(#soilGrad)" />
+
+      {/* 紅色蝴蝶結 */}
+      <ellipse cx="90" cy="50" rx="10" ry="7" fill="url(#redRibbon)" />
+      <ellipse cx="90" cy="50" rx="4" ry="3" fill="#8B0000" />
+      <path d="M80 50 Q 68 44, 60 50 Q 68 56, 80 50" fill="url(#redRibbon)" />
+      <path d="M100 50 Q 112 44, 120 50 Q 112 56, 100 50" fill="url(#redRibbon)" />
+
+      {/* 緞帶尾巴 */}
+      <path d="M86 57 Q 82 68, 78 80 Q 76 85, 80 83 Q 84 78, 88 60" fill="url(#redRibbon)" opacity="0.9" />
+      <path d="M94 57 Q 98 68, 102 80 Q 104 85, 100 83 Q 96 78, 92 60" fill="url(#redRibbon)" opacity="0.9" />
+
+      {/* 高光 */}
+      <path d="M38 32 Q 42 50, 40 70" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  </motion.div>
+)
+
+// 主組件
 const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
   const [particles, setParticles] = useState([])
   const [petals, setPetals] = useState([])
@@ -51,120 +414,61 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
   const [fireflyArrived, setFireflyArrived] = useState(null)
   const [showFirefly, setShowFirefly] = useState(true)
   const fireflyControls = useAnimation()
-  const fireflyPositionRef = useRef({ x: 0, y: 0 })
+  const fireflyPosRef = useRef({ x: 0, y: 0 })
 
-  // 計算花朵位置的輔助函數
-  const getFlowerCoords = (index) => {
-    const radius = typeof window !== 'undefined' && window.innerWidth < 768 ? 110 : 170
-    const angle = (index / 7) * Math.PI * 2 - Math.PI / 2
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
+  // 螢火蟲目標位置
+  const getFireflyTarget = useCallback((idx) => {
+    const pos = FLOWER_POSITIONS[idx]
+    const scale = isMobile ? 0.7 : 1
     return {
-      x: Math.cos(angle) * radius,
-      y: Math.sin(angle) * radius,
+      x: pos.x * scale,
+      y: -(pos.stemHeight * scale) - 15,
     }
-  }
+  }, [isMobile])
 
   useEffect(() => {
-    // Generate random particles for background
-    const newParticles = Array.from({ length: 30 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 4 + 2,
-      duration: Math.random() * 3 + 2,
-      delay: Math.random() * 2
-    }))
-    setParticles(newParticles)
-
-    // Generate floating petals
-    const newPetals = Array.from({ length: 60 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      delay: Math.random() * 10,
-      duration: Math.random() * 8 + 6,
-      size: Math.random() * 12 + 8,
-      rotation: (Math.random() - 0.5) * 720,
-    }))
-    setPetals(newPetals)
+    setParticles(Array.from({ length: 30 }, (_, i) => ({
+      id: i, x: Math.random() * 100, y: Math.random() * 100,
+      size: Math.random() * 4 + 2, duration: Math.random() * 3 + 2, delay: Math.random() * 2
+    })))
+    setPetals(Array.from({ length: 60 }, (_, i) => ({
+      id: i, x: Math.random() * 100, delay: Math.random() * 10,
+      duration: Math.random() * 8 + 6, size: Math.random() * 12 + 8, rotation: (Math.random() - 0.5) * 720
+    })))
   }, [])
 
-  // 螢火蟲巡迴花朵
   useEffect(() => {
     if (isTransforming || selectedIndex !== null) {
-      // 隱藏螢火蟲
       setShowFirefly(false)
-      setFireflyTarget(0)
-      setFireflyArrived(null)
-      fireflyPositionRef.current = { x: 0, y: 0 }
       return
     }
-
     setShowFirefly(true)
-    const interval = setInterval(() => {
-      setFireflyTarget(prev => (prev + 1) % 7)
-    }, 5000) // 每5秒飛到下一朵花
-
+    const interval = setInterval(() => setFireflyTarget(p => (p + 1) % 7), 4500)
     return () => clearInterval(interval)
   }, [isTransforming, selectedIndex])
 
-  // 螢火蟲飛行動畫
   useEffect(() => {
-    if (isTransforming || selectedIndex !== null || !showFirefly) return
-
-    const animateFirefly = async () => {
-      const target = getFlowerCoords(fireflyTarget)
-      const current = fireflyPositionRef.current
-
-      // 計算曲線中間點
-      const midX = (current.x + target.x) / 2 + Math.sin(fireflyTarget) * 25
-      const midY = (current.y + target.y) / 2 + Math.cos(fireflyTarget) * 25
-
-      await fireflyControls.start({
-        x: [current.x, midX, target.x * 0.95, target.x],
-        y: [current.y, midY, target.y * 0.95, target.y],
-        opacity: 1,
-        transition: {
-          duration: 4.5,
-          ease: 'easeInOut',
-        }
-      })
-
-      // 更新當前位置
-      fireflyPositionRef.current = target
+    if (!showFirefly || isTransforming || selectedIndex !== null) return
+    const target = getFireflyTarget(fireflyTarget)
+    const cur = fireflyPosRef.current
+    fireflyControls.start({
+      x: [cur.x, (cur.x + target.x) / 2 + Math.sin(fireflyTarget * 2) * 15, target.x],
+      y: [cur.y, (cur.y + target.y) / 2 - 30, target.y],
+      opacity: 1,
+      transition: { duration: 3.5, ease: 'easeInOut' }
+    }).then(() => {
+      fireflyPosRef.current = target
       setFireflyArrived(fireflyTarget)
-    }
-
-    animateFirefly()
-  }, [fireflyTarget, isTransforming, selectedIndex, showFirefly, fireflyControls])
-
-  // 創建 7 枝花的位置
-  const flowers = Array.from({ length: 7 }, (_, i) => {
-    const angle = (i / 7) * Math.PI * 2 - Math.PI / 2
-    return {
-      id: i,
-      angle: angle,
-    }
-  })
+    })
+  }, [fireflyTarget, showFirefly, isTransforming, selectedIndex, fireflyControls, getFireflyTarget])
 
   const handleFlowerClick = (index) => {
     if (isTransforming) return
-
     setSelectedIndex(index)
     setIsTransforming(true)
-
-    // 抽卡動畫時間
-    setTimeout(() => {
-      onPetalSelect()
-    }, 2800)
-  }
-
-  const getFlowerPosition = (angle) => {
-    // 響應式半徑
-    const radius = typeof window !== 'undefined' && window.innerWidth < 768 ? 110 : 170
-    return {
-      x: Math.cos(angle) * radius,
-      y: Math.sin(angle) * radius,
-      rotate: (angle * 180) / Math.PI + 90,
-    }
+    setTimeout(() => onPetalSelect(), 2800)
   }
 
   return (
@@ -173,9 +477,9 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 1 }}
       transition={{ exit: { duration: 0 } }}
-      className="relative min-h-screen flex flex-col items-center justify-center px-4 md:px-6 overflow-hidden"
+      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
     >
-      {/* Collection button */}
+      {/* 圖鑑按鈕 */}
       <motion.button
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -189,653 +493,138 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
         <span className="hidden sm:inline">圖鑑</span>
       </motion.button>
 
-      {/* Floating petals */}
+      {/* 背景飄落花瓣 */}
       <motion.div
         className="absolute inset-0 overflow-hidden pointer-events-none"
         animate={{ opacity: isTransforming ? 0.2 : 1 }}
-        transition={{ duration: 0.8 }}
       >
-        {petals.map((petal) => (
-          <FloatingPetal
-            key={petal.id}
-            delay={petal.delay}
-            x={petal.x}
-            duration={petal.duration}
-            size={petal.size}
-            rotation={petal.rotation}
-          />
-        ))}
+        {petals.map(p => <FloatingPetal key={p.id} {...p} />)}
       </motion.div>
 
-      {/* Animated background particles */}
+      {/* 背景粒子 */}
       <motion.div
         className="absolute inset-0 overflow-hidden pointer-events-none"
         animate={{ opacity: isTransforming ? 0.2 : 1 }}
-        transition={{ duration: 0.8 }}
       >
-        {particles.map((particle) => (
+        {particles.map(p => (
           <motion.div
-            key={particle.id}
+            key={p.id}
             className="absolute rounded-full bg-primary-400/20"
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-              width: `${particle.size}px`,
-              height: `${particle.size}px`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              opacity: [0.2, 0.5, 0.2],
-            }}
-            transition={{
-              duration: particle.duration,
-              repeat: Infinity,
-              delay: particle.delay,
-              ease: 'easeInOut',
-            }}
+            style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size }}
+            animate={{ y: [0, -30, 0], opacity: [0.2, 0.5, 0.2] }}
+            transition={{ duration: p.duration, repeat: Infinity, delay: p.delay }}
           />
         ))}
       </motion.div>
 
-      {/* Title */}
+      {/* 標題 */}
       <motion.div
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="text-center mb-6 md:mb-8 relative"
-        style={{ zIndex: isTransforming ? 5 : 10, opacity: isTransforming ? 0.3 : 1 }}
+        className="text-center mb-4 md:mb-6 relative z-10"
+        style={{ opacity: isTransforming ? 0.3 : 1 }}
       >
-        <h1 className="text-5xl md:text-7xl font-bold mb-2 md:mb-4 text-gradient glow">
-          埕花
-        </h1>
-        <p className="text-lg md:text-2xl text-primary-200 mb-1 md:mb-2">
-          鹽夏不夜埕
-        </p>
+        <h1 className="text-5xl md:text-7xl font-bold mb-2 md:mb-4 text-gradient glow">埕花</h1>
+        <p className="text-lg md:text-2xl text-primary-200 mb-1 md:mb-2">鹽夏不夜埕</p>
         <motion.p
-          key={isTransforming ? 'transforming' : 'selecting'}
+          key={isTransforming ? 't' : 's'}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
           className="text-base md:text-xl text-gray-300"
         >
-          {isTransforming ? '花語顯現中...' : '選擇一朵花，開啟今夜的指引'}
+          {isTransforming ? '花語顯現中...' : '選擇一枝花，開啟今夜的指引'}
         </motion.p>
       </motion.div>
 
-      {/* 背景變暗遮罩 */}
+      {/* 背景遮罩 */}
       {isTransforming && (
-        <motion.div
-          className="fixed inset-0 bg-black pointer-events-none"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.7, 0.7, 0] }}
-          transition={{
-            duration: 2.8,
-            times: [0, 0.2, 0.65, 1],
-            ease: 'easeInOut',
-          }}
-          style={{ zIndex: 5 }}
-        />
-      )}
-
-      {/* 全屏亮白閃光銜接 */}
-      {isTransforming && (
-        <motion.div
-          className="fixed inset-0 bg-white pointer-events-none"
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: [0, 0, 0, 0.4, 1],
-          }}
-          transition={{
-            duration: 2.8,
-            times: [0, 0.55, 0.65, 0.85, 1],
-            ease: 'easeIn',
-          }}
-          style={{ zIndex: 15 }}
-        />
-      )}
-
-      {/* 花朵圓圈 */}
-      <div className="relative w-[260px] h-[260px] md:w-[380px] md:h-[380px] flex items-center justify-center mb-4 md:mb-8 mx-auto" style={{ zIndex: 10 }}>
-        {/* 螢火蟲 - 使用 useAnimation 控制，避免重複動畫 */}
-        {showFirefly && !isTransforming && selectedIndex === null && (
+        <>
           <motion.div
-            className="absolute pointer-events-none"
-            style={{ zIndex: 20 }}
-            initial={{ opacity: 0, x: 0, y: 0 }}
-            animate={fireflyControls}
-          >
-            {/* 螢火蟲身體 */}
-            <div className="relative">
-              {/* 發光部分 - 增大尺寸讓螢火蟲更清楚 */}
+            className="fixed inset-0 bg-black pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.7, 0.7, 0] }}
+            transition={{ duration: 2.8, times: [0, 0.2, 0.65, 1] }}
+            style={{ zIndex: 5 }}
+          />
+          <motion.div
+            className="fixed inset-0 bg-white pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0, 0, 0.5, 1] }}
+            transition={{ duration: 2.8, times: [0, 0.55, 0.65, 0.85, 1] }}
+            style={{ zIndex: 15 }}
+          />
+        </>
+      )}
+
+      {/* 花束區域 */}
+      <div
+        className="relative flex flex-col items-center"
+        style={{ zIndex: 10, width: isMobile ? 280 : 360, height: isMobile ? 250 : 310 }}
+      >
+        {/* 花朵容器 - 所有莖從同一水平開始 */}
+        <div
+          className="relative"
+          style={{ width: '100%', height: isMobile ? 150 : 190, marginBottom: isMobile ? -30 : -40 }}
+        >
+          {/* 螢火蟲 */}
+          {showFirefly && !isTransforming && selectedIndex === null && (
+            <motion.div
+              className="absolute pointer-events-none"
+              style={{ left: '50%', bottom: 0, zIndex: 30 }}
+              initial={{ opacity: 0, x: 0, y: 0 }}
+              animate={fireflyControls}
+            >
               <motion.div
-                className="w-6 h-6 md:w-8 md:h-8 rounded-full"
-                style={{
-                  background: 'radial-gradient(circle, #fffbeb, #fef9c3, #fef08a, #fbbf24)',
-                }}
+                className="w-5 h-5 md:w-6 md:h-6 rounded-full"
+                style={{ background: 'radial-gradient(circle, #fffbeb, #fef9c3, #fbbf24)' }}
                 animate={
                   fireflyArrived === fireflyTarget
-                    ? {
-                        opacity: [0.9, 1, 0.9],
-                        scale: [1, 1.5, 1],
-                        boxShadow: [
-                          '0 0 25px rgba(251, 191, 36, 1), 0 0 45px rgba(251, 191, 36, 0.7), 0 0 65px rgba(251, 191, 36, 0.4)',
-                          '0 0 50px rgba(251, 191, 36, 1), 0 0 80px rgba(251, 191, 36, 0.8), 0 0 110px rgba(251, 191, 36, 0.5)',
-                          '0 0 25px rgba(251, 191, 36, 1), 0 0 45px rgba(251, 191, 36, 0.7), 0 0 65px rgba(251, 191, 36, 0.4)',
-                        ],
-                      }
-                    : {
-                        opacity: [0.8, 1, 0.8],
-                        scale: [1, 1.1, 1],
-                        boxShadow: [
-                          '0 0 18px rgba(251, 191, 36, 0.9), 0 0 30px rgba(251, 191, 36, 0.6)',
-                          '0 0 25px rgba(251, 191, 36, 1), 0 0 40px rgba(251, 191, 36, 0.7)',
-                          '0 0 18px rgba(251, 191, 36, 0.9), 0 0 30px rgba(251, 191, 36, 0.6)',
-                        ],
-                      }
+                    ? { scale: [1, 1.4, 1], boxShadow: ['0 0 18px rgba(251,191,36,1)', '0 0 35px rgba(251,191,36,1)', '0 0 18px rgba(251,191,36,1)'] }
+                    : { scale: [1, 1.15, 1], boxShadow: ['0 0 12px rgba(251,191,36,0.9)', '0 0 22px rgba(251,191,36,1)', '0 0 12px rgba(251,191,36,0.9)'] }
                 }
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
+                transition={{ duration: 1.5, repeat: Infinity }}
               />
-
-              {/* 翅膀左 */}
-              <motion.div
-                className="absolute top-0 left-0 w-4 h-5 md:w-5 md:h-6 rounded-full"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(254, 249, 195, 0.5))',
-                  filter: 'blur(0.5px)',
-                  transformOrigin: 'right center',
-                  left: '-5px',
-                }}
-                animate={{
-                  scaleX: [1, 1.3, 1],
-                  opacity: [0.5, 0.8, 0.5],
-                }}
-                transition={{
-                  duration: 0.25,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-              />
-
-              {/* 翅膀右 */}
-              <motion.div
-                className="absolute top-0 right-0 w-4 h-5 md:w-5 md:h-6 rounded-full"
-                style={{
-                  background: 'linear-gradient(225deg, rgba(255, 255, 255, 0.6), rgba(254, 249, 195, 0.5))',
-                  filter: 'blur(0.5px)',
-                  transformOrigin: 'left center',
-                  right: '-5px',
-                }}
-                animate={{
-                  scaleX: [1, 1.3, 1],
-                  opacity: [0.5, 0.8, 0.5],
-                }}
-                transition={{
-                  duration: 0.25,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {/* 外圈光環 */}
-        <motion.div
-          className="absolute w-40 h-40 md:w-56 md:h-56 rounded-full border border-primary-400/20"
-          animate={{
-            scale: [0.9, 1.1, 0.9],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-          }}
-        />
-
-        {/* 花朵 */}
-        {flowers.map((flower, index) => {
-          const isSelected = selectedIndex === index
-          const isHighlightedByFirefly = !isTransforming && selectedIndex === null && fireflyArrived === index
-          const pos = getFlowerPosition(flower.angle)
-
-          return (
-            <motion.div
-              key={flower.id}
-              className="absolute"
-              style={{
-                left: '50%',
-                top: '50%',
-                x: '-50%',
-                y: '-50%',
-              }}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{
-                x: isTransforming && isSelected ? '-50%' : `calc(-50% + ${pos.x}px)`,
-                y: isTransforming && isSelected ? '-50%' : `calc(-50% + ${pos.y}px)`,
-                scale: isTransforming && isSelected ? [1, 2, 4, 4] : 1,
-                opacity: isTransforming ? (isSelected ? 1 : 0) : 1,
-                rotate: pos.rotate,
-              }}
-              transition={{
-                delay: isTransforming ? 0 : index * 0.08,
-                duration: isTransforming && isSelected ? 2.8 : isTransforming ? 0.8 : 0.5,
-                times: isTransforming && isSelected ? [0, 0.3, 0.7, 1] : undefined,
-                type: isTransforming && isSelected ? 'tween' : 'spring',
-                stiffness: 200,
-                ease: isTransforming ? 'easeInOut' : 'easeInOut',
-              }}
-            >
-              <motion.button
-                onClick={() => handleFlowerClick(index)}
-                disabled={isTransforming}
-                className="relative focus:outline-none"
-                whileHover={!isTransforming ? { scale: 1.35 } : {}}
-                whileTap={!isTransforming ? { scale: 0.9 } : {}}
-              >
-                {/* 螢火蟲提示發光 */}
-                {isHighlightedByFirefly && (
-                  <>
-                    {/* 整體發光光環 */}
-                    <motion.div
-                      className="absolute inset-0 rounded-full"
-                      initial={{ opacity: 0, scale: 1 }}
-                      animate={{
-                        opacity: [0, 0.7, 0.5, 0.7, 0],
-                        scale: [1, 1.8, 1.6, 1.8, 1],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      }}
-                      style={{
-                        boxShadow: '0 0 30px rgba(251, 191, 36, 0.9), 0 0 45px rgba(251, 191, 36, 0.5)',
-                      }}
-                    />
-
-                    {/* 小螢火蟲圍繞效果 */}
-                    {[...Array(8)].map((_, i) => {
-                      const baseAngle = (i / 8) * Math.PI * 2
-                      const radius = 35
-                      const floatOffset = i * 0.5
-                      return (
-                        <motion.div
-                          key={i}
-                          className="absolute w-1 h-1 md:w-1.5 md:h-1.5 rounded-full"
-                          style={{
-                            left: '50%',
-                            top: '50%',
-                            background: 'radial-gradient(circle, #fef08a, #fbbf24)',
-                            filter: 'blur(0.5px)',
-                          }}
-                          animate={{
-                            x: [
-                              Math.cos(baseAngle) * radius,
-                              Math.cos(baseAngle + 0.5) * (radius + 8),
-                              Math.cos(baseAngle + 1) * radius,
-                              Math.cos(baseAngle + 1.5) * (radius - 5),
-                              Math.cos(baseAngle + 2) * radius,
-                            ],
-                            y: [
-                              Math.sin(baseAngle) * radius,
-                              Math.sin(baseAngle + 0.5) * (radius + 8),
-                              Math.sin(baseAngle + 1) * radius,
-                              Math.sin(baseAngle + 1.5) * (radius - 5),
-                              Math.sin(baseAngle + 2) * radius,
-                            ],
-                            opacity: [0.3, 0.8, 0.5, 0.9, 0.3],
-                            scale: [0.8, 1.2, 1, 1.3, 0.8],
-                            boxShadow: [
-                              '0 0 3px rgba(251, 191, 36, 0.4)',
-                              '0 0 8px rgba(251, 191, 36, 0.8)',
-                              '0 0 5px rgba(251, 191, 36, 0.6)',
-                              '0 0 10px rgba(251, 191, 36, 1)',
-                              '0 0 3px rgba(251, 191, 36, 0.4)',
-                            ],
-                          }}
-                          transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            delay: floatOffset,
-                            ease: 'easeInOut',
-                          }}
-                        />
-                      )
-                    })}
-                  </>
-                )}
-
-                {/* 發光光環 */}
-                {isSelected && (
-                  <>
-                    {/* 抽卡特效 */}
-                    {isTransforming && (
-                      <>
-                        {/* 第一階段：紫色能量聚集 */}
-                        <motion.div
-                          className="absolute inset-0 rounded-full"
-                          initial={{ scale: 3, opacity: 0 }}
-                          animate={{
-                            scale: [3, 1, 1, 1],
-                            opacity: [0, 0.8, 0.8, 0],
-                          }}
-                          transition={{
-                            duration: 2.8,
-                            times: [0, 0.3, 0.7, 1],
-                            ease: 'easeInOut',
-                          }}
-                          style={{
-                            background: 'radial-gradient(circle, rgba(168, 85, 247, 0.8), rgba(168, 85, 247, 0) 70%)',
-                            filter: 'blur(15px)',
-                          }}
-                        />
-
-                        {/* 脈動能量環 */}
-                        {[...Array(3)].map((_, i) => (
-                          <motion.div
-                            key={i}
-                            className="absolute inset-0 rounded-full border-2 border-purple-400"
-                            initial={{ scale: 1, opacity: 0 }}
-                            animate={{
-                              scale: [1, 4],
-                              opacity: [0.8, 0],
-                            }}
-                            transition={{
-                              duration: 1.3,
-                              delay: i * 0.3,
-                              ease: 'easeOut',
-                            }}
-                          />
-                        ))}
-
-                        {/* 第二階段：金色光芒閃現 */}
-                        <motion.div
-                          className="absolute inset-0 rounded-full"
-                          initial={{ scale: 1, opacity: 0 }}
-                          animate={{
-                            scale: [1, 1, 2, 3],
-                            opacity: [0, 0, 1, 0],
-                          }}
-                          transition={{
-                            duration: 2.8,
-                            times: [0, 0.3, 0.45, 0.6],
-                            ease: 'easeOut',
-                          }}
-                          style={{
-                            background: 'radial-gradient(circle, rgba(251, 191, 36, 1), rgba(251, 191, 36, 0) 60%)',
-                            filter: 'blur(10px)',
-                          }}
-                        />
-
-                        {/* 第三階段：強烈白光爆發 */}
-                        <motion.div
-                          className="absolute inset-0 rounded-full bg-white"
-                          initial={{ scale: 1, opacity: 0 }}
-                          animate={{
-                            scale: [1, 1, 1, 8, 20, 25],
-                            opacity: [0, 0, 0, 0.8, 1, 1],
-                          }}
-                          transition={{
-                            duration: 2.8,
-                            times: [0, 0.6, 0.6, 0.75, 0.9, 1],
-                            ease: 'easeOut',
-                          }}
-                          style={{
-                            filter: 'blur(30px)',
-                          }}
-                        />
-
-                        {/* 光環擴散波 */}
-                        <motion.div
-                          className="absolute inset-0 rounded-full border-4 border-white"
-                          initial={{ scale: 1, opacity: 0 }}
-                          animate={{
-                            scale: [1, 1, 1, 12, 15],
-                            opacity: [0, 0, 0, 0.8, 1],
-                          }}
-                          transition={{
-                            duration: 2.8,
-                            times: [0, 0.6, 0.6, 0.85, 1],
-                            ease: 'easeOut',
-                          }}
-                        />
-
-                        {/* 星星粒子爆發 (1.5s後) */}
-                        {[...Array(20)].map((_, i) => {
-                          const angle = (i / 20) * Math.PI * 2
-                          const distance = 80 + Math.random() * 40
-                          return (
-                            <motion.div
-                              key={i}
-                              className="absolute w-2 h-2 rounded-full"
-                              style={{
-                                left: '50%',
-                                top: '50%',
-                              }}
-                              initial={{ scale: 0, opacity: 0 }}
-                              animate={{
-                                x: [0, 0, 0, Math.cos(angle) * distance],
-                                y: [0, 0, 0, Math.sin(angle) * distance],
-                                scale: [0, 0, 0, 1.2],
-                                opacity: [0, 0, 0, 1, 0],
-                                backgroundColor: [
-                                  '#fbbf24',
-                                  '#fbbf24',
-                                  '#fbbf24',
-                                  '#ffffff',
-                                ],
-                              }}
-                              transition={{
-                                duration: 2.8,
-                                times: [0, 0.6, 0.6, 0.85, 1],
-                                ease: 'easeOut',
-                              }}
-                            />
-                          )
-                        })}
-                      </>
-                    )}
-
-                    {/* 脈動光環 */}
-                    {!isTransforming && (
-                      <motion.div
-                        className="absolute inset-0 rounded-full"
-                        animate={{
-                          scale: [1, 2.5, 1],
-                          opacity: [0.8, 0, 0.8],
-                        }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity,
-                        }}
-                        style={{
-                          boxShadow: '0 0 60px rgba(168, 85, 247, 1)',
-                        }}
-                      />
-                    )}
-                  </>
-                )}
-
-                {/* 花朵 */}
-                <motion.div
-                  className="relative w-16 h-16 md:w-24 md:h-24 flex items-center justify-center"
-                  animate={
-                    isSelected && !isTransforming
-                      ? {
-                          rotate: [0, 20, -20, 20, -20, 0],
-                          scale: [1, 1.2, 1.15, 1.2, 1.15, 1],
-                        }
-                      : {}
-                  }
-                  transition={{
-                    duration: 0.5,
-                    repeat: isSelected && !isTransforming ? Infinity : 0,
-                    ease: 'easeInOut',
-                  }}
-                >
-                  {/* 花瓣 */}
-                  <div className="relative w-full h-full">
-                    {[...Array(8)].map((_, petalIndex) => {
-                      const petalAngle = (petalIndex / 8) * Math.PI * 2
-                      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-                      const petalSize = isMobile ? 26 : 36
-                      const petalDistance = isMobile ? 16 : 24
-
-                      return (
-                        <motion.div
-                          key={petalIndex}
-                          className="absolute top-1/2 left-1/2 rounded-full"
-                          style={{
-                            width: `${petalSize}px`,
-                            height: `${petalSize}px`,
-                            x: Math.cos(petalAngle) * petalDistance - petalSize / 2,
-                            y: Math.sin(petalAngle) * petalDistance - petalSize / 2,
-                          }}
-                          animate={
-                            isSelected && !isTransforming
-                              ? {
-                                  background: 'linear-gradient(135deg, #d8b4fe, #c084fc, #a855f7)',
-                                  scale: [1, 1.3, 1],
-                                  boxShadow: [
-                                    '0 0 25px rgba(168, 85, 247, 1)',
-                                    '0 0 35px rgba(168, 85, 247, 1)',
-                                    '0 0 25px rgba(168, 85, 247, 1)',
-                                  ],
-                                  opacity: 1,
-                                }
-                              : isTransforming && isSelected
-                              ? {
-                                  background: [
-                                    'linear-gradient(135deg, #d8b4fe, #c084fc, #a855f7)',
-                                    'linear-gradient(135deg, #fbbf24, #f59e0b, #d97706)',
-                                    'linear-gradient(135deg, #ffffff, #ffffff, #ffffff)',
-                                    'linear-gradient(135deg, #ffffff, #ffffff, #ffffff)',
-                                  ],
-                                  scale: [1, 1.3, 1.5, 1.8],
-                                  boxShadow: [
-                                    '0 0 25px rgba(168, 85, 247, 1)',
-                                    '0 0 40px rgba(251, 191, 36, 1)',
-                                    '0 0 60px rgba(255, 255, 255, 1)',
-                                    '0 0 80px rgba(255, 255, 255, 1)',
-                                  ],
-                                  opacity: [1, 1, 1, 0],
-                                }
-                              : isSelected
-                              ? {
-                                  background: 'linear-gradient(135deg, #d8b4fe, #c084fc, #a855f7)',
-                                  boxShadow: '0 0 25px rgba(168, 85, 247, 1), inset 0 0 12px rgba(255, 255, 255, 0.4)',
-                                  opacity: 1,
-                                }
-                              : isHighlightedByFirefly
-                              ? {
-                                  background: 'linear-gradient(135deg, #d8b4fe, #c084fc, #a855f7)',
-                                  boxShadow: '0 0 20px rgba(251, 191, 36, 0.7)',
-                                  opacity: 1,
-                                }
-                              : {
-                                  background: 'linear-gradient(135deg, #c084fc, #a855f7, #9333ea)',
-                                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)',
-                                  opacity: 1,
-                                }
-                          }
-                          transition={{
-                            duration: isTransforming ? 2.8 : 0.6,
-                            times: isTransforming ? [0, 0.4, 0.75, 1] : undefined,
-                            repeat: isSelected && !isTransforming ? Infinity : 0,
-                            delay: isTransforming ? petalIndex * 0.02 : 0,
-                            ease: 'easeInOut',
-                          }}
-                        />
-                      )
-                    })}
-
-                    {/* 花心 */}
-                    <motion.div
-                      className="absolute rounded-full"
-                      style={{
-                        width: typeof window !== 'undefined' && window.innerWidth < 768 ? '20px' : '26px',
-                        height: typeof window !== 'undefined' && window.innerWidth < 768 ? '20px' : '26px',
-                        left: '50%',
-                        top: '50%',
-                        x: '-50%',
-                        y: '-50%',
-                      }}
-                      animate={
-                        isSelected && !isTransforming
-                          ? {
-                              background: 'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)',
-                              scale: [1, 1.4, 1],
-                              boxShadow: [
-                                '0 0 25px rgba(251, 191, 36, 1)',
-                                '0 0 40px rgba(251, 191, 36, 1)',
-                                '0 0 25px rgba(251, 191, 36, 1)',
-                              ],
-                              opacity: 1,
-                            }
-                          : isTransforming && isSelected
-                          ? {
-                              background: [
-                                'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)',
-                                'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)',
-                                'radial-gradient(circle, #ffffff, #ffffff, #ffffff, #ffffff)',
-                                'radial-gradient(circle, #ffffff, #ffffff, #ffffff, #ffffff)',
-                              ],
-                              scale: [1, 1.5, 2.5, 3.5],
-                              boxShadow: [
-                                '0 0 25px rgba(251, 191, 36, 1)',
-                                '0 0 50px rgba(251, 191, 36, 1)',
-                                '0 0 80px rgba(255, 255, 255, 1)',
-                                '0 0 120px rgba(255, 255, 255, 1)',
-                              ],
-                              opacity: [1, 1, 1, 0],
-                            }
-                          : isSelected
-                          ? {
-                              background: 'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)',
-                              boxShadow: '0 0 25px rgba(251, 191, 36, 1), inset 0 0 10px rgba(255, 255, 255, 0.6)',
-                              opacity: 1,
-                            }
-                          : isHighlightedByFirefly
-                          ? {
-                              background: 'radial-gradient(circle, #fef9c3, #fef08a, #fbbf24, #f59e0b)',
-                              boxShadow: '0 0 25px rgba(251, 191, 36, 0.9)',
-                              opacity: 1,
-                            }
-                          : {
-                              background: 'radial-gradient(circle, #fef08a, #fbbf24, #eab308)',
-                              boxShadow: '0 3px 12px rgba(0, 0, 0, 0.5)',
-                              opacity: 1,
-                            }
-                      }
-                      transition={{
-                        duration: isTransforming ? 2.8 : 0.6,
-                        times: isTransforming ? [0, 0.4, 0.75, 1] : undefined,
-                        repeat: isSelected && !isTransforming ? Infinity : 0,
-                        ease: 'easeInOut',
-                      }}
-                    />
-                  </div>
-                </motion.div>
-              </motion.button>
             </motion.div>
-          )
-        })}
+          )}
+
+          {/* 7 枝花 */}
+          {BOUQUET_FLOWERS.map((flower, index) => (
+            <SingleFlower
+              key={flower.id}
+              flower={flower}
+              position={FLOWER_POSITIONS[index]}
+              index={index}
+              isSelected={selectedIndex === index}
+              isTransforming={isTransforming}
+              isHighlighted={!isTransforming && selectedIndex === null && fireflyArrived === index}
+              onClick={() => handleFlowerClick(index)}
+              isMobile={isMobile}
+            />
+          ))}
+        </div>
+
+        {/* 台灣竹編花籃 */}
+        <BambooBasket isMobile={isMobile} isTransforming={isTransforming} />
       </div>
 
       {/* 提示文字 */}
       {!isTransforming && (
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="text-sm md:text-base text-gray-400 text-center relative"
-          style={{ zIndex: 10 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{
+            opacity: [0.6, 1, 0.6],
+            y: 0,
+            textShadow: ['0 0 8px rgba(255,200,150,0.3)', '0 0 16px rgba(255,200,150,0.6)', '0 0 8px rgba(255,200,150,0.3)']
+          }}
+          transition={{
+            delay: 1,
+            opacity: { duration: 2, repeat: Infinity },
+            textShadow: { duration: 2, repeat: Infinity },
+          }}
+          className="text-sm md:text-base text-amber-200/90 text-center tracking-widest font-medium mt-4 relative z-10"
         >
-          點擊任意一朵花開始抽籤
+          ✦ 點擊任意一枝花開始抽籤 ✦
         </motion.p>
       )}
     </motion.div>

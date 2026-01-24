@@ -371,20 +371,25 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                   </>
                 )}
 
-                {/* 3D Flower - Centered */}
+                {/* 3D Flower - Centered with fixed positioning */}
                 {showFlower && (
                   <div
                     style={{
                       position: 'absolute',
-                      width: '192px',
-                      height: '192px',
-                      left: '50%',
-                      top: '50%',
-                      transform: 'translate(-50%, -50%)',
+                      width: '100%',
+                      height: '65%',
+                      left: 0,
+                      top: '5%',
                       zIndex: 5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      pointerEvents: 'none',
                     }}
                   >
-                    <FlowerBloom flower={flippedCard} key={flippedCard.id} />
+                    <div style={{ width: '100%', height: '100%' }}>
+                      <FlowerBloom flower={flippedCard} key={flippedCard.id} />
+                    </div>
                   </div>
                 )}
 
