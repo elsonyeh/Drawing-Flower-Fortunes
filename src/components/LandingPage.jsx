@@ -13,9 +13,9 @@ const BOUQUET_FLOWERS = [
 
 // 每枝花的位置配置 - 5枝花，莖從花盆土壤開始
 const FLOWER_POSITIONS = [
-  { angle: -25, stemHeight: 130, x: -45, curve1: 12, curve2: -7, mid: 0.52 },  // 左外
-  { angle: -10, stemHeight: 150, x: -20, curve1: -6, curve2: 9, mid: 0.48 },   // 左內
-  { angle: 0, stemHeight: 165, x: 0, curve1: 5, curve2: -3, mid: 0.5 },        // 中央
+  { angle: -25, stemHeight: 115, x: -45, curve1: 10, curve2: -6, mid: 0.52 },  // 左外 - 縮短
+  { angle: -10, stemHeight: 130, x: -20, curve1: -5, curve2: 7, mid: 0.48 },   // 左內 - 縮短
+  { angle: 0, stemHeight: 140, x: 0, curve1: 4, curve2: -3, mid: 0.5 },        // 中央 - 縮短
   { angle: 12, stemHeight: 145, x: 22, curve1: -5, curve2: 8, mid: 0.47 },     // 右內
   { angle: 28, stemHeight: 125, x: 48, curve1: 10, curve2: -8, mid: 0.53 },    // 右外
 ]
