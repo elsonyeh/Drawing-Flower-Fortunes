@@ -13,11 +13,11 @@ const BOUQUET_FLOWERS = [
 
 // 每枝花的位置配置 - 5枝花，莖從花盆土壤開始
 const FLOWER_POSITIONS = [
-  { angle: -25, stemHeight: 115, x: -45, curve1: 10, curve2: -6, mid: 0.52 },  // 左外 - 縮短
-  { angle: -10, stemHeight: 130, x: -20, curve1: -5, curve2: 7, mid: 0.48 },   // 左內 - 縮短
-  { angle: 0, stemHeight: 140, x: 0, curve1: 4, curve2: -3, mid: 0.5 },        // 中央 - 縮短
-  { angle: 12, stemHeight: 145, x: 22, curve1: -5, curve2: 8, mid: 0.47 },     // 右內
-  { angle: 28, stemHeight: 125, x: 48, curve1: 10, curve2: -8, mid: 0.53 },    // 右外
+  { angle: -25, stemHeight: 115, x: -45, curve1: 10, curve2: -6, mid: 0.52, yOffset: 15 },  // 左外 - 往上移
+  { angle: -10, stemHeight: 130, x: -20, curve1: -5, curve2: 7, mid: 0.48, yOffset: 10 },   // 左內 - 往上移
+  { angle: 0, stemHeight: 140, x: 0, curve1: 4, curve2: -3, mid: 0.5, yOffset: 8 },         // 中央 - 往上移
+  { angle: 12, stemHeight: 145, x: 22, curve1: -5, curve2: 8, mid: 0.47, yOffset: 0 },      // 右內
+  { angle: 28, stemHeight: 125, x: 48, curve1: 10, curve2: -8, mid: 0.53, yOffset: 0 },     // 右外
 ]
 
 // 背景飄落花瓣
@@ -128,7 +128,7 @@ const SingleFlower = ({ flower, position, index, isSelected, isTransforming, isH
       className="absolute"
       style={{
         left: '50%',
-        bottom: 0, // 所有莖從底部對齊
+        bottom: position.yOffset || 0, // 可個別調整垂直位置
         zIndex: 10, // 莖在花盆上面
         transformOrigin: 'bottom center',
       }}
