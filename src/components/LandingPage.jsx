@@ -2,26 +2,22 @@ import { motion, useAnimation } from 'framer-motion'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import CollectionIcon from './CollectionIcon'
 
-// 花束配置 - 7種不同的花
+// 花束配置 - 5種不同的花
 const BOUQUET_FLOWERS = [
   { id: 0, color: '#ff69b4' },  // 粉紅
-  { id: 1, color: '#ff6b6b' },  // 珊瑚紅
-  { id: 2, color: '#c084fc' },  // 紫色
-  { id: 3, color: '#f472b6' },  // 玫瑰粉
-  { id: 4, color: '#a78bfa' },  // 淡紫
-  { id: 5, color: '#fb7185' },  // 粉紅紅
-  { id: 6, color: '#e879f9' },  // 洋紅
+  { id: 1, color: '#c084fc' },  // 紫色
+  { id: 2, color: '#f472b6' },  // 玫瑰粉
+  { id: 3, color: '#a78bfa' },  // 淡紫
+  { id: 4, color: '#fb7185' },  // 珊瑚粉
 ]
 
-// 每枝花的位置配置 - 不對稱自然排列（莖在同一水平起點）
+// 每枝花的位置配置 - 5枝花，莖從花盆土壤開始
 const FLOWER_POSITIONS = [
-  { angle: -28, stemHeight: 95, x: -48, curve1: 12, curve2: -7, mid: 0.55 },
-  { angle: -15, stemHeight: 115, x: -28, curve1: -5, curve2: 9, mid: 0.45 },
-  { angle: -5, stemHeight: 130, x: -9, curve1: 7, curve2: -3, mid: 0.5 },
-  { angle: 2, stemHeight: 140, x: 3, curve1: -4, curve2: 5, mid: 0.48 },
-  { angle: 8, stemHeight: 125, x: 12, curve1: 8, curve2: -5, mid: 0.52 },
-  { angle: 18, stemHeight: 110, x: 32, curve1: -7, curve2: 10, mid: 0.42 },
-  { angle: 30, stemHeight: 90, x: 50, curve1: 10, curve2: -8, mid: 0.58 },
+  { angle: -25, stemHeight: 130, x: -45, curve1: 12, curve2: -7, mid: 0.52 },  // 左外
+  { angle: -10, stemHeight: 150, x: -20, curve1: -6, curve2: 9, mid: 0.48 },   // 左內
+  { angle: 0, stemHeight: 165, x: 0, curve1: 5, curve2: -3, mid: 0.5 },        // 中央
+  { angle: 12, stemHeight: 145, x: 22, curve1: -5, curve2: 8, mid: 0.47 },     // 右內
+  { angle: 28, stemHeight: 125, x: 48, curve1: 10, curve2: -8, mid: 0.53 },    // 右外
 ]
 
 // 背景飄落花瓣
@@ -132,7 +128,7 @@ const SingleFlower = ({ flower, position, index, isSelected, isTransforming, isH
       className="absolute"
       style={{
         left: '50%',
-        bottom: 0,
+        bottom: 0, // 所有莖從底部對齊
         zIndex: 10, // 莖在花盆上面
         transformOrigin: 'bottom center',
       }}
@@ -144,7 +140,7 @@ const SingleFlower = ({ flower, position, index, isSelected, isTransforming, isH
         opacity: isTransforming ? (isSelected ? 1 : 0) : 1,
       }}
       transition={{
-        delay: isTransforming ? 0 : index * 0.08,
+        delay: isTransforming ? 0 : index * 0.06,
         duration: 0.6,
         type: 'spring',
         stiffness: 150,
@@ -424,7 +420,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
     const scale = isMobile ? 0.7 : 1
     return {
       x: pos.x * scale,
-      y: -(pos.stemHeight * scale) - 15,
+      y: -(pos.stemHeight * scale) - 20,
     }
   }, [isMobile])
 
@@ -445,7 +441,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
       return
     }
     setShowFirefly(true)
-    const interval = setInterval(() => setFireflyTarget(p => (p + 1) % 7), 4500)
+    const interval = setInterval(() => setFireflyTarget(p => (p + 1) % 5), 4500)
     return () => clearInterval(interval)
   }, [isTransforming, selectedIndex])
 
@@ -560,12 +556,12 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
       {/* 花束區域 */}
       <div
         className="relative flex flex-col items-center"
-        style={{ zIndex: 10, width: isMobile ? 280 : 360, height: isMobile ? 250 : 310 }}
+        style={{ zIndex: 10, width: isMobile ? 280 : 360, height: isMobile ? 300 : 380 }}
       >
-        {/* 花朵容器 - 所有莖從同一水平開始 */}
+        {/* 花朵容器 - 莖底部對齊 */}
         <div
-          className="relative"
-          style={{ width: '100%', height: isMobile ? 150 : 190, marginBottom: isMobile ? -30 : -40 }}
+          className="relative flex items-end justify-center"
+          style={{ width: '100%', height: isMobile ? 180 : 230, marginBottom: isMobile ? -25 : -35 }}
         >
           {/* 螢火蟲 */}
           {showFirefly && !isTransforming && selectedIndex === null && (
