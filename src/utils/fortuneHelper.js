@@ -146,3 +146,26 @@ export const isFlowerViewed = (flowerId) => {
   const viewed = getViewedFlowers()
   return viewed.includes(flowerId)
 }
+
+/**
+ * Unlock all flowers (Admin function)
+ * Adds all flowers to the collection
+ */
+export const unlockAllFlowers = () => {
+  const allFlowers = flowersData.map(flower => ({
+    id: flower.id,
+    flower: flower.flower,
+    rarity: flower.rarity,
+    collectedAt: new Date().toISOString()
+  }))
+  localStorage.setItem('collectedFlowers', JSON.stringify(allFlowers))
+}
+
+/**
+ * Clear all collected flowers (Admin function)
+ * Resets the collection to empty
+ */
+export const clearAllFlowers = () => {
+  localStorage.removeItem('collectedFlowers')
+  localStorage.removeItem('viewedFlowers')
+}

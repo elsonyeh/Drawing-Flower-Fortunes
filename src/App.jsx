@@ -1,13 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import LandingPage from './components/LandingPage'
 import GachaAnimation from './components/GachaAnimation'
 import FortuneResult from './components/FortuneResult'
 import CollectionPage from './components/CollectionPage'
+import AdminPage from './components/AdminPage'
 import { getRandomFlower, saveCollectedFlower } from './utils/fortuneHelper'
 
 function App() {
-  const [stage, setStage] = useState('landing') // 'landing', 'gacha', 'result', 'collection'
+  const [stage, setStage] = useState('landing') // 'landing', 'gacha', 'result', 'collection', 'admin'
+
+  // Check for admin route on mount
+  useEffect(() => {
+    if (window.location.pathname === '/elsontest') {
+      setStage('admin')
+    }
+  }, [])
   const [selectedFlower, setSelectedFlower] = useState(null)
   const [viewingFlower, setViewingFlower] = useState(null) // For viewing from collection
 
@@ -84,6 +92,12 @@ function App() {
             key="collection"
             onClose={handleCloseCollection}
             onSelectFlower={handleSelectFlowerFromCollection}
+          />
+        )}
+
+        {stage === 'admin' && (
+          <AdminPage
+            key="admin"
           />
         )}
       </AnimatePresence>
