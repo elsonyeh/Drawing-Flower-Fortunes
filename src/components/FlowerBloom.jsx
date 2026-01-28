@@ -681,69 +681,74 @@ const RoseCupPetal = ({ angle, layer, totalLayers, color, lightColor, dotSize })
     const layerRatio = layer / (totalLayers - 1)
 
     // 花瓣尺寸
-    const petalLength = 0.06 + layerRatio * 0.09   // 花瓣長度
+    const petalLength = 0.08 + layerRatio * 0.10   // 花瓣長度（加長以填滿底部）
     const petalWidth = 0.03 + layerRatio * 0.045   // 花瓣最寬處
-    const baseRadius = 0.006 + layerRatio * 0.065  // 底部離中心距離（更靠近中心）
+    const baseRadius = 0.005 + layerRatio * 0.055  // 底部離中心距離
 
-    // 傾斜角度：內層直立，外層也不要太開（最多 0.5）
-    const tiltAngle = 0.08 + layerRatio * 0.42
+    // 傾斜角度
+    const tiltAngle = 0.1 + layerRatio * 0.4
 
-    // 頂部內捲：全部都要往內捲，形成半橢圓形
-    const topCurl = (1 - layerRatio) * 0.4 + 0.25
+    // 頂部內捲
+    const topCurl = (1 - layerRatio) * 0.35 + 0.2
 
-    const rows = 12  // 沿花瓣長度
+    // 底部起始高度（往下延伸填滿）
+    const baseY = -0.02 - layerRatio * 0.01
+
+    const rows = 14  // 沿花瓣長度（增加以填滿）
     const cols = 9   // 沿花瓣寬度
 
     for (let r = 0; r < rows; r++) {
       const t = r / (rows - 1)  // 0=底部, 1=頂部（尖端）
 
       // ===== 橢圓形+尖端的寬度曲線 =====
-      // 底部窄 → 中間最寬 → 頂部收成尖端
       let widthCurve
-      if (t < 0.6) {
+      if (t < 0.55) {
         // 底部到中間：橢圓形膨脹
-        widthCurve = Math.sin((t / 0.6) * Math.PI * 0.5) * 1.0
+        widthCurve = Math.sin((t / 0.55) * Math.PI * 0.5)
       } else {
         // 中間到頂部：收成尖端
-        const tipT = (t - 0.6) / 0.4
-        widthCurve = Math.cos(tipT * Math.PI * 0.5) * 1.0
+        const tipT = (t - 0.55) / 0.45
+        widthCurve = Math.cos(tipT * Math.PI * 0.5)
       }
-      // 確保有最小寬度
-      widthCurve = Math.max(widthCurve, 0.15)
+      widthCurve = Math.max(widthCurve, 0.12)
 
       const actualWidth = petalWidth * widthCurve
       const actualCols = Math.max(2, Math.round(cols * widthCurve))
 
       for (let c = 0; c < actualCols; c++) {
-        const s = actualCols > 1 ? (c / (actualCols - 1)) - 0.5 : 0  // -0.5 到 0.5
+        const s = actualCols > 1 ? (c / (actualCols - 1)) - 0.5 : 0
 
         // 花瓣局部座標
         const localLength = t * petalLength
         const localWidth = s * actualWidth * 2
 
-        // 內凹曲面（杯狀）
-        const cupDepth = (1 - Math.abs(s) * 1.8) * 0.012 * (0.5 + t)
+        // 內凹曲面
+        const cupDepth = (1 - Math.abs(s) * 1.8) * 0.01 * (0.3 + t)
 
-        // 頂部內捲（往中心捲）
+        // 頂部內捲
         const curlAmount = Math.pow(t, 3) * topCurl * petalLength
 
+        // 底部圓弧收攏（讓底部往中心收）
+        const bottomCurve = (1 - t) * (1 - t) * 0.015
+
         // 傾斜變換
-        const radiusOffset = baseRadius + Math.sin(tiltAngle) * localLength - curlAmount
-        const heightOffset = Math.cos(tiltAngle) * localLength + cupDepth
+        const radiusOffset = baseRadius + Math.sin(tiltAngle) * localLength - curlAmount - bottomCurve
+        const heightOffset = baseY + Math.cos(tiltAngle) * localLength + cupDepth
 
         // 寬度方向的角度偏移
         const widthAngle = (localWidth / petalLength) * 0.8
 
         // 3D 座標
         const finalAngle = angle + widthAngle
-        const x = Math.cos(finalAngle) * Math.max(0.005, radiusOffset)
-        const z = Math.sin(finalAngle) * Math.max(0.005, radiusOffset)
+        const x = Math.cos(finalAngle) * Math.max(0.003, radiusOffset)
+        const z = Math.sin(finalAngle) * Math.max(0.003, radiusOffset)
         const y = heightOffset
 
-        // 點大小：頂端（尖端）更小
+        // 點大小
         const tipFactor = t > 0.7 ? (1 - (t - 0.7) / 0.3 * 0.5) : 1
+        const bottomFactor = t < 0.2 ? (0.7 + t * 1.5) : 1  // 底部點稍小
         const edgeFactor = 1 - Math.abs(s) * 0.25
-        const size = dotSize * tipFactor * edgeFactor
+        const size = dotSize * tipFactor * bottomFactor * edgeFactor
 
         // 顏色
         const useLight = t > 0.45 || Math.abs(s) > 0.35
@@ -824,47 +829,11 @@ const RoseDotCluster = ({ color, isSSR = false, gradientColors }) => {
     return items
   }, [colors])
 
-  // 花苞底部填充（圓弧狀）
-  const baseDots = useMemo(() => {
-    const items = []
-    const baseColor = colors.dark
-
-    // 用半球形填充底部
-    const rings = 6  // 環數
-    const maxRadius = 0.07  // 最大半徑
-
-    for (let ring = 0; ring < rings; ring++) {
-      const ringRatio = ring / (rings - 1)
-      const radius = maxRadius * ringRatio
-      const y = -0.01 - (1 - Math.sqrt(1 - ringRatio * ringRatio)) * 0.04  // 圓弧形下沉
-
-      const dotsInRing = Math.max(4, Math.round(8 + ring * 4))
-
-      for (let d = 0; d < dotsInRing; d++) {
-        const angle = (d / dotsInRing) * Math.PI * 2
-        items.push({
-          position: [Math.cos(angle) * radius, y, Math.sin(angle) * radius],
-          size: 0.006 + ringRatio * 0.003,
-          color: baseColor,
-        })
-      }
-    }
-    return items
-  }, [colors])
-
   return (
     <group ref={ref} position={[0, 0, 0]}>
-      {/* 花苞底部填充（圓弧） */}
-      {baseDots.map((dot, i) => (
-        <mesh key={`base-${i}`} position={dot.position}>
-          <sphereGeometry args={[dot.size, 6, 6]} />
-          <meshStandardMaterial color={dot.color} roughness={0.35} />
-        </mesh>
-      ))}
-
       {/* 花萼 */}
-      <mesh position={[0, -0.05, 0]}>
-        <coneGeometry args={[0.04, 0.04, 8]} />
+      <mesh position={[0, -0.03, 0]}>
+        <coneGeometry args={[0.035, 0.035, 8]} />
         <meshStandardMaterial color="#2D5A20" roughness={0.6} />
       </mesh>
 
