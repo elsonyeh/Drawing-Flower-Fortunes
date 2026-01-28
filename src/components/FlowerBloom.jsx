@@ -680,10 +680,10 @@ const RoseCupPetal = ({ angle, layer, totalLayers, color, lightColor, dotSize })
     // 層級參數
     const layerRatio = layer / (totalLayers - 1)
 
-    // 花瓣尺寸（修長的花苞形狀）
-    const petalLength = 0.10 + layerRatio * 0.08   // 花瓣更長
-    const petalWidth = 0.025 + layerRatio * 0.035  // 花瓣更窄
-    const baseRadius = 0.004 + layerRatio * 0.04   // 更靠近中心
+    // 花瓣尺寸（更寬的花瓣）
+    const petalLength = 0.10 + layerRatio * 0.08   // 花瓣長度
+    const petalWidth = 0.045 + layerRatio * 0.06   // 花瓣更寬
+    const baseRadius = 0.004 + layerRatio * 0.035  // 靠近中心
 
     // 傾斜角度（更直立）
     const tiltAngle = 0.05 + layerRatio * 0.30
@@ -796,11 +796,11 @@ const RoseDotCluster = ({ color, isSSR = false, gradientColors }) => {
     }
   }, [color])
 
-  // 花瓣配置：每層的花瓣數和起始角度
+  // 花瓣配置：每層的花瓣數和起始角度（減少數量）
   const petals = useMemo(() => {
     const items = []
-    const totalLayers = 6
-    const petalsPerLayer = [3, 4, 5, 6, 7, 9]  // 內到外
+    const totalLayers = 5
+    const petalsPerLayer = [2, 3, 4, 5, 6]  // 內到外，數量減少
     const goldenAngle = 137.5 * Math.PI / 180
 
     for (let layer = 0; layer < totalLayers; layer++) {
