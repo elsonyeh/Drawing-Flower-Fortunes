@@ -681,15 +681,15 @@ const RoseCupPetal = ({ angle, layer, totalLayers, color, lightColor, dotSize })
     const layerRatio = layer / (totalLayers - 1)
 
     // 花瓣尺寸
-    const petalLength = 0.07 + layerRatio * 0.11   // 花瓣長度
-    const petalWidth = 0.035 + layerRatio * 0.055  // 花瓣最寬處
-    const baseRadius = 0.008 + layerRatio * 0.09   // 底部離中心距離
+    const petalLength = 0.06 + layerRatio * 0.09   // 花瓣長度
+    const petalWidth = 0.03 + layerRatio * 0.045   // 花瓣最寬處
+    const baseRadius = 0.006 + layerRatio * 0.065  // 底部離中心距離（更靠近中心）
 
-    // 傾斜角度
-    const tiltAngle = 0.12 + layerRatio * 0.78
+    // 傾斜角度：內層直立，外層也不要太開（最多 0.5）
+    const tiltAngle = 0.08 + layerRatio * 0.42
 
-    // 頂部內捲
-    const topCurl = (1 - layerRatio) * 0.5 + 0.08
+    // 頂部內捲：全部都要往內捲，形成半橢圓形
+    const topCurl = (1 - layerRatio) * 0.4 + 0.25
 
     const rows = 12  // 沿花瓣長度
     const cols = 9   // 沿花瓣寬度
