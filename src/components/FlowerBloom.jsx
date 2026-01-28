@@ -672,57 +672,105 @@ const LavenderSpike = ({ color }) => {
   )
 }
 
-// ============ 玫瑰小圓點 - 精緻螺旋點陣 ============
+// ============ 玫瑰小圓點 - 立體多層花瓣 ============
 const RoseDotCluster = ({ color, isSSR = false, gradientColors }) => {
   const ref = useRef()
   useFrame((state) => {
-    if (ref.current) ref.current.rotation.z = state.clock.getElapsedTime() * 0.12
+    if (ref.current) ref.current.rotation.y = state.clock.getElapsedTime() * 0.1
   })
 
-  // 生成顏色 - 中心深、外圍淺
+  // 生成顏色漸變函數
   const getColor = useMemo(() => {
     const base = new THREE.Color(color)
     const hsl = {}
     base.getHSL(hsl)
 
-    return (progress) => {
-      // progress: 0 = 中心, 1 = 外圍
-      const lightness = hsl.l * (0.5 + progress * 0.5) // 中心暗，外圍亮
-      const saturation = hsl.s * (0.8 + progress * 0.2)
-      return '#' + new THREE.Color().setHSL(hsl.h, saturation, Math.min(lightness, 0.85)).getHexString()
+    return (layerProgress, petalProgress) => {
+      // layerProgress: 0 = 內層, 1 = 外層
+      // petalProgress: 0 = 花瓣根部, 1 = 花瓣尖端
+      const lightness = hsl.l * (0.45 + layerProgress * 0.35 + petalProgress * 0.2)
+      const saturation = hsl.s * (0.85 + layerProgress * 0.15)
+      return '#' + new THREE.Color().setHSL(hsl.h, saturation, Math.min(lightness, 0.88)).getHexString()
     }
   }, [color])
 
-  // 使用 Fibonacci 螺旋生成精緻點陣
+  // 生成立體玫瑰花瓣點陣
   const dots = useMemo(() => {
     const items = []
-    const totalDots = 280 // 總點數，更精緻
-    const goldenAngle = Math.PI * (3 - Math.sqrt(5)) // 黃金角度 ≈ 137.5°
-    const maxRadius = 0.42
+    const layers = 6 // 花瓣層數
+    const petalsPerLayer = [5, 6, 7, 8, 10, 12] // 每層花瓣數，外層更多
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5))
 
-    for (let i = 0; i < totalDots; i++) {
-      const progress = i / totalDots // 0 到 1
+    for (let layer = 0; layer < layers; layer++) {
+      const layerProgress = layer / (layers - 1)
+      const petalCount = petalsPerLayer[layer]
+      const layerRotOffset = layer * goldenAngle * 0.5 // 每層錯開角度
 
-      // Fibonacci 螺旋：角度 = i * 黃金角度，半徑 = sqrt(i)
+      // 層的參數 - 內層緊閉，外層展開
+      const layerRadius = 0.06 + layerProgress * 0.22 // 基礎半徑
+      const layerHeight = 0.12 - layerProgress * 0.1 // 內層高，外層低
+      const petalCurl = 0.85 - layerProgress * 0.55 // 內層捲曲度高，外層平展
+      const petalLength = 0.12 + layerProgress * 0.14 // 外層花瓣更長
+
+      for (let p = 0; p < petalCount; p++) {
+        const petalAngle = (p / petalCount) * Math.PI * 2 + layerRotOffset
+
+        // 每片花瓣上的點數
+        const dotsOnPetal = 18 + layer * 4 // 外層花瓣更多點
+        const dotsAcross = 4 + layer // 花瓣寬度方向的點數
+
+        for (let i = 0; i < dotsOnPetal; i++) {
+          const petalProgress = i / (dotsOnPetal - 1) // 0=根部, 1=尖端
+
+          for (let j = 0; j < dotsAcross; j++) {
+            const widthProgress = (j / (dotsAcross - 1)) - 0.5 // -0.5 到 0.5
+
+            // 花瓣寬度曲線 - 中間寬，兩端窄
+            const widthCurve = Math.sin(petalProgress * Math.PI) * (0.03 + layerProgress * 0.025)
+            const lateralOffset = widthProgress * widthCurve
+
+            // 花瓣的彎曲 - 從根部向外彎曲
+            const curlAmount = petalProgress * petalProgress * petalCurl * petalLength
+            const heightOffset = layerHeight + curlAmount
+
+            // 計算花瓣上每個點的 3D 位置
+            const radiusAtPoint = layerRadius + petalProgress * petalLength * (1 - petalCurl * 0.3)
+
+            // 主要位置
+            const x = Math.cos(petalAngle + lateralOffset) * radiusAtPoint
+            const z = Math.sin(petalAngle + lateralOffset) * radiusAtPoint
+            const y = heightOffset
+
+            // 點的大小 - 花瓣尖端稍小
+            const baseSize = 0.008 + layerProgress * 0.006
+            const size = baseSize * (0.7 + (1 - petalProgress) * 0.5)
+
+            items.push({
+              position: [x, y, z],
+              size,
+              color: getColor(layerProgress, petalProgress),
+            })
+          }
+        }
+      }
+    }
+
+    // 花心 - 緊密螺旋的小點
+    const centerDots = 60
+    for (let i = 0; i < centerDots; i++) {
+      const t = i / centerDots
       const angle = i * goldenAngle
-      const radius = maxRadius * Math.sqrt(progress) // sqrt 讓中心更密集
-
-      // 點的大小：中心小、外圍大
-      const minSize = 0.006
-      const maxSize = 0.032
-      const size = minSize + progress * (maxSize - minSize)
-
-      // 平面螺旋位置
-      const x = Math.cos(angle) * radius
-      const y = Math.sin(angle) * radius
-
-      // 輕微的 3D 弧度 - 讓花有一點立體感
-      const z = Math.pow(1 - progress, 2) * 0.08 // 中心稍微凸起
+      const radius = t * 0.055
+      const height = 0.14 + (1 - t) * 0.04
 
       items.push({
-        position: [x, z, y],
-        size,
-        color: getColor(progress),
+        position: [
+          Math.cos(angle) * radius,
+          height,
+          Math.sin(angle) * radius,
+        ],
+        size: 0.005 + t * 0.003,
+        color: getColor(0, 0), // 最深色
       })
     }
 
@@ -730,22 +778,22 @@ const RoseDotCluster = ({ color, isSSR = false, gradientColors }) => {
   }, [getColor])
 
   return (
-    <group ref={ref} position={[0, 0.4, 0]}>
+    <group ref={ref} position={[0, 0.32, 0]}>
       {dots.map((dot, i) => (
         <mesh key={i} position={dot.position}>
-          <sphereGeometry args={[dot.size, 12, 12]} />
+          <sphereGeometry args={[dot.size, 10, 10]} />
           <meshStandardMaterial
             color={dot.color}
-            roughness={0.3}
-            metalness={isSSR ? 0.2 : 0.08}
+            roughness={0.35}
+            metalness={isSSR ? 0.18 : 0.05}
           />
         </mesh>
       ))}
       {/* SSR 光暈效果 */}
       {isSSR && (
-        <mesh position={[0, -0.02, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.5, 32]} />
-          <meshBasicMaterial color={gradientColors?.[1] || color} transparent opacity={0.15} side={THREE.DoubleSide} />
+        <mesh position={[0, 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.45, 32]} />
+          <meshBasicMaterial color={gradientColors?.[1] || color} transparent opacity={0.12} side={THREE.DoubleSide} />
         </mesh>
       )}
     </group>
