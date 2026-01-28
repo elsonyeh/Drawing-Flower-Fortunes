@@ -672,107 +672,80 @@ const LavenderSpike = ({ color }) => {
   )
 }
 
-// ============ 玫瑰小圓點 ============
+// ============ 玫瑰小圓點 - 精緻螺旋點陣 ============
 const RoseDotCluster = ({ color, isSSR = false, gradientColors }) => {
   const ref = useRef()
   useFrame((state) => {
-    if (ref.current) ref.current.rotation.y = state.clock.getElapsedTime() * 0.08
+    if (ref.current) ref.current.rotation.z = state.clock.getElapsedTime() * 0.12
   })
 
-  // 生成顏色變化
-  const colors = useMemo(() => {
-    if (isSSR && gradientColors && gradientColors.length >= 2) {
-      return gradientColors
-    }
+  // 生成顏色 - 中心深、外圍淺
+  const getColor = useMemo(() => {
     const base = new THREE.Color(color)
     const hsl = {}
     base.getHSL(hsl)
-    return [
-      '#' + new THREE.Color().setHSL(hsl.h, hsl.s * 0.95, Math.min(hsl.l * 0.7, 0.4)).getHexString(), // 深色內層
-      color, // 主色中層
-      '#' + new THREE.Color().setHSL(hsl.h, hsl.s * 0.85, Math.min(hsl.l * 1.15, 0.85)).getHexString(), // 淺色外層
-    ]
-  }, [color, isSSR, gradientColors])
 
-  // 生成玫瑰花瓣點陣 - 螺旋上升排列
+    return (progress) => {
+      // progress: 0 = 中心, 1 = 外圍
+      const lightness = hsl.l * (0.5 + progress * 0.5) // 中心暗，外圍亮
+      const saturation = hsl.s * (0.8 + progress * 0.2)
+      return '#' + new THREE.Color().setHSL(hsl.h, saturation, Math.min(lightness, 0.85)).getHexString()
+    }
+  }, [color])
+
+  // 使用 Fibonacci 螺旋生成精緻點陣
   const dots = useMemo(() => {
     const items = []
-    const layers = 8 // 層數
-    const dotsPerLayer = 12 // 每層點數
+    const totalDots = 280 // 總點數，更精緻
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5)) // 黃金角度 ≈ 137.5°
+    const maxRadius = 0.42
 
-    for (let layer = 0; layer < layers; layer++) {
-      const layerProgress = layer / (layers - 1) // 0 到 1
-      const layerRadius = 0.05 + layerProgress * 0.25 // 半徑從內到外增大
-      const layerHeight = layerProgress * 0.18 // 高度從下往上
-      const layerTilt = 0.3 + (1 - layerProgress) * 0.5 // 內層更傾斜（像花苞），外層更平
-      const dotSize = 0.018 + layerProgress * 0.012 // 外層點稍大
+    for (let i = 0; i < totalDots; i++) {
+      const progress = i / totalDots // 0 到 1
 
-      // 每層的旋轉偏移（黃金角度，讓排列更自然）
-      const goldenAngle = Math.PI * (3 - Math.sqrt(5))
-      const layerRotOffset = layer * goldenAngle
+      // Fibonacci 螺旋：角度 = i * 黃金角度，半徑 = sqrt(i)
+      const angle = i * goldenAngle
+      const radius = maxRadius * Math.sqrt(progress) // sqrt 讓中心更密集
 
-      for (let i = 0; i < dotsPerLayer; i++) {
-        const angle = (i / dotsPerLayer) * Math.PI * 2 + layerRotOffset
+      // 點的大小：中心小、外圍大
+      const minSize = 0.006
+      const maxSize = 0.032
+      const size = minSize + progress * (maxSize - minSize)
 
-        // 添加一些隨機性讓花瓣更自然
-        const randRadius = layerRadius * (0.9 + Math.random() * 0.2)
-        const randHeight = layerHeight + (Math.random() - 0.5) * 0.02
-        const randTilt = layerTilt + (Math.random() - 0.5) * 0.1
+      // 平面螺旋位置
+      const x = Math.cos(angle) * radius
+      const y = Math.sin(angle) * radius
 
-        // 計算 3D 位置 - 花瓣向上傾斜形成杯狀
-        const x = Math.cos(angle) * randRadius
-        const z = Math.sin(angle) * randRadius
-        const y = randHeight + Math.cos(randTilt) * randRadius * 0.5
+      // 輕微的 3D 弧度 - 讓花有一點立體感
+      const z = Math.pow(1 - progress, 2) * 0.08 // 中心稍微凸起
 
-        // 顏色索引 - 內層深，外層淺
-        const colorIndex = Math.min(Math.floor(layerProgress * colors.length), colors.length - 1)
-
-        items.push({
-          position: [x, y, z],
-          size: dotSize,
-          color: colors[colorIndex],
-          layer,
-        })
-      }
-    }
-
-    // 添加花心的小點
-    for (let i = 0; i < 15; i++) {
-      const phi = Math.acos(-1 + (2 * i) / 15)
-      const theta = Math.sqrt(15 * Math.PI) * phi
-      const r = 0.035
       items.push({
-        position: [
-          Math.cos(theta) * Math.sin(phi) * r,
-          0.02 + Math.cos(phi) * r * 0.5,
-          Math.sin(theta) * Math.sin(phi) * r,
-        ],
-        size: 0.012,
-        color: colors[0], // 最深色
-        layer: -1,
+        position: [x, z, y],
+        size,
+        color: getColor(progress),
       })
     }
 
     return items
-  }, [colors])
+  }, [getColor])
 
   return (
-    <group ref={ref} position={[0, 0.35, 0]}>
+    <group ref={ref} position={[0, 0.4, 0]}>
       {dots.map((dot, i) => (
         <mesh key={i} position={dot.position}>
-          <sphereGeometry args={[dot.size, 8, 8]} />
+          <sphereGeometry args={[dot.size, 12, 12]} />
           <meshStandardMaterial
             color={dot.color}
-            roughness={0.4}
-            metalness={isSSR ? 0.15 : 0.05}
+            roughness={0.3}
+            metalness={isSSR ? 0.2 : 0.08}
           />
         </mesh>
       ))}
       {/* SSR 光暈效果 */}
       {isSSR && (
-        <mesh position={[0, 0.08, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.4, 24]} />
-          <meshBasicMaterial color={gradientColors?.[1] || color} transparent opacity={0.12} side={THREE.DoubleSide} />
+        <mesh position={[0, -0.02, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.5, 32]} />
+          <meshBasicMaterial color={gradientColors?.[1] || color} transparent opacity={0.15} side={THREE.DoubleSide} />
         </mesh>
       )}
     </group>
