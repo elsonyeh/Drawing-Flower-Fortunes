@@ -922,6 +922,127 @@ const BaseLeaves = () => {
   return <group>{leaves.map((l, i) => <Leaf key={i} {...l} delay={i * 0.18} />)}</group>
 }
 
+// ============ 玫瑰葉子幾何體（鋸齒邊緣）============
+const createRoseLeafletGeometry = (size = 0.12) => {
+  const shape = new THREE.Shape()
+  const l = size, w = size * 0.45
+
+  // 玫瑰葉片：橢圓形帶鋸齒邊緣
+  shape.moveTo(0, 0)
+  // 左側帶鋸齒
+  const segments = 6
+  for (let i = 1; i <= segments; i++) {
+    const t = i / segments
+    const baseX = -Math.sin(t * Math.PI) * w
+    const y = t * l
+    const serration = (i % 2 === 0) ? 0.015 : -0.008
+    shape.lineTo(baseX + serration, y)
+  }
+  // 頂端
+  shape.quadraticCurveTo(0, l * 1.05, w * 0.15, l * 0.92)
+  // 右側帶鋸齒
+  for (let i = segments - 1; i >= 1; i--) {
+    const t = i / segments
+    const baseX = Math.sin(t * Math.PI) * w
+    const y = t * l
+    const serration = (i % 2 === 0) ? 0.015 : -0.008
+    shape.lineTo(baseX + serration, y)
+  }
+  shape.lineTo(0, 0)
+
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: 0.003,
+    bevelEnabled: true,
+    bevelThickness: 0.001,
+    bevelSize: 0.001,
+    bevelSegments: 1,
+  })
+
+  // 添加自然彎曲
+  const positions = geometry.attributes.position
+  for (let i = 0; i < positions.count; i++) {
+    const y = positions.getY(i)
+    const z = positions.getZ(i)
+    const t = y / l
+    positions.setZ(i, z + t * t * size * 0.15)
+  }
+  geometry.computeVertexNormals()
+  return geometry
+}
+
+// ============ 玫瑰複葉（5片小葉）============
+const RoseCompoundLeaf = ({ position, rotation, scale = 1, delay = 0 }) => {
+  const ref = useRef()
+  const leafletGeo = useMemo(() => createRoseLeafletGeometry(0.1), [])
+
+  useFrame((state) => {
+    if (ref.current) {
+      ref.current.rotation.z = rotation[2] + Math.sin(state.clock.getElapsedTime() * 0.5 + delay) * 0.03
+    }
+  })
+
+  // 5片小葉的配置：頂端1片 + 兩側各2片
+  const leaflets = useMemo(() => [
+    // 頂端小葉（最大）
+    { pos: [0, 0.12, 0], rot: [0.2, 0, 0], scale: 1.2 },
+    // 第一對側葉
+    { pos: [-0.045, 0.07, 0], rot: [0.25, 0.3, -0.2], scale: 0.9 },
+    { pos: [0.045, 0.07, 0], rot: [0.25, -0.3, 0.2], scale: 0.9 },
+    // 第二對側葉（較小）
+    { pos: [-0.035, 0.03, 0], rot: [0.3, 0.4, -0.25], scale: 0.7 },
+    { pos: [0.035, 0.03, 0], rot: [0.3, -0.4, 0.25], scale: 0.7 },
+  ], [])
+
+  return (
+    <group ref={ref} position={position} rotation={rotation} scale={scale}>
+      {/* 葉柄（中央莖）*/}
+      <mesh position={[0, 0.06, 0.002]} rotation={[0.1, 0, 0]}>
+        <cylinderGeometry args={[0.004, 0.003, 0.14, 6]} />
+        <meshStandardMaterial color="#2D5A1E" roughness={0.6} />
+      </mesh>
+      {/* 小葉 */}
+      {leaflets.map((leaflet, i) => (
+        <mesh
+          key={i}
+          position={leaflet.pos}
+          rotation={leaflet.rot}
+          scale={leaflet.scale}
+          geometry={leafletGeo}
+        >
+          <meshStandardMaterial color="#3A7D2E" roughness={0.45} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+// ============ 玫瑰莖上的葉子組 ============
+const RoseLeaves = () => (
+  <group>
+    {/* 上方第一組葉子 */}
+    <RoseCompoundLeaf
+      position={[0.08, -0.25, 0.03]}
+      rotation={[0.4, -0.5, 0.3]}
+      scale={1.0}
+      delay={0}
+    />
+    {/* 中間第二組葉子（對側）*/}
+    <RoseCompoundLeaf
+      position={[-0.07, -0.5, -0.02]}
+      rotation={[0.35, 0.6, -0.35]}
+      scale={0.9}
+      delay={0.5}
+    />
+    {/* 下方第三組葉子 */}
+    <RoseCompoundLeaf
+      position={[0.05, -0.8, 0.02]}
+      rotation={[0.45, -0.4, 0.25]}
+      scale={0.85}
+      delay={1.0}
+    />
+  </group>
+)
+
 // ============ 3D 模型配置（只有向日葵使用 3D 模型）============
 const flower3DConfigs = {
   sunflower: {
@@ -1079,9 +1200,15 @@ const CompleteFlower = ({ flower, config }) => {
   if (petalType === 'rose') {
     return (
       <group>
-        <RoseDotCluster color={flower.color} isSSR={isSSR} gradientColors={flower.gradientColors} />
-        <group position={[0, 0.35, 0]}><Stem height={1.32} curve={0.16} /><StemLeaves curve={0.16} /></group>
-        <BaseLeaves />
+        {/* 放大花朵 1.6 倍 */}
+        <group scale={1.6}>
+          <RoseDotCluster color={flower.color} isSSR={isSSR} gradientColors={flower.gradientColors} />
+        </group>
+        {/* 莖和玫瑰專用複葉 */}
+        <group position={[0, 0.45, 0]}>
+          <Stem height={1.4} curve={0.12} />
+          <RoseLeaves />
+        </group>
       </group>
     )
   }
