@@ -824,11 +824,47 @@ const RoseDotCluster = ({ color, isSSR = false, gradientColors }) => {
     return items
   }, [colors])
 
+  // 花苞底部填充（圓弧狀）
+  const baseDots = useMemo(() => {
+    const items = []
+    const baseColor = colors.dark
+
+    // 用半球形填充底部
+    const rings = 6  // 環數
+    const maxRadius = 0.07  // 最大半徑
+
+    for (let ring = 0; ring < rings; ring++) {
+      const ringRatio = ring / (rings - 1)
+      const radius = maxRadius * ringRatio
+      const y = -0.01 - (1 - Math.sqrt(1 - ringRatio * ringRatio)) * 0.04  // 圓弧形下沉
+
+      const dotsInRing = Math.max(4, Math.round(8 + ring * 4))
+
+      for (let d = 0; d < dotsInRing; d++) {
+        const angle = (d / dotsInRing) * Math.PI * 2
+        items.push({
+          position: [Math.cos(angle) * radius, y, Math.sin(angle) * radius],
+          size: 0.006 + ringRatio * 0.003,
+          color: baseColor,
+        })
+      }
+    }
+    return items
+  }, [colors])
+
   return (
     <group ref={ref} position={[0, 0, 0]}>
+      {/* 花苞底部填充（圓弧） */}
+      {baseDots.map((dot, i) => (
+        <mesh key={`base-${i}`} position={dot.position}>
+          <sphereGeometry args={[dot.size, 6, 6]} />
+          <meshStandardMaterial color={dot.color} roughness={0.35} />
+        </mesh>
+      ))}
+
       {/* 花萼 */}
-      <mesh position={[0, -0.015, 0]}>
-        <coneGeometry args={[0.035, 0.05, 8]} />
+      <mesh position={[0, -0.05, 0]}>
+        <coneGeometry args={[0.04, 0.04, 8]} />
         <meshStandardMaterial color="#2D5A20" roughness={0.6} />
       </mesh>
 
