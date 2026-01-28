@@ -672,66 +672,81 @@ const LavenderSpike = ({ color }) => {
   )
 }
 
-// ============ 單片玫瑰花瓣（杯狀曲面，由圓點組成）============
+// ============ 單片玫瑰花瓣（橢圓形+尖端，杯狀曲面）============
 const RoseCupPetal = ({ angle, layer, totalLayers, color, lightColor, dotSize }) => {
   const dots = useMemo(() => {
     const items = []
 
-    // 層級參數：內層緊閉直立，外層展開
-    const layerRatio = layer / (totalLayers - 1)  // 0=最內層, 1=最外層
+    // 層級參數
+    const layerRatio = layer / (totalLayers - 1)
 
-    // 花瓣尺寸：外層更大
-    const petalHeight = 0.06 + layerRatio * 0.12  // 花瓣高度
-    const petalWidth = 0.04 + layerRatio * 0.08   // 花瓣寬度（弧度）
-    const baseRadius = 0.01 + layerRatio * 0.10   // 底部離中心距離
+    // 花瓣尺寸
+    const petalLength = 0.07 + layerRatio * 0.11   // 花瓣長度
+    const petalWidth = 0.035 + layerRatio * 0.055  // 花瓣最寬處
+    const baseRadius = 0.008 + layerRatio * 0.09   // 底部離中心距離
 
-    // 花瓣傾斜：內層直立(0.2)，外層向外傾(0.9)
-    const tiltAngle = 0.15 + layerRatio * 0.75
+    // 傾斜角度
+    const tiltAngle = 0.12 + layerRatio * 0.78
 
-    // 花瓣頂部內捲程度：內層捲很多，外層少捲
-    const topCurl = (1 - layerRatio) * 0.6 + 0.1
+    // 頂部內捲
+    const topCurl = (1 - layerRatio) * 0.5 + 0.08
 
-    const rows = 10  // 高度方向點數
-    const cols = 7   // 寬度方向點數
+    const rows = 12  // 沿花瓣長度
+    const cols = 9   // 沿花瓣寬度
 
     for (let r = 0; r < rows; r++) {
-      const t = r / (rows - 1)  // 0=底部, 1=頂部
+      const t = r / (rows - 1)  // 0=底部, 1=頂部（尖端）
 
-      // 實際列數：底部和頂部窄，中間寬（花瓣形狀）
-      const widthFactor = Math.sin(t * Math.PI) * 0.7 + 0.3
-      const actualCols = Math.max(3, Math.round(cols * widthFactor))
+      // ===== 橢圓形+尖端的寬度曲線 =====
+      // 底部窄 → 中間最寬 → 頂部收成尖端
+      let widthCurve
+      if (t < 0.6) {
+        // 底部到中間：橢圓形膨脹
+        widthCurve = Math.sin((t / 0.6) * Math.PI * 0.5) * 1.0
+      } else {
+        // 中間到頂部：收成尖端
+        const tipT = (t - 0.6) / 0.4
+        widthCurve = Math.cos(tipT * Math.PI * 0.5) * 1.0
+      }
+      // 確保有最小寬度
+      widthCurve = Math.max(widthCurve, 0.15)
+
+      const actualWidth = petalWidth * widthCurve
+      const actualCols = Math.max(2, Math.round(cols * widthCurve))
 
       for (let c = 0; c < actualCols; c++) {
-        const s = (c / (actualCols - 1)) - 0.5  // -0.5 到 0.5
+        const s = actualCols > 1 ? (c / (actualCols - 1)) - 0.5 : 0  // -0.5 到 0.5
 
         // 花瓣局部座標
-        // 高度：從底往上
-        const localY = t * petalHeight
+        const localLength = t * petalLength
+        const localWidth = s * actualWidth * 2
 
-        // 花瓣內凹曲面：中間凹進去，邊緣翹起
-        const cupDepth = (1 - Math.abs(s) * 2) * 0.015 * (1 + t)
+        // 內凹曲面（杯狀）
+        const cupDepth = (1 - Math.abs(s) * 1.8) * 0.012 * (0.5 + t)
 
-        // 頂部內捲
-        const curlAmount = t * t * t * topCurl * petalHeight
+        // 頂部內捲（往中心捲）
+        const curlAmount = Math.pow(t, 3) * topCurl * petalLength
 
-        // 計算傾斜後的位置
-        const radiusOffset = baseRadius + Math.sin(tiltAngle) * localY - curlAmount
-        const heightOffset = Math.cos(tiltAngle) * localY + cupDepth
+        // 傾斜變換
+        const radiusOffset = baseRadius + Math.sin(tiltAngle) * localLength - curlAmount
+        const heightOffset = Math.cos(tiltAngle) * localLength + cupDepth
 
-        // 左右展開角度
-        const spreadAngle = s * petalWidth
+        // 寬度方向的角度偏移
+        const widthAngle = (localWidth / petalLength) * 0.8
 
-        // 最終 3D 座標（繞 Y 軸旋轉到正確角度）
-        const finalAngle = angle + spreadAngle
-        const x = Math.cos(finalAngle) * radiusOffset
-        const z = Math.sin(finalAngle) * radiusOffset
+        // 3D 座標
+        const finalAngle = angle + widthAngle
+        const x = Math.cos(finalAngle) * Math.max(0.005, radiusOffset)
+        const z = Math.sin(finalAngle) * Math.max(0.005, radiusOffset)
         const y = heightOffset
 
-        // 點大小
-        const size = dotSize * (0.8 + t * 0.2) * (1 - Math.abs(s) * 0.3)
+        // 點大小：頂端（尖端）更小
+        const tipFactor = t > 0.7 ? (1 - (t - 0.7) / 0.3 * 0.5) : 1
+        const edgeFactor = 1 - Math.abs(s) * 0.25
+        const size = dotSize * tipFactor * edgeFactor
 
-        // 顏色：內側深，外側和頂部淺
-        const useLight = t > 0.5 || Math.abs(s) > 0.3
+        // 顏色
+        const useLight = t > 0.45 || Math.abs(s) > 0.35
 
         items.push({ position: [x, y, z], size, useLight })
       }
