@@ -727,12 +727,16 @@ const RoseCupPetal = ({ angle, layer, totalLayers, color, lightColor, dotSize })
         // 頂部內捲
         const curlAmount = Math.pow(t, 3) * topCurl * petalLength
 
-        // 底部圓弧收攏
-        const bottomCurve = (1 - t) * (1 - t) * 0.02
+        // 底部橢圓形收攏（更強的圓弧）
+        const bottomT = 1 - t  // 底部 = 1, 頂部 = 0
+        const bottomCurve = bottomT * bottomT * bottomT * 0.045  // 更強的內收
+
+        // 底部也要往上彎（形成橢圓底部）
+        const bottomLift = bottomT * bottomT * 0.015
 
         // 傾斜變換
         const radiusOffset = baseRadius + Math.sin(tiltAngle) * localLength - curlAmount - bottomCurve
-        const heightOffset = baseY + Math.cos(tiltAngle) * localLength + cupDepth
+        const heightOffset = baseY + bottomLift + Math.cos(tiltAngle) * localLength + cupDepth
 
         const widthAngle = (localWidth / petalLength) * 0.7
 
