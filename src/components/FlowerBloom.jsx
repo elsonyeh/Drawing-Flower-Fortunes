@@ -672,51 +672,51 @@ const LavenderSpike = ({ color }) => {
   )
 }
 
-// ============ 單片玫瑰花瓣（由圓點組成的曲面）============
-const RosePetal = ({ angle, radius, height, tilt, curl, petalScale, baseColor, tipColor, dotSize }) => {
+// ============ 玫瑰花瓣（包覆式曲面，由圓點組成）============
+const RoseWrappingPetal = ({ petalIndex, totalInLayer, layerRadius, layerHeight, openness, petalSize, color, lightColor, dotSize }) => {
   const dots = useMemo(() => {
     const items = []
-    const rows = 10  // 花瓣長度方向
-    const cols = 8   // 花瓣寬度方向
+    const rows = 12   // 花瓣高度方向
+    const cols = 9    // 花瓣弧度方向
+
+    // 花瓣在圓周上的角度範圍（包覆角度）
+    const wrapAngle = (2 * Math.PI / totalInLayer) * 0.85  // 每片花瓣覆蓋的角度
+    const baseAngle = (petalIndex / totalInLayer) * Math.PI * 2  // 起始角度
 
     for (let r = 0; r < rows; r++) {
-      const t = r / (rows - 1)  // 0=根部, 1=尖端
+      const t = r / (rows - 1)  // 0=底部, 1=頂部
 
-      // 每行的點數 - 根部少、中間多、尖端少（橢圓形）
-      const rowWidth = Math.sin(t * Math.PI) * 0.8 + 0.2
-      const actualCols = Math.max(2, Math.round(cols * rowWidth))
+      // 花瓣高度 - 從底部向上，頂部向內捲
+      const petalHeight = layerHeight + t * petalSize * 0.22
+      // 花瓣向內捲的程度（頂部更內捲）
+      const curlInward = t * t * t * openness * 0.15
 
-      for (let c = 0; c < actualCols; c++) {
-        const s = actualCols > 1 ? (c / (actualCols - 1) - 0.5) * 2 : 0  // -1 到 1
+      for (let c = 0; c < cols; c++) {
+        const s = c / (cols - 1)  // 0 到 1，沿著花瓣弧度
 
-        // 花瓣局部座標
-        const localX = s * rowWidth * 0.06 * petalScale  // 寬度
-        const localY = t * 0.15 * petalScale              // 長度（向上延伸）
-        const localZ = (t * t * curl + Math.abs(s) * s * t * 0.02) * petalScale  // 彎曲
+        // 花瓣弧度位置
+        const angle = baseAngle + (s - 0.5) * wrapAngle
 
-        // 轉換到世界座標 - 花瓣朝外傾斜
-        const cosA = Math.cos(angle)
-        const sinA = Math.sin(angle)
-        const cosTilt = Math.cos(tilt)
-        const sinTilt = Math.sin(tilt)
+        // 半徑：底部貼近中心，向上展開，但頂部內捲
+        const radiusAtHeight = layerRadius + t * petalSize * 0.08 * (1 - openness * 0.3) - curlInward
 
-        // 先繞 Y 軸旋轉（angle），再繞切線軸傾斜（tilt）
-        const x = radius * cosA + (localX * cosA - localZ * sinA * sinTilt)
-        const y = height + localY * cosTilt + localZ * sinTilt
-        const z = radius * sinA + (localX * sinA + localZ * cosA * sinTilt)
+        // 計算 3D 座標
+        const x = Math.cos(angle) * radiusAtHeight
+        const z = Math.sin(angle) * radiusAtHeight
+        const y = petalHeight
 
-        // 點大小 - 邊緣和尖端稍小
-        const sizeFactor = (1 - Math.abs(s) * 0.25) * (1 - t * 0.15)
-        const size = dotSize * sizeFactor
+        // 點的大小 - 中間稍大
+        const edgeFade = 1 - Math.abs(s - 0.5) * 0.4
+        const size = dotSize * edgeFade * (0.85 + t * 0.15)
 
-        // 顏色混合 - 根部用深色，尖端用淺色
-        const colorMix = t
+        // 顏色 - 底部深，頂部淺
+        const useLightColor = t > 0.55
 
-        items.push({ position: [x, y, z], size, colorMix })
+        items.push({ position: [x, y, z], size, useLightColor })
       }
     }
     return items
-  }, [angle, radius, height, tilt, curl, petalScale, dotSize])
+  }, [petalIndex, totalInLayer, layerRadius, layerHeight, openness, petalSize, dotSize])
 
   return (
     <>
@@ -724,7 +724,7 @@ const RosePetal = ({ angle, radius, height, tilt, curl, petalScale, baseColor, t
         <mesh key={i} position={dot.position}>
           <sphereGeometry args={[dot.size, 8, 8]} />
           <meshStandardMaterial
-            color={dot.colorMix < 0.5 ? baseColor : tipColor}
+            color={dot.useLightColor ? lightColor : color}
             roughness={0.32}
             metalness={0.05}
           />
@@ -734,146 +734,96 @@ const RosePetal = ({ angle, radius, height, tilt, curl, petalScale, baseColor, t
   )
 }
 
-// ============ 玫瑰花（由多片花瓣螺旋組成）============
+// ============ 玫瑰花（層層包覆的花瓣）============
 const RoseDotCluster = ({ color, isSSR = false, gradientColors }) => {
   const ref = useRef()
   useFrame((state) => {
-    if (ref.current) ref.current.rotation.y = state.clock.getElapsedTime() * 0.06
+    if (ref.current) ref.current.rotation.y = state.clock.getElapsedTime() * 0.05
   })
 
-  // 顏色
+  // 顏色漸變
   const colors = useMemo(() => {
     const base = new THREE.Color(color)
     const hsl = {}
     base.getHSL(hsl)
     return {
-      inner: '#' + new THREE.Color().setHSL(hsl.h, hsl.s * 0.95, hsl.l * 0.5).getHexString(),
-      base: '#' + new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l * 0.7).getHexString(),
+      deep: '#' + new THREE.Color().setHSL(hsl.h, hsl.s * 0.95, hsl.l * 0.4).getHexString(),
+      dark: '#' + new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l * 0.6).getHexString(),
       mid: color,
-      tip: '#' + new THREE.Color().setHSL(hsl.h, hsl.s * 0.85, Math.min(hsl.l * 1.2, 0.92)).getHexString(),
+      light: '#' + new THREE.Color().setHSL(hsl.h, hsl.s * 0.9, Math.min(hsl.l * 1.15, 0.88)).getHexString(),
     }
   }, [color])
 
-  // 生成花瓣配置 - 從內到外螺旋排列
-  const petals = useMemo(() => {
-    const items = []
-    const goldenAngle = 137.508 * Math.PI / 180
-
-    // 內層花瓣（緊閉的花苞核心）
-    for (let i = 0; i < 4; i++) {
-      const angle = i * goldenAngle
-      items.push({
-        angle,
-        radius: 0.012,
-        height: 0.08,
-        tilt: 0.25,      // 幾乎直立
-        curl: 0.12,      // 強烈內捲
-        petalScale: 0.5,
-        baseColor: colors.inner,
-        tipColor: colors.base,
-        dotSize: 0.007,
-      })
-    }
-
-    // 第二層
-    for (let i = 0; i < 5; i++) {
-      const angle = (i + 4) * goldenAngle
-      items.push({
-        angle,
-        radius: 0.03,
-        height: 0.06,
-        tilt: 0.45,
-        curl: 0.1,
-        petalScale: 0.65,
-        baseColor: colors.base,
-        tipColor: colors.mid,
-        dotSize: 0.008,
-      })
-    }
-
+  // 層層包覆的花瓣配置
+  const layers = useMemo(() => [
+    // 最內層 - 緊閉的核心（2-3片緊緊包住）
+    { count: 3, radius: 0.015, height: 0.06, openness: 0.15, size: 0.08, color: colors.deep, light: colors.dark, dot: 0.006 },
+    // 第二層 - 稍微展開
+    { count: 4, radius: 0.035, height: 0.045, openness: 0.3, size: 0.10, color: colors.dark, light: colors.mid, dot: 0.007 },
     // 第三層
-    for (let i = 0; i < 6; i++) {
-      const angle = (i + 9) * goldenAngle
-      items.push({
-        angle,
-        radius: 0.055,
-        height: 0.04,
-        tilt: 0.7,
-        curl: 0.08,
-        petalScale: 0.8,
-        baseColor: colors.base,
-        tipColor: colors.mid,
-        dotSize: 0.009,
-      })
-    }
-
+    { count: 5, radius: 0.055, height: 0.03, openness: 0.45, size: 0.12, color: colors.dark, light: colors.mid, dot: 0.008 },
     // 第四層
-    for (let i = 0; i < 8; i++) {
-      const angle = (i + 15) * goldenAngle
-      items.push({
-        angle,
-        radius: 0.085,
-        height: 0.02,
-        tilt: 0.95,
-        curl: 0.06,
-        petalScale: 0.95,
-        baseColor: colors.mid,
-        tipColor: colors.tip,
-        dotSize: 0.01,
-      })
-    }
+    { count: 6, radius: 0.08, height: 0.015, openness: 0.6, size: 0.14, color: colors.mid, light: colors.light, dot: 0.009 },
+    // 第五層 - 較展開
+    { count: 7, radius: 0.11, height: 0.0, openness: 0.75, size: 0.15, color: colors.mid, light: colors.light, dot: 0.01 },
+    // 最外層 - 完全展開
+    { count: 8, radius: 0.145, height: -0.015, openness: 0.9, size: 0.16, color: colors.mid, light: colors.light, dot: 0.011 },
+  ], [colors])
 
-    // 最外層
-    for (let i = 0; i < 10; i++) {
-      const angle = (i + 23) * goldenAngle
-      items.push({
-        angle,
-        radius: 0.12,
-        height: -0.01,
-        tilt: 1.2,       // 向外展開
-        curl: 0.04,
-        petalScale: 1.1,
-        baseColor: colors.mid,
-        tipColor: colors.tip,
-        dotSize: 0.011,
-      })
-    }
-
-    return items
-  }, [colors])
-
-  // 花心
+  // 花心小點
   const centerDots = useMemo(() => {
     const items = []
     const ga = Math.PI * (3 - Math.sqrt(5))
-    for (let i = 0; i < 30; i++) {
-      const t = i / 30
+    for (let i = 0; i < 25; i++) {
+      const t = i / 25
       const a = i * ga
-      const r = t * 0.018
+      const r = t * 0.012
       items.push({
-        position: [Math.cos(a) * r, 0.09 + (1 - t) * 0.015, Math.sin(a) * r],
-        size: 0.004 + t * 0.002,
+        position: [Math.cos(a) * r, 0.07 + (1 - t) * 0.012, Math.sin(a) * r],
+        size: 0.003 + t * 0.002,
       })
     }
     return items
   }, [])
 
   return (
-    <group ref={ref} position={[0, 0.38, 0]}>
-      {petals.map((petal, i) => (
-        <RosePetal key={i} {...petal} />
-      ))}
+    <group ref={ref} position={[0, 0, 0]}>
+      {/* 花萼（連接莖的綠色部分）*/}
+      <mesh position={[0, -0.02, 0]}>
+        <coneGeometry args={[0.045, 0.06, 8]} />
+        <meshStandardMaterial color="#2D5A20" roughness={0.6} />
+      </mesh>
 
+      {/* 層層花瓣 */}
+      {layers.map((layer, li) =>
+        [...Array(layer.count)].map((_, pi) => (
+          <RoseWrappingPetal
+            key={`${li}-${pi}`}
+            petalIndex={pi}
+            totalInLayer={layer.count}
+            layerRadius={layer.radius}
+            layerHeight={layer.height}
+            openness={layer.openness}
+            petalSize={layer.size}
+            color={layer.color}
+            lightColor={layer.light}
+            dotSize={layer.dot}
+          />
+        ))
+      )}
+
+      {/* 花心 */}
       {centerDots.map((dot, i) => (
         <mesh key={`c${i}`} position={dot.position}>
           <sphereGeometry args={[dot.size, 6, 6]} />
-          <meshStandardMaterial color={colors.inner} roughness={0.4} />
+          <meshStandardMaterial color={colors.deep} roughness={0.4} />
         </mesh>
       ))}
 
+      {/* SSR 光暈 */}
       {isSSR && (
-        <mesh position={[0, 0.02, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.25, 32]} />
+        <mesh position={[0, 0.03, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.22, 32]} />
           <meshBasicMaterial color={gradientColors?.[1] || color} transparent opacity={0.12} side={THREE.DoubleSide} />
         </mesh>
       )}
@@ -1016,29 +966,45 @@ const RoseCompoundLeaf = ({ position, rotation, scale = 1, delay = 0 }) => {
   )
 }
 
-// ============ 玫瑰莖上的葉子組 ============
+// ============ 玫瑰細莖 ============
+const RoseStem = () => {
+  const geometry = useMemo(() => {
+    const points = []
+    const height = 1.6
+    for (let i = 0; i <= 24; i++) {
+      const t = i / 24
+      // 非常輕微的自然彎曲
+      const x = Math.sin(t * Math.PI * 0.3) * 0.02
+      const z = Math.cos(t * Math.PI * 0.2) * 0.01
+      points.push(new THREE.Vector3(x, 0.52 - height * t, z))
+    }
+    // 細莖：半徑 0.018
+    return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 20, 0.018, 8, false)
+  }, [])
+
+  return (
+    <mesh geometry={geometry}>
+      <meshStandardMaterial color="#3D6B35" roughness={0.55} />
+    </mesh>
+  )
+}
+
+// ============ 玫瑰莖上的葉子組（參考照片：兩組葉子，左右交錯）============
 const RoseLeaves = () => (
   <group>
-    {/* 上方第一組葉子 */}
+    {/* 上方葉子 - 向右伸出 */}
     <RoseCompoundLeaf
-      position={[0.08, -0.25, 0.03]}
-      rotation={[0.4, -0.5, 0.3]}
-      scale={1.0}
+      position={[0.04, 0.05, 0.02]}
+      rotation={[0.2, -1.2, 0.4]}
+      scale={1.1}
       delay={0}
     />
-    {/* 中間第二組葉子（對側）*/}
+    {/* 下方葉子 - 向左伸出 */}
     <RoseCompoundLeaf
-      position={[-0.07, -0.5, -0.02]}
-      rotation={[0.35, 0.6, -0.35]}
-      scale={0.9}
-      delay={0.5}
-    />
-    {/* 下方第三組葉子 */}
-    <RoseCompoundLeaf
-      position={[0.05, -0.8, 0.02]}
-      rotation={[0.45, -0.4, 0.25]}
-      scale={0.85}
-      delay={1.0}
+      position={[-0.03, -0.45, -0.01]}
+      rotation={[0.25, 1.3, -0.35]}
+      scale={1.0}
+      delay={0.6}
     />
   </group>
 )
@@ -1200,15 +1166,14 @@ const CompleteFlower = ({ flower, config }) => {
   if (petalType === 'rose') {
     return (
       <group>
-        {/* 放大花朵 1.6 倍 */}
-        <group scale={1.6}>
+        {/* 花朵（放大 1.8 倍）*/}
+        <group position={[0, 0.55, 0]} scale={1.8}>
           <RoseDotCluster color={flower.color} isSSR={isSSR} gradientColors={flower.gradientColors} />
         </group>
-        {/* 莖和玫瑰專用複葉 */}
-        <group position={[0, 0.45, 0]}>
-          <Stem height={1.4} curve={0.12} />
-          <RoseLeaves />
-        </group>
+        {/* 細莖（連接花萼）*/}
+        <RoseStem />
+        {/* 玫瑰葉子（參考照片位置）*/}
+        <RoseLeaves />
       </group>
     )
   }
