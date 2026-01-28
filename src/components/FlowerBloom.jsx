@@ -680,37 +680,37 @@ const RoseCupPetal = ({ angle, layer, totalLayers, color, lightColor, dotSize })
     // 層級參數
     const layerRatio = layer / (totalLayers - 1)
 
-    // 花瓣尺寸
-    const petalLength = 0.08 + layerRatio * 0.10   // 花瓣長度（加長以填滿底部）
-    const petalWidth = 0.03 + layerRatio * 0.045   // 花瓣最寬處
-    const baseRadius = 0.005 + layerRatio * 0.055  // 底部離中心距離
+    // 花瓣尺寸（修長的花苞形狀）
+    const petalLength = 0.10 + layerRatio * 0.08   // 花瓣更長
+    const petalWidth = 0.025 + layerRatio * 0.035  // 花瓣更窄
+    const baseRadius = 0.004 + layerRatio * 0.04   // 更靠近中心
 
-    // 傾斜角度
-    const tiltAngle = 0.1 + layerRatio * 0.4
+    // 傾斜角度（更直立）
+    const tiltAngle = 0.05 + layerRatio * 0.30
 
     // 頂部內捲
-    const topCurl = (1 - layerRatio) * 0.35 + 0.2
+    const topCurl = (1 - layerRatio) * 0.3 + 0.15
 
-    // 底部起始高度（往下延伸填滿）
-    const baseY = -0.02 - layerRatio * 0.01
+    // 底部起始高度
+    const baseY = -0.025
 
-    const rows = 14  // 沿花瓣長度（增加以填滿）
-    const cols = 9   // 沿花瓣寬度
+    const rows = 14
+    const cols = 8
 
     for (let r = 0; r < rows; r++) {
-      const t = r / (rows - 1)  // 0=底部, 1=頂部（尖端）
+      const t = r / (rows - 1)
 
-      // ===== 橢圓形+尖端的寬度曲線 =====
+      // 修長橢圓形+尖端
       let widthCurve
-      if (t < 0.55) {
-        // 底部到中間：橢圓形膨脹
-        widthCurve = Math.sin((t / 0.55) * Math.PI * 0.5)
+      if (t < 0.5) {
+        // 底部到中間：緩慢膨脹
+        widthCurve = Math.sin((t / 0.5) * Math.PI * 0.5) * 0.9
       } else {
         // 中間到頂部：收成尖端
-        const tipT = (t - 0.55) / 0.45
-        widthCurve = Math.cos(tipT * Math.PI * 0.5)
+        const tipT = (t - 0.5) / 0.5
+        widthCurve = Math.cos(tipT * Math.PI * 0.5) * 0.9
       }
-      widthCurve = Math.max(widthCurve, 0.12)
+      widthCurve = Math.max(widthCurve, 0.1)
 
       const actualWidth = petalWidth * widthCurve
       const actualCols = Math.max(2, Math.round(cols * widthCurve))
@@ -718,40 +718,36 @@ const RoseCupPetal = ({ angle, layer, totalLayers, color, lightColor, dotSize })
       for (let c = 0; c < actualCols; c++) {
         const s = actualCols > 1 ? (c / (actualCols - 1)) - 0.5 : 0
 
-        // 花瓣局部座標
         const localLength = t * petalLength
         const localWidth = s * actualWidth * 2
 
         // 內凹曲面
-        const cupDepth = (1 - Math.abs(s) * 1.8) * 0.01 * (0.3 + t)
+        const cupDepth = (1 - Math.abs(s) * 1.6) * 0.008 * (0.3 + t)
 
         // 頂部內捲
         const curlAmount = Math.pow(t, 3) * topCurl * petalLength
 
-        // 底部圓弧收攏（讓底部往中心收）
-        const bottomCurve = (1 - t) * (1 - t) * 0.015
+        // 底部圓弧收攏
+        const bottomCurve = (1 - t) * (1 - t) * 0.02
 
         // 傾斜變換
         const radiusOffset = baseRadius + Math.sin(tiltAngle) * localLength - curlAmount - bottomCurve
         const heightOffset = baseY + Math.cos(tiltAngle) * localLength + cupDepth
 
-        // 寬度方向的角度偏移
-        const widthAngle = (localWidth / petalLength) * 0.8
+        const widthAngle = (localWidth / petalLength) * 0.7
 
-        // 3D 座標
         const finalAngle = angle + widthAngle
-        const x = Math.cos(finalAngle) * Math.max(0.003, radiusOffset)
-        const z = Math.sin(finalAngle) * Math.max(0.003, radiusOffset)
+        const x = Math.cos(finalAngle) * Math.max(0.002, radiusOffset)
+        const z = Math.sin(finalAngle) * Math.max(0.002, radiusOffset)
         const y = heightOffset
 
         // 點大小
         const tipFactor = t > 0.7 ? (1 - (t - 0.7) / 0.3 * 0.5) : 1
-        const bottomFactor = t < 0.2 ? (0.7 + t * 1.5) : 1  // 底部點稍小
-        const edgeFactor = 1 - Math.abs(s) * 0.25
+        const bottomFactor = t < 0.15 ? (0.6 + t * 2.5) : 1
+        const edgeFactor = 1 - Math.abs(s) * 0.2
         const size = dotSize * tipFactor * bottomFactor * edgeFactor
 
-        // 顏色
-        const useLight = t > 0.45 || Math.abs(s) > 0.35
+        const useLight = t > 0.4 || Math.abs(s) > 0.3
 
         items.push({ position: [x, y, z], size, useLight })
       }
@@ -832,9 +828,9 @@ const RoseDotCluster = ({ color, isSSR = false, gradientColors }) => {
   return (
     <group ref={ref} position={[0, 0, 0]}>
       {/* 花萼 */}
-      <mesh position={[0, -0.03, 0]}>
-        <coneGeometry args={[0.035, 0.035, 8]} />
-        <meshStandardMaterial color="#2D5A20" roughness={0.6} />
+      <mesh position={[0, -0.035, 0]}>
+        <coneGeometry args={[0.03, 0.03, 8]} />
+        <meshStandardMaterial color="#3D6830" roughness={0.5} />
       </mesh>
 
       {/* 花瓣 */}
@@ -845,7 +841,7 @@ const RoseDotCluster = ({ color, isSSR = false, gradientColors }) => {
       {/* SSR 光暈 */}
       {isSSR && (
         <mesh position={[0, 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.2, 32]} />
+          <circleGeometry args={[0.18, 32]} />
           <meshBasicMaterial color={gradientColors?.[1] || color} transparent opacity={0.12} side={THREE.DoubleSide} />
         </mesh>
       )}
