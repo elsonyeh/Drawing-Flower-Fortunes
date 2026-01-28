@@ -59,6 +59,21 @@ const petalProfiles = {
     curve: { main: 0.08, edge: 0.06, tip: 0.12 },
     arrange: { baseRadius: 0.015, radiusGrow: 0.005, tiltBase: 0.18, tiltDecay: 0.05, randomPos: 0.005, randomRot: 0.08 },
   },
+  gardenia: {
+    // 梔子花：螺旋白花瓣
+    curve: { main: 0.35, edge: 0.2, tip: 0.1 },
+    arrange: { baseRadius: 0.07, radiusGrow: 0.04, tiltBase: 0.55, tiltDecay: 0.25, randomPos: 0.01, randomRot: 0.08 },
+  },
+  lavender: {
+    // 薰衣草：小穗狀
+    curve: { main: 0.05, edge: 0.03, tip: 0.08 },
+    arrange: { baseRadius: 0.02, radiusGrow: 0.01, tiltBase: 0.15, tiltDecay: 0.05, randomPos: 0.008, randomRot: 0.1 },
+  },
+  violet: {
+    // 紫羅蘭：小巧五瓣
+    curve: { main: 0.1, edge: 0.06, tip: 0.15 },
+    arrange: { baseRadius: 0.1, radiusGrow: 0.02, tiltBase: 0.2, tiltDecay: 0.08, randomPos: 0.012, randomRot: 0.08 },
+  },
   epiphyllum: {
     curve: { main: 0.32, edge: 0.18, tip: 0.38 },
     arrange: { baseRadius: 0.12, radiusGrow: 0.04, tiltBase: 0.32, tiltDecay: 0.15, randomPos: 0.015, randomRot: 0.08 },
@@ -211,6 +226,36 @@ const createPetalShape = (type, w, l) => {
       shape.quadraticCurveTo(-w * 0.15, l * 0.95, 0, l)
       shape.quadraticCurveTo(w * 0.15, l * 0.95, w * 0.38, l * 0.62)
       shape.quadraticCurveTo(w * 0.42, l * 0.2, 0, 0)
+      break
+    }
+    case 'gardenia': {
+      // 梔子花：螺旋白花瓣，飽滿圓潤
+      shape.moveTo(0, l * 0.04)
+      shape.bezierCurveTo(-w * 0.42, l * 0.03, -w * 0.88, l * 0.22, -w * 0.95, l * 0.48)
+      shape.bezierCurveTo(-w * 1.0, l * 0.72, -w * 0.78, l * 0.88, -w * 0.42, l * 0.96)
+      shape.quadraticCurveTo(-w * 0.15, l * 1.0, 0, l * 0.98)
+      shape.quadraticCurveTo(w * 0.15, l * 1.0, w * 0.42, l * 0.96)
+      shape.bezierCurveTo(w * 0.78, l * 0.88, w * 1.0, l * 0.72, w * 0.95, l * 0.48)
+      shape.bezierCurveTo(w * 0.88, l * 0.22, w * 0.42, l * 0.03, 0, l * 0.04)
+      break
+    }
+    case 'lavender': {
+      // 薰衣草：小巧橢圓形花瓣
+      shape.moveTo(0, 0)
+      shape.bezierCurveTo(-w * 0.35, l * 0.12, -w * 0.45, l * 0.38, -w * 0.38, l * 0.62)
+      shape.bezierCurveTo(-w * 0.28, l * 0.85, -w * 0.12, l * 0.96, 0, l)
+      shape.bezierCurveTo(w * 0.12, l * 0.96, w * 0.28, l * 0.85, w * 0.38, l * 0.62)
+      shape.bezierCurveTo(w * 0.45, l * 0.38, w * 0.35, l * 0.12, 0, 0)
+      break
+    }
+    case 'violet': {
+      // 紫羅蘭：小巧五瓣，頂部微圓
+      shape.moveTo(0, 0)
+      shape.bezierCurveTo(-w * 0.32, l * 0.08, -w * 0.68, l * 0.28, -w * 0.72, l * 0.52)
+      shape.bezierCurveTo(-w * 0.75, l * 0.75, -w * 0.52, l * 0.92, -w * 0.22, l * 0.98)
+      shape.quadraticCurveTo(0, l * 1.02, w * 0.22, l * 0.98)
+      shape.bezierCurveTo(w * 0.52, l * 0.92, w * 0.75, l * 0.75, w * 0.72, l * 0.52)
+      shape.bezierCurveTo(w * 0.68, l * 0.28, w * 0.32, l * 0.08, 0, 0)
       break
     }
     case 'epiphyllum': {
@@ -668,48 +713,65 @@ const BaseLeaves = () => {
   return <group>{leaves.map((l, i) => <Leaf key={i} {...l} delay={i * 0.18} />)}</group>
 }
 
-// ============ 向日葵 3D 模型 ============
-const SunflowerModel = () => {
+// ============ 3D 模型配置（只有向日葵使用 3D 模型）============
+const flower3DConfigs = {
+  sunflower: {
+    mtl: '/models/sunflower/10455_Sunflower_v1_max2010_it2.mtl',
+    obj: '/models/sunflower/10455_Sunflower_v1_max2010_it2.obj',
+    scale: 0.019,
+    position: [0, -2.0, 0],
+    clipThreshold: 80,
+    clipAxis: 'z',
+    clipDirection: '>',
+  },
+}
+
+// ============ 通用 3D 花朵模型 ============
+const Flower3DModel = ({ modelType }) => {
   const groupRef = useRef()
+  const config = flower3DConfigs[modelType] || flower3DConfigs.sunflower
 
-  // 裁切閾值 - Z 軸（3ds Max 模型的高度軸），數值越大裁越多莖
-  const clipThreshold = 80
-
-  const materials = useLoader(MTLLoader, '/models/sunflower/10455_Sunflower_v1_max2010_it2.mtl')
-  const obj = useLoader(OBJLoader, '/models/sunflower/10455_Sunflower_v1_max2010_it2.obj', (loader) => {
+  const materials = useLoader(MTLLoader, config.mtl)
+  const obj = useLoader(OBJLoader, config.obj, (loader) => {
     materials.preload()
     loader.setMaterials(materials)
   })
-
-  // 載入貼圖
-  const texture = useMemo(() => {
-    const loader = new THREE.TextureLoader()
-    return loader.load('/models/sunflower/10455_Sunflower_v1_Diffuse.jpg')
-  }, [])
 
   const clonedObj = useMemo(() => {
     const clone = obj.clone()
     clone.traverse((child) => {
       if (child.isMesh && child.geometry) {
-        // 直接修改 geometry 來裁切
         const geo = child.geometry.clone()
         const pos = geo.attributes.position
         const indices = geo.index ? Array.from(geo.index.array) : null
+        const { clipThreshold, clipAxis, clipDirection } = config
+
+        const getAxisValue = (arr, idx, axis) => {
+          const base = idx * 3
+          if (axis === 'x') return arr[base]
+          if (axis === 'y') return arr[base + 1]
+          return arr[base + 2]
+        }
+
+        const shouldKeep = (v0, v1, v2) => {
+          if (clipDirection === '>') {
+            return v0 > clipThreshold && v1 > clipThreshold && v2 > clipThreshold
+          }
+          return v0 < clipThreshold && v1 < clipThreshold && v2 < clipThreshold
+        }
 
         if (indices) {
-          // 有索引的 geometry
           const newIndices = []
           for (let i = 0; i < indices.length; i += 3) {
-            const y0 = pos.getY(indices[i])
-            const y1 = pos.getY(indices[i + 1])
-            const y2 = pos.getY(indices[i + 2])
-            if (y0 < clipThreshold && y1 < clipThreshold && y2 < clipThreshold) {
+            const v0 = clipAxis === 'z' ? pos.getZ(indices[i]) : clipAxis === 'y' ? pos.getY(indices[i]) : pos.getX(indices[i])
+            const v1 = clipAxis === 'z' ? pos.getZ(indices[i+1]) : clipAxis === 'y' ? pos.getY(indices[i+1]) : pos.getX(indices[i+1])
+            const v2 = clipAxis === 'z' ? pos.getZ(indices[i+2]) : clipAxis === 'y' ? pos.getY(indices[i+2]) : pos.getX(indices[i+2])
+            if (shouldKeep(v0, v1, v2)) {
               newIndices.push(indices[i], indices[i + 1], indices[i + 2])
             }
           }
           geo.setIndex(newIndices)
         } else {
-          // 非索引 geometry - 每 3 個頂點一個三角形
           const oldPos = pos.array
           const newPos = []
           const uv = geo.attributes.uv ? geo.attributes.uv.array : null
@@ -718,13 +780,11 @@ const SunflowerModel = () => {
           const newNormal = normal ? [] : null
 
           for (let i = 0; i < pos.count; i += 3) {
-            // 用 Z 軸（原模型的高度軸）
-            const z0 = oldPos[i * 3 + 2]
-            const z1 = oldPos[(i + 1) * 3 + 2]
-            const z2 = oldPos[(i + 2) * 3 + 2]
+            const v0 = getAxisValue(oldPos, i, clipAxis)
+            const v1 = getAxisValue(oldPos, i + 1, clipAxis)
+            const v2 = getAxisValue(oldPos, i + 2, clipAxis)
 
-            if (z0 > clipThreshold && z1 > clipThreshold && z2 > clipThreshold) {
-              // 保留這個三角形的三個頂點
+            if (shouldKeep(v0, v1, v2)) {
               for (let j = 0; j < 3; j++) {
                 const idx = i + j
                 newPos.push(oldPos[idx * 3], oldPos[idx * 3 + 1], oldPos[idx * 3 + 2])
@@ -740,14 +800,13 @@ const SunflowerModel = () => {
         }
 
         child.geometry = geo
-        child.material = new THREE.MeshStandardMaterial({
-          map: texture,
-          side: THREE.DoubleSide,
-        })
+        if (child.material) {
+          child.material.side = THREE.DoubleSide
+        }
       }
     })
     return clone
-  }, [obj, texture, clipThreshold])
+  }, [obj, config])
 
   useFrame((state) => {
     if (groupRef.current) {
@@ -757,16 +816,14 @@ const SunflowerModel = () => {
 
   return (
     <group ref={groupRef}>
-      {/* 內層 group 調整模型位置 */}
-      <group scale={0.019} rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.0, 0]}>
+      <group scale={config.scale} rotation={[-Math.PI / 2, 0, 0]} position={config.position}>
         <primitive object={clonedObj} />
       </group>
-      {/* 補光 - 花朵部分 */}
+      {/* 補光 */}
       <pointLight position={[0, 0.8, 1.5]} intensity={1} color="#fffaf0" />
       <pointLight position={[0, 0.8, -1.5]} intensity={1} color="#fff8dc" />
       <pointLight position={[1.5, 0.6, 0]} intensity={0.8} color="#ffffff" />
       <pointLight position={[-1.5, 0.6, 0]} intensity={0.8} color="#ffffff" />
-      {/* 補光 - 莖和葉子 */}
       <pointLight position={[0.8, -0.3, 0.8]} intensity={0.6} color="#fffef5" />
       <pointLight position={[-0.8, -0.3, 0.8]} intensity={0.6} color="#fffef5" />
     </group>
@@ -780,11 +837,11 @@ const CompleteFlower = ({ flower, config }) => {
   const curveStrength = 0.18
   const seed = useMemo(() => Math.random() * 1000, [])
 
-  // 向日葵使用 3D 模型
-  if (petalType === 'sunflower') {
+  // 有 3D 模型的花朵
+  if (flower3DConfigs[petalType]) {
     return (
       <Suspense fallback={null}>
-        <SunflowerModel />
+        <Flower3DModel modelType={petalType} />
       </Suspense>
     )
   }
@@ -859,10 +916,10 @@ const FlowerBloom = ({ flower }) => {
         enableZoom={false}
         enablePan={false}
         autoRotate
-        autoRotateSpeed={config.petalType === 'sunflower' ? 0 : (isSSR ? 0.42 : 0.3)}
-        maxPolarAngle={config.petalType === 'sunflower' ? Math.PI / 2 : Math.PI / 1.55}
-        minPolarAngle={config.petalType === 'sunflower' ? Math.PI / 2 : Math.PI / 4.2}
-        target={config.petalType === 'sunflower' ? [0, 0.4, 0] : [0, -0.1, 0]}
+        autoRotateSpeed={flower3DConfigs[config.petalType] ? 0 : (isSSR ? 0.42 : 0.3)}
+        maxPolarAngle={flower3DConfigs[config.petalType] ? Math.PI / 2 : Math.PI / 1.55}
+        minPolarAngle={flower3DConfigs[config.petalType] ? Math.PI / 2 : Math.PI / 4.2}
+        target={flower3DConfigs[config.petalType] ? [0, 0.4, 0] : [0, -0.1, 0]}
       />
     </Canvas>
   )
