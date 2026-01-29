@@ -730,8 +730,12 @@ const BaseLeaves = () => {
 // │                 │ X負值=模型往左移（旋轉中心往右）                          │
 // │ autoRotateSpeed │ 自動旋轉速度，0=停止旋轉，數字越大轉越快                  │
 // │ showPivotGuide  │ true=顯示旋轉中心輔助線（紅:水平 綠:垂直 黃:旋轉圓）      │
+// │ pivotHeight     │ 水平旋轉面的高度（Y軸位置），正值=往上，負值=往下          │
 // ├─────────────────┼────────────────────────────────────────────────────────┤
+// │ lightIntensity  │ 亮度倍率，預設 1.0，數字越小越暗（0.5=減半）             │
+// │ forceOpaque     │ true=強制不透明，解決模型透明度過高問題                   │
 // │ flowerColor     │ 花的顏色（十六進位色碼），會覆蓋模型中的白色/淺色材質      │
+// │ stemColor       │ 莖的顏色（十六進位色碼），會覆蓋模型中的棕色材質           │
 // │ filterMeshes    │ 要隱藏的 mesh 名稱陣列，例如 ['cube', 'plane']           │
 // ├─────────────────┼────────────────────────────────────────────────────────┤
 // │ clipThreshold   │ (OBJ專用) 裁切閾值，用於移除模型底部                     │
@@ -745,7 +749,7 @@ const flower3DConfigs = {
     type: 'obj',
     mtl: '/models/sunflower/10455_Sunflower_v1_max2010_it2.mtl',
     obj: '/models/sunflower/10455_Sunflower_v1_max2010_it2.obj',
-    scale: 0.019,                      // 縮放比例（原模型很大所以縮很小）
+    scale: 0.019,                      // 縮放比例
     position: [0, -2.0, 0],            // 往下移 2 單位
     rotation: [-Math.PI / 2, 0, 0],    // X軸旋轉 -90度（原模型躺著）
     clipThreshold: 80,                 // 裁切 Z < 80 的部分（移除長莖）
@@ -787,6 +791,22 @@ const flower3DConfigs = {
     showPivotGuide: false,             // 不顯示輔助線
     flowerColor: '#9370DB',            // 紫色（覆蓋原本白色的花）
   },
+
+  // 茉莉花 - GLB 格式模型
+  jasmine: {
+    type: 'glb',
+    glb: '/models/jasmine/jasmine.glb',
+    scale: 1.8,                          // 縮放比例
+    position: [0, -0.07, 0],             // 位置偏移
+    rotation: [0, 0, 0.4],               // 旋轉角度
+    modelOffset: [0.03, 0, 0.01],           // 模型中心偏移
+    autoRotateSpeed: 0,                  // 不自動旋轉
+    showPivotGuide: true,                // 顯示輔助線方便調整
+    pivotHeight: 0.06,                      // 水平旋轉面高度（Y軸位置）
+    lightIntensity: 0.05,                // 亮度倍率
+    forceOpaque: true,                   // 強制不透明
+    stemColor: '#2D5A1E',                // 莖的顏色（綠色）
+  },
 }
 
 // ============ GLB 模型載入組件 ============
@@ -812,21 +832,51 @@ const FlowerGLBModel = ({ modelType }) => {
         } else {
           child.castShadow = true
           child.receiveShadow = true
-          if (child.material) {
-            // 克隆材質以避免共享問題
-            child.material = child.material.clone()
-            child.material.side = THREE.DoubleSide
-            child.material.needsUpdate = true
+          // 處理材質（可能是單一材質或材質陣列）
+          const isArray = Array.isArray(child.material)
+          const materials = isArray ? child.material : [child.material]
+          const processedMats = materials.map(mat => {
+            if (!mat) return mat
+            const clonedMat = mat.clone()
+            clonedMat.side = THREE.DoubleSide
+            clonedMat.needsUpdate = true
 
-            // 如果設定了花的顏色，覆蓋白色/淺色材質
-            if (config.flowerColor) {
-              const color = child.material.color
-              // 檢測是否為白色或淺色（亮度 > 0.8）
-              if (color && (color.r > 0.8 && color.g > 0.8 && color.b > 0.8)) {
-                child.material.color.set(config.flowerColor)
+            // 強制不透明（解決透明度過高問題）
+            if (config.forceOpaque) {
+              clonedMat.transparent = false
+              clonedMat.opacity = 1.0
+              clonedMat.alphaTest = 0
+              clonedMat.depthWrite = true
+              clonedMat.alphaMap = null
+              clonedMat.alphaToCoverage = false
+              if (clonedMat.blending !== undefined) {
+                clonedMat.blending = THREE.NormalBlending
               }
             }
-          }
+
+            // 如果設定了花的顏色，覆蓋白色/淺色材質
+            if (config.flowerColor && clonedMat.color) {
+              const color = clonedMat.color
+              if (color.r > 0.8 && color.g > 0.8 && color.b > 0.8) {
+                clonedMat.color.set(config.flowerColor)
+              }
+            }
+
+            // 如果設定了莖的顏色，覆蓋棕色/深色材質
+            if (config.stemColor && clonedMat.color) {
+              const color = clonedMat.color
+              // 檢測棕色系（R > G > B 且整體偏暗）
+              const isBrown = (color.r > color.g && color.g > color.b && color.r < 0.7) ||
+                              (color.r > 0.3 && color.g < 0.4 && color.b < 0.3)
+              if (isBrown) {
+                clonedMat.color.set(config.stemColor)
+              }
+            }
+
+            return clonedMat
+          })
+          // 如果原本是單一材質，還原為單一材質
+          child.material = isArray ? processedMats : processedMats[0]
         }
       }
     })
@@ -835,7 +885,7 @@ const FlowerGLBModel = ({ modelType }) => {
     toRemove.forEach(obj => obj.parent?.remove(obj))
 
     return clone
-  }, [scene, config.filterMeshes, config.flowerColor])
+  }, [scene, config.filterMeshes, config.flowerColor, config.forceOpaque, config.stemColor])
 
   useFrame((state) => {
     if (groupRef.current) {
@@ -848,18 +898,18 @@ const FlowerGLBModel = ({ modelType }) => {
       {/* 旋轉中心輔助線 */}
       {config.showPivotGuide && (
         <>
-          {/* 水平線 */}
-          <mesh position={[0, 0, 0]}>
+          {/* 水平線（紅色）- 可用 pivotHeight 調整高度 */}
+          <mesh position={[0, config.pivotHeight || 0, 0]}>
             <boxGeometry args={[2, 0.01, 0.01]} />
             <meshBasicMaterial color="#ff0000" />
           </mesh>
-          {/* 垂直線 */}
+          {/* 垂直線（綠色）*/}
           <mesh position={[0, 0, 0]}>
             <boxGeometry args={[0.01, 2, 0.01]} />
             <meshBasicMaterial color="#00ff00" />
           </mesh>
-          {/* 旋轉軌跡圓 */}
-          <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          {/* 旋轉軌跡圓（黃色）- 可用 pivotHeight 調整高度 */}
+          <mesh position={[0, config.pivotHeight || 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
             <ringGeometry args={[0.95, 1, 64]} />
             <meshBasicMaterial color="#ffff00" side={THREE.DoubleSide} transparent opacity={0.5} />
           </mesh>
@@ -875,13 +925,20 @@ const FlowerGLBModel = ({ modelType }) => {
           <primitive object={clonedScene} />
         </group>
       </group>
-      {/* 補光 - 高亮度 */}
-      <pointLight position={[0, 1, 2]} intensity={4} color="#fffaf0" />
-      <pointLight position={[0, 1, -2]} intensity={4} color="#fff8dc" />
-      <pointLight position={[2, 0.8, 0]} intensity={3.5} color="#ffffff" />
-      <pointLight position={[-2, 0.8, 0]} intensity={3.5} color="#ffffff" />
-      <pointLight position={[0, -0.5, 1.5]} intensity={2.5} color="#fff5ee" />
-      <pointLight position={[0, 2, 0]} intensity={3} color="#ffffff" />
+      {/* 補光 - 可調亮度（lightIntensity: 預設 1.0，數字越小越暗）*/}
+      {(() => {
+        const li = config.lightIntensity ?? 1.0
+        return (
+          <>
+            <pointLight position={[0, 1, 2]} intensity={4 * li} color="#fffaf0" />
+            <pointLight position={[0, 1, -2]} intensity={4 * li} color="#fff8dc" />
+            <pointLight position={[2, 0.8, 0]} intensity={3.5 * li} color="#ffffff" />
+            <pointLight position={[-2, 0.8, 0]} intensity={3.5 * li} color="#ffffff" />
+            <pointLight position={[0, -0.5, 1.5]} intensity={2.5 * li} color="#fff5ee" />
+            <pointLight position={[0, 2, 0]} intensity={3 * li} color="#ffffff" />
+          </>
+        )
+      })()}
     </group>
   )
 }
