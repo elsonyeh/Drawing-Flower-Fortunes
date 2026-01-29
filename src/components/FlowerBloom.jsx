@@ -672,187 +672,6 @@ const LavenderSpike = ({ color }) => {
   )
 }
 
-// ============ 單片玫瑰花瓣（橢圓形+尖端，杯狀曲面）============
-const RoseCupPetal = ({ angle, layer, totalLayers, color, lightColor, dotSize }) => {
-  const dots = useMemo(() => {
-    const items = []
-
-    // 層級參數
-    const layerRatio = layer / (totalLayers - 1)
-
-    // 花瓣尺寸（更寬的花瓣）
-    const petalLength = 0.10 + layerRatio * 0.08   // 花瓣長度
-    const petalWidth = 0.045 + layerRatio * 0.06   // 花瓣更寬
-    const baseRadius = 0.004 + layerRatio * 0.035  // 靠近中心
-
-    // 傾斜角度（更直立）
-    const tiltAngle = 0.05 + layerRatio * 0.30
-
-    // 頂部內捲
-    const topCurl = (1 - layerRatio) * 0.3 + 0.15
-
-    // 底部起始高度
-    const baseY = -0.025
-
-    const rows = 14
-    const cols = 8
-
-    for (let r = 0; r < rows; r++) {
-      const t = r / (rows - 1)
-
-      // 修長橢圓形+尖端
-      let widthCurve
-      if (t < 0.5) {
-        // 底部到中間：緩慢膨脹
-        widthCurve = Math.sin((t / 0.5) * Math.PI * 0.5) * 0.9
-      } else {
-        // 中間到頂部：收成尖端
-        const tipT = (t - 0.5) / 0.5
-        widthCurve = Math.cos(tipT * Math.PI * 0.5) * 0.9
-      }
-      widthCurve = Math.max(widthCurve, 0.1)
-
-      const actualWidth = petalWidth * widthCurve
-      const actualCols = Math.max(2, Math.round(cols * widthCurve))
-
-      for (let c = 0; c < actualCols; c++) {
-        const s = actualCols > 1 ? (c / (actualCols - 1)) - 0.5 : 0
-
-        const localLength = t * petalLength
-        const localWidth = s * actualWidth * 2
-
-        // 內凹曲面
-        const cupDepth = (1 - Math.abs(s) * 1.6) * 0.008 * (0.3 + t)
-
-        // 頂部內捲
-        const curlAmount = Math.pow(t, 3) * topCurl * petalLength
-
-        // 底部橢圓形收攏（更強的圓弧）
-        const bottomT = 1 - t  // 底部 = 1, 頂部 = 0
-        const bottomCurve = bottomT * bottomT * bottomT * 0.045  // 更強的內收
-
-        // 底部也要往上彎（形成橢圓底部）
-        const bottomLift = bottomT * bottomT * 0.015
-
-        // 傾斜變換
-        const radiusOffset = baseRadius + Math.sin(tiltAngle) * localLength - curlAmount - bottomCurve
-        const heightOffset = baseY + bottomLift + Math.cos(tiltAngle) * localLength + cupDepth
-
-        const widthAngle = (localWidth / petalLength) * 0.7
-
-        const finalAngle = angle + widthAngle
-        const x = Math.cos(finalAngle) * Math.max(0.002, radiusOffset)
-        const z = Math.sin(finalAngle) * Math.max(0.002, radiusOffset)
-        const y = heightOffset
-
-        // 點大小
-        const tipFactor = t > 0.7 ? (1 - (t - 0.7) / 0.3 * 0.5) : 1
-        const bottomFactor = t < 0.15 ? (0.6 + t * 2.5) : 1
-        const edgeFactor = 1 - Math.abs(s) * 0.2
-        const size = dotSize * tipFactor * bottomFactor * edgeFactor
-
-        const useLight = t > 0.4 || Math.abs(s) > 0.3
-
-        items.push({ position: [x, y, z], size, useLight })
-      }
-    }
-
-    return items
-  }, [angle, layer, totalLayers, dotSize])
-
-  return (
-    <>
-      {dots.map((dot, i) => (
-        <mesh key={i} position={dot.position}>
-          <sphereGeometry args={[dot.size, 8, 8]} />
-          <meshStandardMaterial
-            color={dot.useLight ? lightColor : color}
-            roughness={0.3}
-            metalness={0.05}
-          />
-        </mesh>
-      ))}
-    </>
-  )
-}
-
-// ============ 玫瑰花（層層往上包覆）============
-const RoseDotCluster = ({ color, isSSR = false, gradientColors }) => {
-  const ref = useRef()
-  useFrame((state) => {
-    if (ref.current) ref.current.rotation.y = state.clock.getElapsedTime() * 0.05
-  })
-
-  // 顏色
-  const colors = useMemo(() => {
-    const base = new THREE.Color(color)
-    const hsl = {}
-    base.getHSL(hsl)
-    return {
-      deep: '#' + new THREE.Color().setHSL(hsl.h, hsl.s * 0.95, hsl.l * 0.35).getHexString(),
-      dark: '#' + new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l * 0.55).getHexString(),
-      mid: color,
-      light: '#' + new THREE.Color().setHSL(hsl.h, hsl.s * 0.85, Math.min(hsl.l * 1.2, 0.9)).getHexString(),
-    }
-  }, [color])
-
-  // 花瓣配置：每層的花瓣數和起始角度（減少數量）
-  const petals = useMemo(() => {
-    const items = []
-    const totalLayers = 5
-    const petalsPerLayer = [2, 3, 4, 5, 6]  // 內到外，數量減少
-    const goldenAngle = 137.5 * Math.PI / 180
-
-    for (let layer = 0; layer < totalLayers; layer++) {
-      const count = petalsPerLayer[layer]
-      const layerOffset = layer * goldenAngle * 0.4  // 每層錯開
-
-      // 顏色：內層深，外層淺
-      const layerColor = layer < 2 ? colors.deep : layer < 4 ? colors.dark : colors.mid
-      const layerLight = layer < 2 ? colors.dark : layer < 4 ? colors.mid : colors.light
-
-      // 點的大小
-      const dotSize = 0.005 + layer * 0.0015
-
-      for (let p = 0; p < count; p++) {
-        const angle = (p / count) * Math.PI * 2 + layerOffset
-        items.push({
-          angle,
-          layer,
-          totalLayers,
-          color: layerColor,
-          lightColor: layerLight,
-          dotSize,
-        })
-      }
-    }
-    return items
-  }, [colors])
-
-  return (
-    <group ref={ref} position={[0, 0, 0]}>
-      {/* 花萼 */}
-      <mesh position={[0, -0.035, 0]}>
-        <coneGeometry args={[0.03, 0.03, 8]} />
-        <meshStandardMaterial color="#3D6830" roughness={0.5} />
-      </mesh>
-
-      {/* 花瓣 */}
-      {petals.map((petal, i) => (
-        <RoseCupPetal key={i} {...petal} />
-      ))}
-
-      {/* SSR 光暈 */}
-      {isSSR && (
-        <mesh position={[0, 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.18, 32]} />
-          <meshBasicMaterial color={gradientColors?.[1] || color} transparent opacity={0.12} side={THREE.DoubleSide} />
-        </mesh>
-      )}
-    </group>
-  )
-}
-
 // ============ 花莖 ============
 const Stem = ({ height = 1.45, curve = 0.18 }) => {
   const geometry = useMemo(() => {
@@ -894,171 +713,79 @@ const BaseLeaves = () => {
   return <group>{leaves.map((l, i) => <Leaf key={i} {...l} delay={i * 0.18} />)}</group>
 }
 
-// ============ 玫瑰葉子幾何體（鋸齒邊緣）============
-const createRoseLeafletGeometry = (size = 0.12) => {
-  const shape = new THREE.Shape()
-  const l = size, w = size * 0.45
-
-  // 玫瑰葉片：橢圓形帶鋸齒邊緣
-  shape.moveTo(0, 0)
-  // 左側帶鋸齒
-  const segments = 6
-  for (let i = 1; i <= segments; i++) {
-    const t = i / segments
-    const baseX = -Math.sin(t * Math.PI) * w
-    const y = t * l
-    const serration = (i % 2 === 0) ? 0.015 : -0.008
-    shape.lineTo(baseX + serration, y)
-  }
-  // 頂端
-  shape.quadraticCurveTo(0, l * 1.05, w * 0.15, l * 0.92)
-  // 右側帶鋸齒
-  for (let i = segments - 1; i >= 1; i--) {
-    const t = i / segments
-    const baseX = Math.sin(t * Math.PI) * w
-    const y = t * l
-    const serration = (i % 2 === 0) ? 0.015 : -0.008
-    shape.lineTo(baseX + serration, y)
-  }
-  shape.lineTo(0, 0)
-
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: 0.003,
-    bevelEnabled: true,
-    bevelThickness: 0.001,
-    bevelSize: 0.001,
-    bevelSegments: 1,
-  })
-
-  // 添加自然彎曲
-  const positions = geometry.attributes.position
-  for (let i = 0; i < positions.count; i++) {
-    const y = positions.getY(i)
-    const z = positions.getZ(i)
-    const t = y / l
-    positions.setZ(i, z + t * t * size * 0.15)
-  }
-  geometry.computeVertexNormals()
-  return geometry
-}
-
-// ============ 玫瑰複葉（5片小葉）============
-const RoseCompoundLeaf = ({ position, rotation, scale = 1, delay = 0 }) => {
-  const ref = useRef()
-  const leafletGeo = useMemo(() => createRoseLeafletGeometry(0.1), [])
-
-  useFrame((state) => {
-    if (ref.current) {
-      ref.current.rotation.z = rotation[2] + Math.sin(state.clock.getElapsedTime() * 0.5 + delay) * 0.03
-    }
-  })
-
-  // 5片小葉的配置：頂端1片 + 兩側各2片
-  const leaflets = useMemo(() => [
-    // 頂端小葉（最大）
-    { pos: [0, 0.12, 0], rot: [0.2, 0, 0], scale: 1.2 },
-    // 第一對側葉
-    { pos: [-0.045, 0.07, 0], rot: [0.25, 0.3, -0.2], scale: 0.9 },
-    { pos: [0.045, 0.07, 0], rot: [0.25, -0.3, 0.2], scale: 0.9 },
-    // 第二對側葉（較小）
-    { pos: [-0.035, 0.03, 0], rot: [0.3, 0.4, -0.25], scale: 0.7 },
-    { pos: [0.035, 0.03, 0], rot: [0.3, -0.4, 0.25], scale: 0.7 },
-  ], [])
-
-  return (
-    <group ref={ref} position={position} rotation={rotation} scale={scale}>
-      {/* 葉柄（中央莖）*/}
-      <mesh position={[0, 0.06, 0.002]} rotation={[0.1, 0, 0]}>
-        <cylinderGeometry args={[0.004, 0.003, 0.14, 6]} />
-        <meshStandardMaterial color="#2D5A1E" roughness={0.6} />
-      </mesh>
-      {/* 小葉 */}
-      {leaflets.map((leaflet, i) => (
-        <mesh
-          key={i}
-          position={leaflet.pos}
-          rotation={leaflet.rot}
-          scale={leaflet.scale}
-          geometry={leafletGeo}
-        >
-          <meshStandardMaterial color="#3A7D2E" roughness={0.45} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-    </group>
-  )
-}
-
-// ============ 玫瑰細莖 ============
-const RoseStem = () => {
-  const geometry = useMemo(() => {
-    const points = []
-    const height = 1.6
-    for (let i = 0; i <= 24; i++) {
-      const t = i / 24
-      // 非常輕微的自然彎曲
-      const x = Math.sin(t * Math.PI * 0.3) * 0.02
-      const z = Math.cos(t * Math.PI * 0.2) * 0.01
-      points.push(new THREE.Vector3(x, 0.52 - height * t, z))
-    }
-    // 細莖：半徑 0.018
-    return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 20, 0.018, 8, false)
-  }, [])
-
-  return (
-    <mesh geometry={geometry}>
-      <meshStandardMaterial color="#3D6B35" roughness={0.55} />
-    </mesh>
-  )
-}
-
-// ============ 玫瑰莖上的葉子組（參考照片：兩組葉子，左右交錯）============
-const RoseLeaves = () => (
-  <group>
-    {/* 上方葉子 - 向右伸出 */}
-    <RoseCompoundLeaf
-      position={[0.04, 0.05, 0.02]}
-      rotation={[0.2, -1.2, 0.4]}
-      scale={1.1}
-      delay={0}
-    />
-    {/* 下方葉子 - 向左伸出 */}
-    <RoseCompoundLeaf
-      position={[-0.03, -0.45, -0.01]}
-      rotation={[0.25, 1.3, -0.35]}
-      scale={1.0}
-      delay={0.6}
-    />
-  </group>
-)
-
 // ============ 3D 模型配置 ============
+//
+// 【參數說明】
+// ┌─────────────────┬────────────────────────────────────────────────────────┐
+// │ 參數名稱         │ 說明                                                    │
+// ├─────────────────┼────────────────────────────────────────────────────────┤
+// │ type            │ 模型格式：'glb' 或 'obj'                                 │
+// │ glb / obj / mtl │ 模型檔案路徑                                            │
+// ├─────────────────┼────────────────────────────────────────────────────────┤
+// │ scale           │ 縮放比例，數字越大模型越大                               │
+// │ position        │ [X, Y, Z] 位置偏移，Y負值=往下移                         │
+// │ rotation        │ [X軸, Y軸, Z軸] 旋轉角度（弧度），Z負值=順時針傾斜        │
+// ├─────────────────┼────────────────────────────────────────────────────────┤
+// │ modelOffset     │ [X, Y, Z] 模型中心偏移，用於調整旋轉軸心位置              │
+// │                 │ X負值=模型往左移（旋轉中心往右）                          │
+// │ autoRotateSpeed │ 自動旋轉速度，0=停止旋轉，數字越大轉越快                  │
+// │ showPivotGuide  │ true=顯示旋轉中心輔助線（紅:水平 綠:垂直 黃:旋轉圓）      │
+// ├─────────────────┼────────────────────────────────────────────────────────┤
+// │ flowerColor     │ 花的顏色（十六進位色碼），會覆蓋模型中的白色/淺色材質      │
+// │ filterMeshes    │ 要隱藏的 mesh 名稱陣列，例如 ['cube', 'plane']           │
+// ├─────────────────┼────────────────────────────────────────────────────────┤
+// │ clipThreshold   │ (OBJ專用) 裁切閾值，用於移除模型底部                     │
+// │ clipAxis        │ (OBJ專用) 裁切軸：'x', 'y', 或 'z'                       │
+// │ clipDirection   │ (OBJ專用) 裁切方向：'>' 保留大於閾值的部分               │
+// └─────────────────┴────────────────────────────────────────────────────────┘
+//
 const flower3DConfigs = {
+  // 向日葵 - OBJ 格式模型
   sunflower: {
     type: 'obj',
     mtl: '/models/sunflower/10455_Sunflower_v1_max2010_it2.mtl',
     obj: '/models/sunflower/10455_Sunflower_v1_max2010_it2.obj',
-    scale: 0.019,
-    position: [0, -2.0, 0],
-    rotation: [-Math.PI / 2, 0, 0],
-    clipThreshold: 80,
+    scale: 0.019,                      // 縮放比例（原模型很大所以縮很小）
+    position: [0, -2.0, 0],            // 往下移 2 單位
+    rotation: [-Math.PI / 2, 0, 0],    // X軸旋轉 -90度（原模型躺著）
+    clipThreshold: 80,                 // 裁切 Z < 80 的部分（移除長莖）
     clipAxis: 'z',
     clipDirection: '>',
   },
+
+  // 玫瑰 - GLB 格式模型
   rose: {
     type: 'glb',
     glb: '/models/rose/rose.glb',
-    scale: 1.5,
-    position: [0, -0.5, 0],
-    rotation: [0, 0, 0],
-    autoRotateSpeed: 0.8,
+    scale: 1.5,                        // 放大 1.5 倍
+    position: [0, -0.5, 0],            // 往下移 0.5 單位
+    rotation: [0, 0, 0],               // 不旋轉
+    autoRotateSpeed: 0,                // 不自動旋轉
   },
+
+  // 櫻花 - GLB 格式模型（樹枝造型）
   sakura: {
     type: 'glb',
     glb: '/models/sakura/sakura.glb',
-    scale: 5,
-    position: [0, -0.5, 0],
-    rotation: [0, 0, 0],
-    autoRotateSpeed: 0.8,
+    scale: 4.5,                        // 放大 4.5 倍
+    position: [0, -0.5, 0],            // 往下移 0.5 單位
+    rotation: [0, 0, -0.3],            // Z軸順時針傾斜 0.3 弧度（約17度）
+    modelOffset: [-0.05, 0, 0],        // 模型往左移 0.05，讓樹枝中心對齊旋轉軸
+    autoRotateSpeed: 0,                // 不自動旋轉
+    showPivotGuide: false,             // 不顯示輔助線（調整時可開啟）
+  },
+
+  // 薰衣草 - GLB 格式模型
+  lavender: {
+    type: 'glb',
+    glb: '/models/lavender/lavender.glb',
+    scale: 2,                          // 放大 2 倍
+    position: [0, 0, 0],               // 不偏移
+    rotation: [0, 0, 0],               // 不旋轉
+    modelOffset: [0, 0, 0],            // 不偏移中心
+    autoRotateSpeed: 0,                // 不自動旋轉
+    showPivotGuide: false,             // 不顯示輔助線
+    flowerColor: '#9370DB',            // 紫色（覆蓋原本白色的花）
   },
 }
 
@@ -1069,7 +796,7 @@ const FlowerGLBModel = ({ modelType }) => {
   const { scene } = useGLTF(config.glb)
 
   const clonedScene = useMemo(() => {
-    const clone = scene.clone()
+    const clone = scene.clone(true)  // 深度克隆
     const toRemove = []
 
     clone.traverse((child) => {
@@ -1086,7 +813,19 @@ const FlowerGLBModel = ({ modelType }) => {
           child.castShadow = true
           child.receiveShadow = true
           if (child.material) {
+            // 克隆材質以避免共享問題
+            child.material = child.material.clone()
             child.material.side = THREE.DoubleSide
+            child.material.needsUpdate = true
+
+            // 如果設定了花的顏色，覆蓋白色/淺色材質
+            if (config.flowerColor) {
+              const color = child.material.color
+              // 檢測是否為白色或淺色（亮度 > 0.8）
+              if (color && (color.r > 0.8 && color.g > 0.8 && color.b > 0.8)) {
+                child.material.color.set(config.flowerColor)
+              }
+            }
           }
         }
       }
@@ -1096,7 +835,7 @@ const FlowerGLBModel = ({ modelType }) => {
     toRemove.forEach(obj => obj.parent?.remove(obj))
 
     return clone
-  }, [scene, config.filterMeshes])
+  }, [scene, config.filterMeshes, config.flowerColor])
 
   useFrame((state) => {
     if (groupRef.current) {
@@ -1106,12 +845,35 @@ const FlowerGLBModel = ({ modelType }) => {
 
   return (
     <group ref={groupRef}>
-      <group
-        scale={config.scale}
-        rotation={config.rotation || [0, 0, 0]}
-        position={config.position}
-      >
-        <primitive object={clonedScene} />
+      {/* 旋轉中心輔助線 */}
+      {config.showPivotGuide && (
+        <>
+          {/* 水平線 */}
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[2, 0.01, 0.01]} />
+            <meshBasicMaterial color="#ff0000" />
+          </mesh>
+          {/* 垂直線 */}
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[0.01, 2, 0.01]} />
+            <meshBasicMaterial color="#00ff00" />
+          </mesh>
+          {/* 旋轉軌跡圓 */}
+          <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.95, 1, 64]} />
+            <meshBasicMaterial color="#ffff00" side={THREE.DoubleSide} transparent opacity={0.5} />
+          </mesh>
+        </>
+      )}
+      {/* 模型容器：先偏移讓樹枝對齊中心，再旋轉 */}
+      <group position={config.modelOffset || [0, 0, 0]}>
+        <group
+          scale={config.scale}
+          rotation={config.rotation || [0, 0, 0]}
+          position={config.position}
+        >
+          <primitive object={clonedScene} />
+        </group>
       </group>
       {/* 補光 - 高亮度 */}
       <pointLight position={[0, 1, 2]} intensity={4} color="#fffaf0" />
@@ -1217,13 +979,14 @@ const FlowerOBJModel = ({ modelType }) => {
       <group scale={config.scale} rotation={[-Math.PI / 2, 0, 0]} position={config.position}>
         <primitive object={clonedObj} />
       </group>
-      {/* 補光 */}
-      <pointLight position={[0, 0.8, 1.5]} intensity={1} color="#fffaf0" />
-      <pointLight position={[0, 0.8, -1.5]} intensity={1} color="#fff8dc" />
-      <pointLight position={[1.5, 0.6, 0]} intensity={0.8} color="#ffffff" />
-      <pointLight position={[-1.5, 0.6, 0]} intensity={0.8} color="#ffffff" />
-      <pointLight position={[0.8, -0.3, 0.8]} intensity={0.6} color="#fffef5" />
-      <pointLight position={[-0.8, -0.3, 0.8]} intensity={0.6} color="#fffef5" />
+      {/* 補光 - 向日葵高亮度 */}
+      <pointLight position={[0, 0.8, 1.5]} intensity={3} color="#fffaf0" />
+      <pointLight position={[0, 0.8, -1.5]} intensity={3} color="#fff8dc" />
+      <pointLight position={[1.5, 0.6, 0]} intensity={2.5} color="#ffffff" />
+      <pointLight position={[-1.5, 0.6, 0]} intensity={2.5} color="#ffffff" />
+      <pointLight position={[0.8, -0.3, 0.8]} intensity={2} color="#fffef5" />
+      <pointLight position={[-0.8, -0.3, 0.8]} intensity={2} color="#fffef5" />
+      <pointLight position={[0, 1.5, 0]} intensity={2} color="#ffffff" />
     </group>
   )
 }
@@ -1271,22 +1034,6 @@ const CompleteFlower = ({ flower, config }) => {
         <LavenderSpike color={flower.color} />
         <group position={[0, 0.24, 0]}><Stem height={1.18} curve={0.1} /><StemLeaves curve={0.1} /></group>
         <BaseLeaves />
-      </group>
-    )
-  }
-
-  // 玫瑰使用小圓點匯集成立體花
-  if (petalType === 'rose') {
-    return (
-      <group>
-        {/* 花朵（放大 1.8 倍）*/}
-        <group position={[0, 0.55, 0]} scale={1.8}>
-          <RoseDotCluster color={flower.color} isSSR={isSSR} gradientColors={flower.gradientColors} />
-        </group>
-        {/* 細莖（連接花萼）*/}
-        <RoseStem />
-        {/* 玫瑰葉子（參考照片位置）*/}
-        <RoseLeaves />
       </group>
     )
   }
