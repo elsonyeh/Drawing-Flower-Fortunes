@@ -110,3 +110,84 @@ Each flower contains:
 - Random fortune selection ensures unique experience
 - Animations should be smooth on mobile devices (60fps target)
 - Consider preloading critical assets for seamless experience
+
+## 3D Model Loading (GLB/GLTF)
+
+### Current Implementation
+
+Models are configured in `FlowerBloom.jsx` via `flower3DConfigs`:
+
+```javascript
+const flower3DConfigs = {
+  // OBJ format (legacy)
+  sunflower: {
+    type: 'obj',
+    mtl: '/models/sunflower/xxx.mtl',
+    obj: '/models/sunflower/xxx.obj',
+    scale: 0.019,
+    position: [0, -2.0, 0],
+    rotation: [-Math.PI / 2, 0, 0],
+  },
+  // GLB format (recommended)
+  rose: {
+    type: 'glb',
+    glb: '/models/rose/rose.glb',
+    scale: 2.5,
+    position: [0, -0.8, 0],
+    rotation: [0, 0, 0],
+    autoRotateSpeed: 0.8,
+  },
+}
+```
+
+### Loading Methods
+
+| Format | Loader | Usage |
+|--------|--------|-------|
+| `.glb` | `useGLTF` (drei) | Preferred - binary, smaller, faster |
+| `.obj/.mtl` | `OBJLoader` + `MTLLoader` | Legacy support |
+
+### Adding New 3D Models
+
+1. Place model in `public/models/<flower-name>/`
+2. Add config to `flower3DConfigs` in `FlowerBloom.jsx`
+3. Update `flowerConfigs.js` if needed (petalType mapping)
+
+### Performance Optimization (Future)
+
+#### Draco Compression (Recommended)
+Compress GLB files to reduce size by 70-90%:
+```bash
+# Using gltf.report online tool
+# Or gltf-pipeline CLI:
+npx gltf-pipeline -i model.glb -o model-draco.glb --draco.compressionLevel 10
+```
+
+Enable Draco loader:
+```javascript
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
+const dracoLoader = new DRACOLoader()
+dracoLoader.setDecoderPath('/draco/')
+```
+
+#### Instanced Rendering (For Multiple Flowers)
+When displaying 20+ identical flowers, use `InstancedMesh`:
+```javascript
+const mesh = new THREE.InstancedMesh(geometry, material, count)
+// Set transforms per instance
+mesh.setMatrixAt(index, matrix)
+```
+
+#### Texture Optimization
+- Use 512px-1024px textures (not 4K)
+- Consider KTX2 format for GPU-optimized textures
+- Lazy load textures when needed
+
+#### Loading Progress
+Use `LoadingManager` to show progress bar:
+```javascript
+const manager = new THREE.LoadingManager()
+manager.onProgress = (url, loaded, total) => {
+  setProgress(loaded / total * 100)
+}
+```

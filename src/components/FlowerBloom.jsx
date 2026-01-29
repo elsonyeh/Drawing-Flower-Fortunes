@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unknown-property */
 import { useRef, useMemo, Suspense } from 'react'
 import { Canvas, useFrame, useLoader } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
@@ -1031,21 +1031,101 @@ const RoseLeaves = () => (
   </group>
 )
 
-// ============ 3D 模型配置（只有向日葵使用 3D 模型）============
+// ============ 3D 模型配置 ============
 const flower3DConfigs = {
   sunflower: {
+    type: 'obj',
     mtl: '/models/sunflower/10455_Sunflower_v1_max2010_it2.mtl',
     obj: '/models/sunflower/10455_Sunflower_v1_max2010_it2.obj',
     scale: 0.019,
     position: [0, -2.0, 0],
+    rotation: [-Math.PI / 2, 0, 0],
     clipThreshold: 80,
     clipAxis: 'z',
     clipDirection: '>',
   },
+  rose: {
+    type: 'glb',
+    glb: '/models/rose/rose.glb',
+    scale: 1.5,
+    position: [0, -0.5, 0],
+    rotation: [0, 0, 0],
+    autoRotateSpeed: 0.8,
+  },
+  sakura: {
+    type: 'glb',
+    glb: '/models/sakura/sakura.glb',
+    scale: 5,
+    position: [0, -0.5, 0],
+    rotation: [0, 0, 0],
+    autoRotateSpeed: 0.8,
+  },
 }
 
-// ============ 通用 3D 花朵模型 ============
-const Flower3DModel = ({ modelType }) => {
+// ============ GLB 模型載入組件 ============
+const FlowerGLBModel = ({ modelType }) => {
+  const groupRef = useRef()
+  const config = flower3DConfigs[modelType]
+  const { scene } = useGLTF(config.glb)
+
+  const clonedScene = useMemo(() => {
+    const clone = scene.clone()
+    const toRemove = []
+
+    clone.traverse((child) => {
+      if (child.isMesh) {
+        // 過濾指定的 mesh（如正方體）
+        const filterList = config.filterMeshes || []
+        const shouldFilter = filterList.some(name =>
+          child.name.toLowerCase().includes(name.toLowerCase())
+        )
+
+        if (shouldFilter) {
+          toRemove.push(child)
+        } else {
+          child.castShadow = true
+          child.receiveShadow = true
+          if (child.material) {
+            child.material.side = THREE.DoubleSide
+          }
+        }
+      }
+    })
+
+    // 移除被過濾的 mesh
+    toRemove.forEach(obj => obj.parent?.remove(obj))
+
+    return clone
+  }, [scene, config.filterMeshes])
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = state.clock.getElapsedTime() * (config.autoRotateSpeed || 0.15)
+    }
+  })
+
+  return (
+    <group ref={groupRef}>
+      <group
+        scale={config.scale}
+        rotation={config.rotation || [0, 0, 0]}
+        position={config.position}
+      >
+        <primitive object={clonedScene} />
+      </group>
+      {/* 補光 - 高亮度 */}
+      <pointLight position={[0, 1, 2]} intensity={4} color="#fffaf0" />
+      <pointLight position={[0, 1, -2]} intensity={4} color="#fff8dc" />
+      <pointLight position={[2, 0.8, 0]} intensity={3.5} color="#ffffff" />
+      <pointLight position={[-2, 0.8, 0]} intensity={3.5} color="#ffffff" />
+      <pointLight position={[0, -0.5, 1.5]} intensity={2.5} color="#fff5ee" />
+      <pointLight position={[0, 2, 0]} intensity={3} color="#ffffff" />
+    </group>
+  )
+}
+
+// ============ 通用 OBJ 3D 花朵模型 ============
+const FlowerOBJModel = ({ modelType }) => {
   const groupRef = useRef()
   const config = flower3DConfigs[modelType] || flower3DConfigs.sunflower
 
@@ -1146,6 +1226,17 @@ const Flower3DModel = ({ modelType }) => {
       <pointLight position={[-0.8, -0.3, 0.8]} intensity={0.6} color="#fffef5" />
     </group>
   )
+}
+
+// ============ 統一 3D 模型分發器 ============
+const Flower3DModel = ({ modelType }) => {
+  const config = flower3DConfigs[modelType]
+  if (!config) return null
+
+  if (config.type === 'glb') {
+    return <FlowerGLBModel modelType={modelType} />
+  }
+  return <FlowerOBJModel modelType={modelType} />
 }
 
 // ============ 完整花朵 ============
