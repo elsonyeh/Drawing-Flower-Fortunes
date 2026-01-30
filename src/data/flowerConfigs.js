@@ -262,20 +262,20 @@ export const flowerConfigs = {
     faceForward: false,
   },
 
-  // 15. 山茶花 - 規則圓形花瓣，朝上
-  camellia: {
-    name: '山茶花',
-    petalType: 'camellia',
-    petalCount: 8,
-    layers: 3,
-    petalSize: 0.6,
-    petalWidth: 0.95,
-    petalLength: 0.95,
-    centerSize: 0.2,
+  // 15. 菊花 - 細長花瓣放射狀排列
+  chrysanthemum: {
+    name: '菊花',
+    petalType: 'chrysanthemum',
+    petalCount: 24,
+    layers: 4,
+    petalSize: 0.5,
+    petalWidth: 0.15,
+    petalLength: 1.2,
+    centerSize: 0.25,
     centerColor: '#FFD700',
-    spread: 0.65,
-    curvature: 0.25,
-    rotation: 22.5,
+    spread: 0.85,
+    curvature: 0.15,
+    rotation: 7.5,
     animation: 'gentle',
     faceForward: false,
   },

@@ -5,6 +5,7 @@ import { OrbitControls, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { getFlowerConfig } from '../data/flowerConfigs'
 
 // ============ 花瓣配置 - 形狀、彎曲、排列 ============
@@ -47,9 +48,10 @@ const petalProfiles = {
     curve: { main: 0.12, edge: 0.22, tip: 0.08 },
     arrange: { baseRadius: 0.05, radiusGrow: 0.025, tiltBase: 0.65, tiltDecay: 0.2, randomPos: 0.02, randomRot: 0.15 },
   },
-  camellia: {
-    curve: { main: 0.18, edge: 0.08, tip: 0.05 },
-    arrange: { baseRadius: 0.09, radiusGrow: 0.04, tiltBase: 0.4, tiltDecay: 0.18, randomPos: 0.01, randomRot: 0.06 },
+  chrysanthemum: {
+    // 菊花：細長花瓣放射狀
+    curve: { main: 0.08, edge: 0.05, tip: 0.12 },
+    arrange: { baseRadius: 0.08, radiusGrow: 0.02, tiltBase: 0.25, tiltDecay: 0.08, randomPos: 0.01, randomRot: 0.05 },
   },
   bellflower: {
     curve: { main: 0.15, edge: 0.08, tip: 0.1 },
@@ -199,13 +201,13 @@ const createPetalShape = (type, w, l) => {
       for (let i = pts.length - 1; i >= 0; i--) shape.lineTo(-pts[i].x, pts[i].y)
       break
     }
-    case 'camellia': {
-      // 山茶花：規則圓潤
-      shape.moveTo(0, l * 0.03)
-      shape.bezierCurveTo(-w * 0.5, l * 0.02, -w * 0.95, l * 0.25, -w * 0.92, l * 0.52)
-      shape.bezierCurveTo(-w * 0.88, l * 0.78, -w * 0.52, l * 0.95, 0, l)
-      shape.bezierCurveTo(w * 0.52, l * 0.95, w * 0.88, l * 0.78, w * 0.92, l * 0.52)
-      shape.bezierCurveTo(w * 0.95, l * 0.25, w * 0.5, l * 0.02, 0, l * 0.03)
+    case 'chrysanthemum': {
+      // 菊花：細長花瓣
+      shape.moveTo(0, 0)
+      shape.bezierCurveTo(-w * 0.25, l * 0.15, -w * 0.3, l * 0.45, -w * 0.2, l * 0.75)
+      shape.quadraticCurveTo(-w * 0.08, l * 0.95, 0, l)
+      shape.quadraticCurveTo(w * 0.08, l * 0.95, w * 0.2, l * 0.75)
+      shape.bezierCurveTo(w * 0.3, l * 0.45, w * 0.25, l * 0.15, 0, 0)
       break
     }
     case 'bellflower': {
@@ -719,8 +721,8 @@ const BaseLeaves = () => {
 // ┌─────────────────┬────────────────────────────────────────────────────────┐
 // │ 參數名稱         │ 說明                                                    │
 // ├─────────────────┼────────────────────────────────────────────────────────┤
-// │ type            │ 模型格式：'glb' 或 'obj'                                 │
-// │ glb / obj / mtl │ 模型檔案路徑                                            │
+// │ type            │ 模型格式：'glb'、'fbx' 或 'obj'                          │
+// │ glb / fbx / obj / mtl │ 模型檔案路徑                                      │
 // ├─────────────────┼────────────────────────────────────────────────────────┤
 // │ scale           │ 縮放比例，數字越大模型越大                               │
 // │ position        │ [X, Y, Z] 位置偏移，Y負值=往下移                         │
@@ -735,6 +737,7 @@ const BaseLeaves = () => {
 // │ lightIntensity  │ 亮度倍率，預設 1.0，數字越小越暗（0.5=減半）             │
 // │ forceOpaque     │ true=強制不透明，解決模型透明度過高問題                   │
 // │ flowerColor     │ 花的顏色（十六進位色碼），會覆蓋模型中的白色/淺色材質      │
+// │ overrideAllColors│ true=強制覆蓋所有花朵顏色（不只白色），需配合flowerColor    │
 // │ stemColor       │ 莖的顏色（十六進位色碼），會覆蓋模型中的棕色材質           │
 // │ filterMeshes    │ 要隱藏的 mesh 名稱陣列，例如 ['cube', 'plane']           │
 // ├─────────────────┼────────────────────────────────────────────────────────┤
@@ -797,15 +800,109 @@ const flower3DConfigs = {
     type: 'glb',
     glb: '/models/jasmine/jasmine.glb',
     scale: 1.8,                          // 縮放比例
-    position: [0, -0.07, 0],             // 位置偏移
+    position: [0, -0.1, 0],             // 位置偏移
     rotation: [0, 0, 0.4],               // 旋轉角度
-    modelOffset: [0.03, 0, 0.01],           // 模型中心偏移
+    modelOffset: [0.1, 0, 0.01],           // 模型中心偏移
     autoRotateSpeed: 0,                  // 不自動旋轉
     showPivotGuide: true,                // 顯示輔助線方便調整
-    pivotHeight: 0.06,                      // 水平旋轉面高度（Y軸位置）
+    pivotHeight: 0.1,                      // 水平旋轉面高度（Y軸位置）
     lightIntensity: 0.05,                // 亮度倍率
-    forceOpaque: true,                   // 強制不透明
+    forceOpaque: false,                   // 強制不透明
     stemColor: '#2D5A1E',                // 莖的顏色（綠色）
+  },
+
+  // 蓮花 - GLB 格式模型
+  lotus: {
+    type: 'glb',
+    glb: '/models/lotus/lotus.glb',
+    scale: 0.12,                         // 縮放比例
+    position: [0, 0, 0],                 // 位置偏移
+    rotation: [0, 0, 0.4],               // 旋轉角度
+    modelOffset: [0, 0, 0],              // 模型中心偏移
+    autoRotateSpeed: 0,                  // 不自動旋轉
+    showPivotGuide: false,               // 顯示輔助線
+    pivotHeight: 0,                      // 水平旋轉面高度
+  },
+
+  // 鬱金香 - GLB 格式模型
+  tulip: {
+    type: 'glb',
+    glb: '/models/tulip/tulip.glb',
+    scale: 0.07,                         // 縮放比例
+    position: [0, 0.07, 0],              // 位置偏移
+    rotation: [0, 0, 0],                 // 旋轉角度
+    modelOffset: [0, 0, 0],              // 模型中心偏移
+    autoRotateSpeed: 0,                  // 不自動旋轉
+    showPivotGuide: false,               // 顯示輔助線
+    pivotHeight: 0,                      // 水平旋轉面高度
+  },
+
+  // 桔梗 - GLB 格式模型
+  bellflower: {
+    type: 'glb',
+    glb: '/models/bellflower/bellflower.glb',
+    scale: 0.2,                          // 縮放比例
+    position: [0, 0, 0],                 // 位置偏移
+    rotation: [0, 0, 0],                 // 旋轉角度
+    modelOffset: [0, 0, 0],              // 模型中心偏移
+    autoRotateSpeed: 0,                  // 不自動旋轉
+    showPivotGuide: false,               // 顯示輔助線
+    pivotHeight: 0,                      // 水平旋轉面高度
+  },
+
+  // 紫羅蘭 - GLB 格式模型
+  violet: {
+    type: 'glb',
+    glb: '/models/violet/violet.glb',
+    scale: 12.5,                         // 縮放比例
+    position: [0, 0.1, 0],               // 位置偏移
+    rotation: [0, 0, 0],                 // 旋轉角度
+    modelOffset: [0, 0, 0],              // 模型中心偏移
+    autoRotateSpeed: 0,                  // 不自動旋轉
+    showPivotGuide: false,               // 顯示輔助線
+    pivotHeight: 0,                      // 水平旋轉面高度
+  },
+
+  // 百合 - GLB 格式模型
+  lily: {
+    type: 'glb',
+    glb: '/models/lily/lily.glb',
+    scale: 0.1,                           // 縮放比例
+    position: [0.1, 0.5, 0],                 // 位置偏移
+    rotation: [0, 0, 0],                 // 旋轉角度
+    modelOffset: [0, 0, 0],              // 模型中心偏移
+    autoRotateSpeed: 0,                  // 不自動旋轉
+    showPivotGuide: false,                // 顯示輔助線方便調整
+    pivotHeight: 0,                      // 水平旋轉面高度
+    lightIntensity: 1.5,                 // 亮度
+  },
+
+  // 牡丹 - GLB 格式模型
+  peony: {
+    type: 'glb',
+    glb: '/models/peony/peony.glb',
+    scale: 0.47,                            // 縮放比例
+    position: [0, 0, 0.05],                 // 位置偏移
+    rotation: [0, 0, 0],                 // 旋轉角度
+    modelOffset: [0, 0, 0],              // 模型中心偏移
+    autoRotateSpeed: 0,                  // 不自動旋轉
+    showPivotGuide: false,                // 顯示輔助線方便調整
+    pivotHeight: 0,                      // 水平旋轉面高度
+    lightIntensity: 1,                   // 亮度
+  },
+
+  // 菊花 - GLB 格式模型
+  chrysanthemum: {
+    type: 'glb',
+    glb: '/models/chrysanthemum/chrysanthemum.glb',
+    scale: 8.5,                            // 縮放比例
+    position: [0, 0.15, 0],                 // 位置偏移
+    rotation: [0, 0, 0],                 // 旋轉角度
+    modelOffset: [0, 0, 0],              // 模型中心偏移
+    autoRotateSpeed: 0,                  // 不自動旋轉
+    showPivotGuide: false,                // 顯示輔助線方便調整
+    pivotHeight: 0,                      // 水平旋轉面高度
+    lightIntensity: 1,                   // 亮度
   },
 }
 
@@ -854,11 +951,24 @@ const FlowerGLBModel = ({ modelType }) => {
               }
             }
 
-            // 如果設定了花的顏色，覆蓋白色/淺色材質
+            // 如果設定了花的顏色，覆蓋白色/淺色材質（或強制覆蓋所有非莖顏色）
             if (config.flowerColor && clonedMat.color) {
               const color = clonedMat.color
-              if (color.r > 0.8 && color.g > 0.8 && color.b > 0.8) {
-                clonedMat.color.set(config.flowerColor)
+              // 檢測是否為莖（棕色/綠色系）- 這些不要被 flowerColor 覆蓋
+              const isStem = (color.r > color.g && color.g > color.b && color.r < 0.7) ||
+                             (color.r > 0.3 && color.g < 0.4 && color.b < 0.3) ||
+                             (color.g > color.r && color.g > color.b) // 綠色
+
+              if (config.overrideAllColors) {
+                // 強制覆蓋所有顏色（除了莖）
+                if (!isStem) {
+                  clonedMat.color.set(config.flowerColor)
+                }
+              } else {
+                // 只覆蓋白色/淺色材質
+                if (color.r > 0.8 && color.g > 0.8 && color.b > 0.8) {
+                  clonedMat.color.set(config.flowerColor)
+                }
               }
             }
 
@@ -885,7 +995,7 @@ const FlowerGLBModel = ({ modelType }) => {
     toRemove.forEach(obj => obj.parent?.remove(obj))
 
     return clone
-  }, [scene, config.filterMeshes, config.flowerColor, config.forceOpaque, config.stemColor])
+  }, [scene, config.filterMeshes, config.flowerColor, config.forceOpaque, config.stemColor, config.overrideAllColors])
 
   useFrame((state) => {
     if (groupRef.current) {
@@ -926,6 +1036,135 @@ const FlowerGLBModel = ({ modelType }) => {
         </group>
       </group>
       {/* 補光 - 可調亮度（lightIntensity: 預設 1.0，數字越小越暗）*/}
+      {(() => {
+        const li = config.lightIntensity ?? 1.0
+        return (
+          <>
+            <pointLight position={[0, 1, 2]} intensity={4 * li} color="#fffaf0" />
+            <pointLight position={[0, 1, -2]} intensity={4 * li} color="#fff8dc" />
+            <pointLight position={[2, 0.8, 0]} intensity={3.5 * li} color="#ffffff" />
+            <pointLight position={[-2, 0.8, 0]} intensity={3.5 * li} color="#ffffff" />
+            <pointLight position={[0, -0.5, 1.5]} intensity={2.5 * li} color="#fff5ee" />
+            <pointLight position={[0, 2, 0]} intensity={3 * li} color="#ffffff" />
+          </>
+        )
+      })()}
+    </group>
+  )
+}
+
+// ============ FBX 模型載入組件 ============
+const FlowerFBXModel = ({ modelType }) => {
+  const groupRef = useRef()
+  const config = flower3DConfigs[modelType]
+  const fbx = useLoader(FBXLoader, config.fbx)
+
+  const clonedScene = useMemo(() => {
+    const clone = fbx.clone(true)
+    const toRemove = []
+
+    clone.traverse((child) => {
+      if (child.isMesh) {
+        const filterList = config.filterMeshes || []
+        const shouldFilter = filterList.some(name =>
+          child.name.toLowerCase().includes(name.toLowerCase())
+        )
+
+        if (shouldFilter) {
+          toRemove.push(child)
+        } else {
+          child.castShadow = true
+          child.receiveShadow = true
+          const isArray = Array.isArray(child.material)
+          const materials = isArray ? child.material : [child.material]
+          const processedMats = materials.map(mat => {
+            if (!mat) return mat
+            const clonedMat = mat.clone()
+            clonedMat.side = THREE.DoubleSide
+            clonedMat.needsUpdate = true
+
+            if (config.forceOpaque) {
+              clonedMat.transparent = false
+              clonedMat.opacity = 1.0
+              clonedMat.alphaTest = 0
+              clonedMat.depthWrite = true
+              clonedMat.alphaMap = null
+              clonedMat.alphaToCoverage = false
+              if (clonedMat.blending !== undefined) {
+                clonedMat.blending = THREE.NormalBlending
+              }
+            }
+
+            if (config.flowerColor && clonedMat.color) {
+              const color = clonedMat.color
+              const isStem = (color.r > color.g && color.g > color.b && color.r < 0.7) ||
+                             (color.r > 0.3 && color.g < 0.4 && color.b < 0.3) ||
+                             (color.g > color.r && color.g > color.b)
+
+              if (config.overrideAllColors) {
+                if (!isStem) {
+                  clonedMat.color.set(config.flowerColor)
+                }
+              } else {
+                if (color.r > 0.8 && color.g > 0.8 && color.b > 0.8) {
+                  clonedMat.color.set(config.flowerColor)
+                }
+              }
+            }
+
+            if (config.stemColor && clonedMat.color) {
+              const color = clonedMat.color
+              const isBrown = (color.r > color.g && color.g > color.b && color.r < 0.7) ||
+                              (color.r > 0.3 && color.g < 0.4 && color.b < 0.3)
+              if (isBrown) {
+                clonedMat.color.set(config.stemColor)
+              }
+            }
+
+            return clonedMat
+          })
+          child.material = isArray ? processedMats : processedMats[0]
+        }
+      }
+    })
+
+    toRemove.forEach(obj => obj.parent?.remove(obj))
+    return clone
+  }, [fbx, config.filterMeshes, config.flowerColor, config.forceOpaque, config.stemColor, config.overrideAllColors])
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = state.clock.getElapsedTime() * (config.autoRotateSpeed || 0.15)
+    }
+  })
+
+  return (
+    <group ref={groupRef}>
+      {config.showPivotGuide && (
+        <>
+          <mesh position={[0, config.pivotHeight || 0, 0]}>
+            <boxGeometry args={[2, 0.01, 0.01]} />
+            <meshBasicMaterial color="#ff0000" />
+          </mesh>
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[0.01, 2, 0.01]} />
+            <meshBasicMaterial color="#00ff00" />
+          </mesh>
+          <mesh position={[0, config.pivotHeight || 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.95, 1, 64]} />
+            <meshBasicMaterial color="#ffff00" side={THREE.DoubleSide} transparent opacity={0.5} />
+          </mesh>
+        </>
+      )}
+      <group position={config.modelOffset || [0, 0, 0]}>
+        <group
+          scale={config.scale}
+          rotation={config.rotation || [0, 0, 0]}
+          position={config.position}
+        >
+          <primitive object={clonedScene} />
+        </group>
+      </group>
       {(() => {
         const li = config.lightIntensity ?? 1.0
         return (
@@ -1033,17 +1272,41 @@ const FlowerOBJModel = ({ modelType }) => {
 
   return (
     <group ref={groupRef}>
-      <group scale={config.scale} rotation={[-Math.PI / 2, 0, 0]} position={config.position}>
+      {/* 旋轉中心輔助線 */}
+      {config.showPivotGuide && (
+        <>
+          <mesh position={[0, config.pivotHeight || 0, 0]}>
+            <boxGeometry args={[2, 0.01, 0.01]} />
+            <meshBasicMaterial color="#ff0000" />
+          </mesh>
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[0.01, 2, 0.01]} />
+            <meshBasicMaterial color="#00ff00" />
+          </mesh>
+          <mesh position={[0, config.pivotHeight || 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.95, 1, 64]} />
+            <meshBasicMaterial color="#ffff00" side={THREE.DoubleSide} transparent opacity={0.5} />
+          </mesh>
+        </>
+      )}
+      <group scale={config.scale} rotation={config.rotation || [-Math.PI / 2, 0, 0]} position={config.position}>
         <primitive object={clonedObj} />
       </group>
-      {/* 補光 - 向日葵高亮度 */}
-      <pointLight position={[0, 0.8, 1.5]} intensity={3} color="#fffaf0" />
-      <pointLight position={[0, 0.8, -1.5]} intensity={3} color="#fff8dc" />
-      <pointLight position={[1.5, 0.6, 0]} intensity={2.5} color="#ffffff" />
-      <pointLight position={[-1.5, 0.6, 0]} intensity={2.5} color="#ffffff" />
-      <pointLight position={[0.8, -0.3, 0.8]} intensity={2} color="#fffef5" />
-      <pointLight position={[-0.8, -0.3, 0.8]} intensity={2} color="#fffef5" />
-      <pointLight position={[0, 1.5, 0]} intensity={2} color="#ffffff" />
+      {/* 補光 - 可調亮度 */}
+      {(() => {
+        const li = config.lightIntensity ?? 1.0
+        return (
+          <>
+            <pointLight position={[0, 0.8, 1.5]} intensity={3 * li} color="#fffaf0" />
+            <pointLight position={[0, 0.8, -1.5]} intensity={3 * li} color="#fff8dc" />
+            <pointLight position={[1.5, 0.6, 0]} intensity={2.5 * li} color="#ffffff" />
+            <pointLight position={[-1.5, 0.6, 0]} intensity={2.5 * li} color="#ffffff" />
+            <pointLight position={[0.8, -0.3, 0.8]} intensity={2 * li} color="#fffef5" />
+            <pointLight position={[-0.8, -0.3, 0.8]} intensity={2 * li} color="#fffef5" />
+            <pointLight position={[0, 1.5, 0]} intensity={2 * li} color="#ffffff" />
+          </>
+        )
+      })()}
     </group>
   )
 }
@@ -1055,6 +1318,9 @@ const Flower3DModel = ({ modelType }) => {
 
   if (config.type === 'glb') {
     return <FlowerGLBModel modelType={modelType} />
+  }
+  if (config.type === 'fbx') {
+    return <FlowerFBXModel modelType={modelType} />
   }
   return <FlowerOBJModel modelType={modelType} />
 }

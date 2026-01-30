@@ -155,13 +155,13 @@
   },
   {
     "id": 15,
-    "flower": "山茶花",
-    "meaning": "謙遜與理想的愛",
-    "story": "山茶花在寒冬中綻放，展現堅韌與美麗並存的特質。",
-    "message": "即使在挑戰中，也能展現你的美好，堅持你的理想。",
+    "flower": "菊花",
+    "meaning": "長壽與高潔",
+    "story": "菊花傲霜綻放，象徵著堅強與清高的品格。",
+    "message": "保持內心的純淨與堅定，你將綻放出最美的光彩。",
     "locations": ["高雄市立美術館", "內惟藝術中心", "鼓山區文化景點"],
-    "color": "#C21745",
-    "model": "camellia",
+    "color": "#FFE55C",
+    "model": "chrysanthemum",
     "rarity": "common"
   },
   {
