@@ -925,7 +925,8 @@ const flower3DConfigs = {
 const FlowerGLBModel = ({ modelType }) => {
   const groupRef = useRef()
   const config = flower3DConfigs[modelType]
-  const { scene } = useGLTF(config.glb)
+  // 第二個參數 true 啟用 Draco 解碼（支援壓縮的 GLB）
+  const { scene } = useGLTF(config.glb, true)
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone(true)  // 深度克隆
