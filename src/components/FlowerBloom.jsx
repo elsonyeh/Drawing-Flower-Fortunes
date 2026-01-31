@@ -804,7 +804,7 @@ const flower3DConfigs = {
     rotation: [0, 0, 0.4],               // 旋轉角度
     modelOffset: [0.1, 0, 0.01],           // 模型中心偏移
     autoRotateSpeed: 0,                  // 不自動旋轉
-    showPivotGuide: true,                // 顯示輔助線方便調整
+    showPivotGuide: false,                // 顯示輔助線方便調整
     pivotHeight: 0.1,                      // 水平旋轉面高度（Y軸位置）
     lightIntensity: 0.05,                // 亮度倍率
     forceOpaque: false,                   // 強制不透明
@@ -904,7 +904,22 @@ const flower3DConfigs = {
     pivotHeight: 0,                      // 水平旋轉面高度
     lightIntensity: 1,                   // 亮度
   },
+
+//繡球花
+  hydrangea: {
+    type: 'glb',
+    glb: '/models/繡球花/繡球花.glb',
+    scale: 3.7,                            // 縮放比例
+    position: [0, -0.55, 0],                 // 位置偏移
+    rotation: [0, 0, 0],                 // 旋轉角度
+    modelOffset: [0, 0, 0],              // 模型中心偏移
+    autoRotateSpeed: 0,                  // 不自動旋轉
+    showPivotGuide: false,                // 顯示輔助線方便調整
+    pivotHeight: 0,                      // 水平旋轉面高度
+    lightIntensity: 1,                   // 亮度
+  },
 }
+
 
 // ============ GLB 模型載入組件 ============
 const FlowerGLBModel = ({ modelType }) => {
