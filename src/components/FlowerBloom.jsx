@@ -20,7 +20,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { getFlowerConfig } from '../data/flowerConfigs'
-import { getDrawQueue, initDrawQueue } from '../utils/fortuneHelper'
+import { getDrawQueue } from '../utils/fortuneHelper'
 
 // ============ 模型路徑對照表 ============
 const MODEL_PATHS = {
@@ -38,13 +38,13 @@ const MODEL_PATHS = {
   hydrangea: '/models/hydrangea/hydrangea.glb',
 }
 
-// ============ 按抽籤順序預載入模型 ============
-// 初始化抽籤佇列並按順序載入模型
-const initPreloading = () => {
-  const queue = initDrawQueue()
+// ============ 背景繼續預載入其他模型 ============
+// main.jsx 已載入前兩個，這裡繼續載入剩餘的
+const continuePreloading = () => {
+  const queue = getDrawQueue()
   const loadedModels = new Set()
 
-  // 先載入佇列中的模型（按抽籤順序）
+  // 按佇列順序載入模型
   queue.forEach(flower => {
     const modelPath = MODEL_PATHS[flower.model]
     if (modelPath && !loadedModels.has(modelPath)) {
@@ -53,7 +53,7 @@ const initPreloading = () => {
     }
   })
 
-  // 再載入其他還沒載入的模型
+  // 載入其他還沒載入的模型
   Object.values(MODEL_PATHS).forEach(path => {
     if (!loadedModels.has(path)) {
       useGLTF.preload(path, true)
@@ -61,8 +61,8 @@ const initPreloading = () => {
   })
 }
 
-// 執行預載入
-initPreloading()
+// 延遲執行，讓前兩個模型先載入完成
+setTimeout(continuePreloading, 100)
 
 // ============ 載入中動畫組件 ============
 function ModelLoader() {
