@@ -1,12 +1,73 @@
 /* eslint-disable react/no-unknown-property */
 import { useRef, useMemo, Suspense } from 'react'
 import { Canvas, useFrame, useLoader } from '@react-three/fiber'
-import { OrbitControls, useGLTF } from '@react-three/drei'
+import { OrbitControls, useGLTF, useProgress, Html } from '@react-three/drei'
 import * as THREE from 'three'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { getFlowerConfig } from '../data/flowerConfigs'
+
+// ============ 預載入所有 GLB 模型 ============
+const GLB_MODELS = [
+  '/models/rose/rose.glb',
+  '/models/sakura/sakura.glb',
+  '/models/lavender/lavender.glb',
+  '/models/jasmine/jasmine.glb',
+  '/models/lotus/lotus.glb',
+  '/models/tulip/tulip.glb',
+  '/models/bellflower/bellflower.glb',
+  '/models/violet/violet.glb',
+  '/models/lily/lily.glb',
+  '/models/chrysanthemum/chrysanthemum.glb',
+  '/models/peony/peony.glb',
+  '/models/hydrangea/hydrangea.glb',
+]
+
+// 預載入所有模型（在背景執行）
+GLB_MODELS.forEach(path => useGLTF.preload(path, true))
+
+// ============ 載入中動畫組件 ============
+function ModelLoader() {
+  const { progress, active } = useProgress()
+
+  if (!active) return null
+
+  return (
+    <Html center>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#666',
+        fontFamily: 'system-ui, sans-serif',
+      }}>
+        {/* 旋轉的花朵圖示 */}
+        <div style={{
+          fontSize: '2rem',
+          animation: 'spin 1.5s linear infinite',
+        }}>
+          🌸
+        </div>
+        {/* 進度文字 */}
+        <div style={{
+          marginTop: '0.5rem',
+          fontSize: '0.875rem',
+        }}>
+          {progress.toFixed(0)}%
+        </div>
+        {/* CSS 動畫 */}
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    </Html>
+  )
+}
 
 // ============ 花瓣配置 - 形狀、彎曲、排列 ============
 const petalProfiles = {
@@ -1351,7 +1412,7 @@ const CompleteFlower = ({ flower, config }) => {
   // 有 3D 模型的花朵
   if (flower3DConfigs[petalType]) {
     return (
-      <Suspense fallback={null}>
+      <Suspense fallback={<ModelLoader />}>
         <Flower3DModel modelType={petalType} />
       </Suspense>
     )
