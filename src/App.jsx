@@ -7,8 +7,7 @@ import CollectionPage from './components/CollectionPage'
 import AdminPage from './components/AdminPage'
 import { getRandomFlower, saveCollectedFlower } from './utils/fortuneHelper'
 
-// 提前引入 FlowerBloom 觸發 GLB 模型預載入
-// 這樣在使用者還在首頁時，模型就會開始在背景下載
+// 引入 FlowerBloom 觸發背景預載入其他模型
 import './components/FlowerBloom'
 
 function App() {

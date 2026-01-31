@@ -38,13 +38,13 @@ const MODEL_PATHS = {
   hydrangea: '/models/hydrangea/hydrangea.glb',
 }
 
-// ============ 背景繼續預載入其他模型 ============
-// main.jsx 已載入前兩個，這裡繼續載入剩餘的
-const continuePreloading = () => {
+// ============ 背景預載入所有模型 ============
+// main.jsx 已載入第一個模型，這裡繼續載入剩餘的
+const preloadAllModels = () => {
   const queue = getDrawQueue()
   const loadedModels = new Set()
 
-  // 按佇列順序載入模型
+  // 按抽籤順序載入模型
   queue.forEach(flower => {
     const modelPath = MODEL_PATHS[flower.model]
     if (modelPath && !loadedModels.has(modelPath)) {
@@ -61,8 +61,8 @@ const continuePreloading = () => {
   })
 }
 
-// 延遲執行，讓前兩個模型先載入完成
-setTimeout(continuePreloading, 100)
+// 延遲執行，讓第一個模型先載入
+setTimeout(preloadAllModels, 100)
 
 // ============ 載入中動畫組件 ============
 function ModelLoader() {
