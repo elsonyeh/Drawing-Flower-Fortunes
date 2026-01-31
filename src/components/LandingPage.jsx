@@ -475,19 +475,21 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
       transition={{ exit: { duration: 0 } }}
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
     >
-      {/* 圖鑑按鈕 */}
-      <motion.button
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
-        onClick={onOpenCollection}
-        className="absolute top-4 right-4 md:top-6 md:right-6 z-20 px-3 py-2 md:px-4 md:py-2 bg-gradient-to-r from-primary-600/80 to-pink-600/80 backdrop-blur-sm rounded-full text-white text-sm md:text-base font-medium flex items-center gap-2 border border-primary-400/30 shadow-lg"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <CollectionIcon className="w-4 h-4 md:w-5 md:h-5" color="white" />
-        <span className="hidden sm:inline">圖鑑</span>
-      </motion.button>
+      {/* 圖鑑按鈕 - 抽卡時隱藏 */}
+      {!isTransforming && (
+        <motion.button
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+          onClick={onOpenCollection}
+          className="absolute top-4 right-4 md:top-6 md:right-6 z-20 px-3 py-2 md:px-4 md:py-2 bg-gradient-to-r from-primary-600/80 to-pink-600/80 backdrop-blur-sm rounded-full text-white text-sm md:text-base font-medium flex items-center gap-2 border border-primary-400/30 shadow-lg"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <CollectionIcon className="w-4 h-4 md:w-5 md:h-5" color="white" />
+          <span className="hidden sm:inline">圖鑑</span>
+        </motion.button>
+      )}
 
       {/* 背景飄落花瓣 */}
       <motion.div

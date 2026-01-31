@@ -77,7 +77,6 @@ function App() {
             key="gacha"
             flower={selectedFlower}
             onComplete={handleGachaComplete}
-            onOpenCollection={handleOpenCollection}
           />
         )}
 
