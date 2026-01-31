@@ -56,13 +56,13 @@ const preloadFirstModels = async () => {
   const modelsToLoad = []
   const loadedPaths = new Set()
 
-  // 取得前兩個不重複的模型
+  // 取得第一個模型
   for (const flower of queue) {
     const path = MODEL_PATHS[flower.model]
     if (path && !loadedPaths.has(path)) {
       modelsToLoad.push(path)
       loadedPaths.add(path)
-      if (modelsToLoad.length >= 2) break
+      break
     }
   }
 
