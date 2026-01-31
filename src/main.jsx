@@ -33,52 +33,36 @@ const hideLoadingScreen = () => {
   }
 }
 
-// 預載入單個模型
-const preloadModel = (path) => {
+// 預載入第一個模型（有 3 秒超時）
+const preloadFirstModel = () => {
   return new Promise((resolve) => {
+    const queue = initDrawQueue()
+    const firstFlower = queue[0]
+    const path = MODEL_PATHS[firstFlower?.model]
+
+    if (!path) {
+      resolve()
+      return
+    }
+
     const loader = new GLTFLoader()
     const dracoLoader = new DRACOLoader()
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/')
     loader.setDRACOLoader(dracoLoader)
 
-    loader.load(
-      path,
-      () => resolve(true),
-      undefined,
-      () => resolve(false) // 載入失敗也繼續
-    )
+    loader.load(path, () => resolve(), undefined, () => resolve())
   })
 }
 
-// 預載入前兩個模型後才顯示網站
-const preloadFirstModels = async () => {
-  const queue = initDrawQueue()
-  const modelsToLoad = []
-  const loadedPaths = new Set()
-
-  // 取得第一個模型
-  for (const flower of queue) {
-    const path = MODEL_PATHS[flower.model]
-    if (path && !loadedPaths.has(path)) {
-      modelsToLoad.push(path)
-      loadedPaths.add(path)
-      break
-    }
-  }
-
-  // 同時載入這兩個模型
-  await Promise.all(modelsToLoad.map(preloadModel))
-
-  // 載入完成後隱藏載入畫面
-  hideLoadingScreen()
-}
-
-// 先渲染 React
+// 渲染 React
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 )
 
-// 等前兩個模型載入完成後隱藏載入畫面
-preloadFirstModels()
+// 最多等 3 秒，或模型載入完成後顯示
+Promise.race([
+  preloadFirstModel(),
+  new Promise(resolve => setTimeout(resolve, 3000))
+]).then(hideLoadingScreen)
