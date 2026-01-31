@@ -905,10 +905,10 @@ const flower3DConfigs = {
     lightIntensity: 1,                   // 亮度
   },
 
-//繡球花
+  // 繡球花 - GLB 格式模型
   hydrangea: {
     type: 'glb',
-    glb: '/models/繡球花/繡球花.glb',
+    glb: '/models/hydrangea/hydrangea.glb',
     scale: 3.7,                            // 縮放比例
     position: [0, -0.55, 0],                 // 位置偏移
     rotation: [0, 0, 0],                 // 旋轉角度
