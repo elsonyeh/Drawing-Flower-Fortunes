@@ -1,8 +1,21 @@
 /* eslint-disable react/no-unknown-property */
-import { useRef, useMemo, Suspense } from 'react'
-import { Canvas, useFrame, useLoader } from '@react-three/fiber'
+import { useRef, useMemo, Suspense, useEffect } from 'react'
+import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { OrbitControls, useGLTF, useProgress, Html } from '@react-three/drei'
 import * as THREE from 'three'
+
+// 固定相機比例組件 - 防止 3D 內容被拉伸
+function FixedAspectCamera() {
+  const { camera, size } = useThree()
+
+  useEffect(() => {
+    // 強制使用 1:1 的相機比例，不管容器實際大小
+    camera.aspect = 1
+    camera.updateProjectionMatrix()
+  }, [camera, size])
+
+  return null
+}
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
@@ -1468,7 +1481,11 @@ const FlowerBloom = ({ flower }) => {
   const isSSR = flower.rarity === 'ssr'
 
   return (
-    <Canvas camera={{ position: [0, 0.08, 2.75], fov: 38 }} gl={{ alpha: true, antialias: true, localClippingEnabled: true }}>
+    <Canvas
+      camera={{ position: [0, 0.08, 2.75], fov: 38 }}
+      gl={{ alpha: true, antialias: true, localClippingEnabled: true }}
+    >
+      <FixedAspectCamera />
       <ambientLight intensity={0.5} />
       <directionalLight position={[3, 5, 4]} intensity={0.85} color="#ffffff" />
       <pointLight position={[-2, 2, 2]} intensity={0.3} color="#fff5ee" />

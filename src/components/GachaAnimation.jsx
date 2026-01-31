@@ -98,34 +98,33 @@ const GachaAnimation = ({ flower, onComplete }) => {
       )}
 
       {/* Main card animation area */}
-      <div className="relative w-full max-w-[320px] aspect-[2/3]">
-        {(stage === 'flip' || stage === 'reveal') && (
-          <div className="absolute inset-0" style={{ perspective: '1000px' }}>
-            <motion.div
-              className="relative w-full h-full preserve-3d"
-              initial={{ rotateY: 0 }}
-              animate={{ rotateY: stage === 'reveal' ? 180 : 90 }}
-              transition={{
-                duration: 2,
-                ease: 'easeInOut',
+      {(stage === 'flip' || stage === 'reveal') && (
+        <motion.div
+          initial={{ rotateY: 0 }}
+          animate={{ rotateY: stage === 'reveal' ? 180 : 90 }}
+          transition={{
+            duration: 2,
+            ease: 'easeInOut',
+          }}
+          className="relative w-full max-w-[320px] aspect-[2/3] preserve-3d"
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+            {/* Card back */}
+            <div
+              className="absolute inset-0 backface-hidden rounded-2xl overflow-hidden shadow-2xl"
+              style={{ backfaceVisibility: 'hidden' }}
+            >
+              <CardBack flower={flower} />
+            </div>
+
+            {/* Card front with flower - game style card */}
+            <div
+              className="absolute inset-0 backface-hidden rounded-2xl overflow-hidden shadow-2xl"
+              style={{
+                backfaceVisibility: 'hidden',
+                transform: 'rotateY(180deg)',
               }}
             >
-              {/* Card back */}
-              <motion.div
-                className="absolute inset-0 backface-hidden rounded-2xl shadow-2xl"
-                style={{ backfaceVisibility: 'hidden' }}
-              >
-                <CardBack flower={flower} />
-              </motion.div>
-
-              {/* Card front with flower - game style card */}
-              <motion.div
-                className="absolute inset-0 backface-hidden rounded-2xl overflow-hidden shadow-2xl"
-                style={{
-                  backfaceVisibility: 'hidden',
-                  transform: 'rotateY(180deg)',
-                }}
-              >
                 {/* Background gradient */}
                 <div
                   className="absolute inset-0"
@@ -174,16 +173,20 @@ const GachaAnimation = ({ flower, onComplete }) => {
                     <div
                       style={{
                         position: 'absolute',
-                        width: '160px',
-                        height: '160px',
-                        left: '50%',
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        marginTop: '-50px',
-                        zIndex: 10,
+                        width: '100%',
+                        height: '65%',
+                        left: 0,
+                        top: '5%',
+                        zIndex: 5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        pointerEvents: 'none',
                       }}
                     >
-                      <FlowerBloom flower={flower} key={flower.id} />
+                      <div style={{ width: '100%', height: '100%' }}>
+                        <FlowerBloom flower={flower} key={flower.id} />
+                      </div>
                     </div>
 
                     {/* Flower name banner - wrapper for centering */}
@@ -260,8 +263,7 @@ const GachaAnimation = ({ flower, onComplete }) => {
                     )}
                   </>
                 )}
-              </motion.div>
-            </motion.div>
+            </div>
 
             {/* Particle effects around card during reveal */}
             {stage === 'reveal' && (
@@ -290,9 +292,8 @@ const GachaAnimation = ({ flower, onComplete }) => {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
-      </div>
 
       <style>{`
         .preserve-3d {
