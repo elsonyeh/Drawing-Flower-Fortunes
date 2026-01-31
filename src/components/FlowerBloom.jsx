@@ -20,25 +20,49 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { getFlowerConfig } from '../data/flowerConfigs'
+import { getDrawQueue, initDrawQueue } from '../utils/fortuneHelper'
 
-// ============ 預載入所有 GLB 模型 ============
-const GLB_MODELS = [
-  '/models/rose/rose.glb',
-  '/models/sakura/sakura.glb',
-  '/models/lavender/lavender.glb',
-  '/models/jasmine/jasmine.glb',
-  '/models/lotus/lotus.glb',
-  '/models/tulip/tulip.glb',
-  '/models/bellflower/bellflower.glb',
-  '/models/violet/violet.glb',
-  '/models/lily/lily.glb',
-  '/models/chrysanthemum/chrysanthemum.glb',
-  '/models/peony/peony.glb',
-  '/models/hydrangea/hydrangea.glb',
-]
+// ============ 模型路徑對照表 ============
+const MODEL_PATHS = {
+  rose: '/models/rose/rose.glb',
+  sakura: '/models/sakura/sakura.glb',
+  lavender: '/models/lavender/lavender.glb',
+  jasmine: '/models/jasmine/jasmine.glb',
+  lotus: '/models/lotus/lotus.glb',
+  tulip: '/models/tulip/tulip.glb',
+  bellflower: '/models/bellflower/bellflower.glb',
+  violet: '/models/violet/violet.glb',
+  lily: '/models/lily/lily.glb',
+  chrysanthemum: '/models/chrysanthemum/chrysanthemum.glb',
+  peony: '/models/peony/peony.glb',
+  hydrangea: '/models/hydrangea/hydrangea.glb',
+}
 
-// 預載入所有模型（在背景執行）
-GLB_MODELS.forEach(path => useGLTF.preload(path, true))
+// ============ 按抽籤順序預載入模型 ============
+// 初始化抽籤佇列並按順序載入模型
+const initPreloading = () => {
+  const queue = initDrawQueue()
+  const loadedModels = new Set()
+
+  // 先載入佇列中的模型（按抽籤順序）
+  queue.forEach(flower => {
+    const modelPath = MODEL_PATHS[flower.model]
+    if (modelPath && !loadedModels.has(modelPath)) {
+      useGLTF.preload(modelPath, true)
+      loadedModels.add(modelPath)
+    }
+  })
+
+  // 再載入其他還沒載入的模型
+  Object.values(MODEL_PATHS).forEach(path => {
+    if (!loadedModels.has(path)) {
+      useGLTF.preload(path, true)
+    }
+  })
+}
+
+// 執行預載入
+initPreloading()
 
 // ============ 載入中動畫組件 ============
 function ModelLoader() {
@@ -47,18 +71,32 @@ function ModelLoader() {
   if (!active) return null
 
   return (
-    <Html center>
+    <Html
+      center
+      style={{
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#666',
+        color: 'white',
         fontFamily: 'system-ui, sans-serif',
+        textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+        padding: '1rem 1.5rem',
+        borderRadius: '0.75rem',
+        background: 'rgba(0,0,0,0.4)',
+        backdropFilter: 'blur(8px)',
+        minWidth: '120px',
       }}>
         {/* 旋轉的花朵圖示 */}
         <div style={{
-          fontSize: '2rem',
+          fontSize: '2.5rem',
           animation: 'spin 1.5s linear infinite',
         }}>
           🌸
@@ -67,8 +105,10 @@ function ModelLoader() {
         <div style={{
           marginTop: '0.5rem',
           fontSize: '0.875rem',
+          fontWeight: 'bold',
+          textAlign: 'center',
         }}>
-          {progress.toFixed(0)}%
+          載入中 {progress.toFixed(0)}%
         </div>
         {/* CSS 動畫 */}
         <style>{`
@@ -1425,7 +1465,7 @@ const CompleteFlower = ({ flower, config }) => {
   // 有 3D 模型的花朵
   if (flower3DConfigs[petalType]) {
     return (
-      <Suspense fallback={<ModelLoader />}>
+      <Suspense fallback={null}>
         <Flower3DModel modelType={petalType} />
       </Suspense>
     )

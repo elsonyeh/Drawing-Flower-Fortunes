@@ -1,27 +1,68 @@
 import flowersData from '../data/flowers.json'
 
-/**
- * Get a random flower with gacha probability
- * SSR: 5% each (25% total for 5 SSR cards)
- * Common: 75% total (distributed among 15 common cards)
- * @returns {Object} Random flower object
- */
-export const getRandomFlower = () => {
-  const random = Math.random() * 100
+// ============ 預抽籤佇列系統 ============
+// 預先產生抽籤順序，讓模型可以按順序載入
+const QUEUE_SIZE = 10 // 預先產生 10 個抽籤結果
+let drawQueue = []
 
-  // SSR cards (id 101-105), each has 5% chance
+/**
+ * 產生一個隨機花朵（內部用）
+ */
+const generateRandomFlower = () => {
+  const random = Math.random() * 100
   const ssrCards = flowersData.filter(f => f.rarity === 'ssr')
   const commonCards = flowersData.filter(f => f.rarity === 'common')
 
-  // 0-25: SSR (5% each for 5 cards)
   if (random < 25) {
-    const ssrIndex = Math.floor(random / 5) // 0-4
+    const ssrIndex = Math.floor(random / 5)
     return ssrCards[ssrIndex]
   }
 
-  // 25-100: Common cards
   const randomIndex = Math.floor(Math.random() * commonCards.length)
   return commonCards[randomIndex]
+}
+
+/**
+ * 初始化抽籤佇列
+ * 在 App 載入時呼叫，預先決定接下來要抽到的花
+ */
+export const initDrawQueue = () => {
+  drawQueue = []
+  for (let i = 0; i < QUEUE_SIZE; i++) {
+    drawQueue.push(generateRandomFlower())
+  }
+  return drawQueue
+}
+
+/**
+ * 取得預抽籤佇列（用於預載入模型）
+ * @returns {Array} 預先產生的花朵陣列
+ */
+export const getDrawQueue = () => {
+  if (drawQueue.length === 0) {
+    initDrawQueue()
+  }
+  return [...drawQueue]
+}
+
+/**
+ * Get a random flower with gacha probability
+ * 從預抽籤佇列取出下一個花朵，並補充佇列
+ * @returns {Object} Random flower object
+ */
+export const getRandomFlower = () => {
+  // 確保佇列有內容
+  if (drawQueue.length === 0) {
+    initDrawQueue()
+  }
+
+  // 從佇列取出第一個
+  const flower = drawQueue.shift()
+
+  // 補充一個新的到佇列尾端
+  drawQueue.push(generateRandomFlower())
+
+  return flower
 }
 
 /**
