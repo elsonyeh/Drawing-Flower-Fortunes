@@ -13,11 +13,13 @@ const generateRandomFlower = () => {
   const ssrCards = flowersData.filter(f => f.rarity === 'ssr')
   const commonCards = flowersData.filter(f => f.rarity === 'common')
 
-  if (random < 25) {
-    const ssrIndex = Math.floor(random / 5)
+  // SSR: 10% 總機率 (5張各2%)
+  if (random < 10) {
+    const ssrIndex = Math.floor(random / 2)
     return ssrCards[ssrIndex]
   }
 
+  // Common: 90% 機率
   const randomIndex = Math.floor(Math.random() * commonCards.length)
   return commonCards[randomIndex]
 }
