@@ -1032,6 +1032,35 @@ const flower3DConfigs = {
     pivotHeight: 0,                      // 水平旋轉面高度
     lightIntensity: 1,                   // 亮度
   },
+
+  // 康乃馨 - GLB 格式模型
+  carnation: {
+    type: 'glb',
+    glb: '/models/carnation/carnation.glb',
+    scale: -0.061,                            // 縮放比例
+    position: [0, -0.49, 0],                 // 位置偏移
+    rotation: [135, 0, 0],                 // 旋轉角度
+    modelOffset: [0, 0, 0],              // 模型中心偏移
+    autoRotateSpeed: 0,                  // 不自動旋轉
+    showPivotGuide: false,                // 顯示輔助線方便調整
+    pivotHeight: 0,                      // 水平旋轉面高度
+    lightIntensity: 1,                   // 亮度
+  },
+
+
+  // 玉蘭花 - GLB 格式模型 我先用梔子花的英文名字替代喔
+  gardenia: {
+    type: 'glb',
+    glb: '/models/magnolia/magnolia.glb',
+    scale: 1.9,                            // 縮放比例
+    position: [0, 0, 0],                 // 位置偏移
+    rotation: [0, 0, 0],                 // 旋轉角度
+    modelOffset: [0, 0, 0],              // 模型中心偏移
+    autoRotateSpeed: 0,                  // 不自動旋轉
+    showPivotGuide: false,                // 顯示輔助線方便調整
+    pivotHeight: 0,                      // 水平旋轉面高度
+    lightIntensity: 1,                   // 亮度
+  },
 }
 
 
