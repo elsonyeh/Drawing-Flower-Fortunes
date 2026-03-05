@@ -22,14 +22,25 @@ const MODEL_PATHS = {
   hydrangea: '/models/hydrangea/hydrangea.glb',
 }
 
+// 更新進度條
+const updateLoadingProgress = (percent) => {
+  const bar = document.getElementById('loading-bar')
+  const text = document.getElementById('loading-percent')
+  const p = Math.round(Math.min(100, Math.max(0, percent)))
+  if (bar) bar.style.width = `${p}%`
+  if (text) text.textContent = `${p}%`
+}
+
 // 隱藏載入畫面
 const hideLoadingScreen = () => {
+  updateLoadingProgress(100)
   const loadingScreen = document.getElementById('loading-screen')
   if (loadingScreen) {
-    loadingScreen.classList.add('hidden')
+    // 稍微停留讓進度條跑到 100% 再淡出
     setTimeout(() => {
-      loadingScreen.remove()
-    }, 500)
+      loadingScreen.classList.add('hidden')
+      setTimeout(() => loadingScreen.remove(), 500)
+    }, 200)
   }
 }
 
@@ -50,7 +61,16 @@ const preloadFirstModel = () => {
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/')
     loader.setDRACOLoader(dracoLoader)
 
-    loader.load(path, () => resolve(), undefined, () => resolve())
+    loader.load(
+      path,
+      () => resolve(),
+      (xhr) => {
+        if (xhr.total > 0) {
+          updateLoadingProgress((xhr.loaded / xhr.total) * 100)
+        }
+      },
+      () => resolve()
+    )
   })
 }
 

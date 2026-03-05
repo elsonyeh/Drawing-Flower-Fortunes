@@ -64,61 +64,56 @@ const preloadAllModels = () => {
 // 延遲執行，讓第一個模型先載入
 setTimeout(preloadAllModels, 100)
 
-// ============ 載入中動畫組件 ============
-function ModelLoader() {
-  const { progress, active } = useProgress()
+// ============ 花形 Skeleton Loading（3D 模型載入前的佔位） ============
+const FlowerSkeleton = () => {
+  const mat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: '#9090a8',
+    transparent: true,
+    opacity: 0.15,
+    side: THREE.DoubleSide,
+  }), [])
 
-  if (!active) return null
+  const centerMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: '#9090a8',
+    transparent: true,
+    opacity: 0.18,
+  }), [])
+
+  const stemMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: '#70708a',
+    transparent: true,
+    opacity: 0.12,
+  }), [])
+
+  useFrame((state) => {
+    const pulse = Math.sin(state.clock.getElapsedTime() * 1.6) * 0.06
+    mat.opacity = 0.12 + pulse
+    centerMat.opacity = 0.16 + pulse
+    stemMat.opacity = 0.10 + Math.abs(Math.sin(state.clock.getElapsedTime() * 1.6)) * 0.04
+  })
+
+  const petals = useMemo(() => Array.from({ length: 6 }, (_, i) => {
+    const angle = (i / 6) * Math.PI * 2
+    return {
+      position: [Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, 0],
+      rotation: [0, 0, angle + Math.PI / 2],
+    }
+  }), [])
 
   return (
-    <Html
-      center
-      style={{
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'white',
-        fontFamily: 'system-ui, sans-serif',
-        textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-        padding: '1rem 1.5rem',
-        borderRadius: '0.75rem',
-        background: 'rgba(0,0,0,0.4)',
-        backdropFilter: 'blur(8px)',
-        minWidth: '120px',
-      }}>
-        {/* 旋轉的花朵圖示 */}
-        <div style={{
-          fontSize: '2.5rem',
-          animation: 'spin 1.5s linear infinite',
-        }}>
-          🌸
-        </div>
-        {/* 進度文字 */}
-        <div style={{
-          marginTop: '0.5rem',
-          fontSize: '0.875rem',
-          fontWeight: 'bold',
-          textAlign: 'center',
-        }}>
-          載入中 {progress.toFixed(0)}%
-        </div>
-        {/* CSS 動畫 */}
-        <style>{`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    </Html>
+    <group position={[0, 0.35, 0]}>
+      {petals.map((p, i) => (
+        <mesh key={i} position={p.position} rotation={p.rotation} material={mat}>
+          <capsuleGeometry args={[0.09, 0.24, 4, 8]} />
+        </mesh>
+      ))}
+      <mesh material={centerMat}>
+        <sphereGeometry args={[0.14, 12, 12]} />
+      </mesh>
+      <mesh position={[0, -0.85, 0]} material={stemMat}>
+        <cylinderGeometry args={[0.024, 0.024, 1.3, 8]} />
+      </mesh>
+    </group>
   )
 }
 
@@ -1494,7 +1489,7 @@ const CompleteFlower = ({ flower, config }) => {
   // 有 3D 模型的花朵
   if (flower3DConfigs[petalType]) {
     return (
-      <Suspense fallback={null}>
+      <Suspense fallback={<FlowerSkeleton />}>
         <Flower3DModel modelType={petalType} />
       </Suspense>
     )
