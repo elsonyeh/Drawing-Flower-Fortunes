@@ -61,57 +61,81 @@ const preloadAllModels = () => {
   })
 }
 
-// 延遲執行，讓第一個模型先載入
-setTimeout(preloadAllModels, 100)
+// 延遲執行其他模型的預載入
+// main.jsx 已負責第一個模型（fetch 進度條 + THREE.Cache + useGLTF.preload）
+// 這裡等 1.5 秒後再開始其他模型，避免搶佔第一個模型的頻寬
+setTimeout(preloadAllModels, 1500)
 
 // ============ 花形 Skeleton Loading（3D 模型載入前的佔位） ============
 const FlowerSkeleton = () => {
-  const mat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: '#9090a8',
+  // 花瓣 + 花心：偏紫色調，呼應 app 主題
+  const petalMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: '#8b7ab8',
+    transparent: true,
+    opacity: 0.18,
+    side: THREE.DoubleSide,
+  }), [])
+
+  // 花莖 + 葉子：偏綠灰色
+  const stemMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: '#5a7060',
     transparent: true,
     opacity: 0.15,
     side: THREE.DoubleSide,
   }), [])
 
-  const centerMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: '#9090a8',
-    transparent: true,
-    opacity: 0.18,
-  }), [])
-
-  const stemMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: '#70708a',
-    transparent: true,
-    opacity: 0.12,
-  }), [])
-
   useFrame((state) => {
-    const pulse = Math.sin(state.clock.getElapsedTime() * 1.6) * 0.06
-    mat.opacity = 0.12 + pulse
-    centerMat.opacity = 0.16 + pulse
-    stemMat.opacity = 0.10 + Math.abs(Math.sin(state.clock.getElapsedTime() * 1.6)) * 0.04
+    const t = state.clock.getElapsedTime()
+    // 花瓣：明滅呼吸感
+    petalMat.opacity = 0.13 + Math.sin(t * 1.5) * 0.07
+    // 花莖：稍慢的 phase，製造波動感
+    stemMat.opacity = 0.10 + Math.abs(Math.sin(t * 1.5 + 0.8)) * 0.05
   })
 
-  const petals = useMemo(() => Array.from({ length: 6 }, (_, i) => {
-    const angle = (i / 6) * Math.PI * 2
+  // 5 片花瓣，從上方開始排列（更接近真實花朵）
+  const petals = useMemo(() => Array.from({ length: 5 }, (_, i) => {
+    const angle = (i / 5) * Math.PI * 2 - Math.PI / 2
     return {
-      position: [Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, 0],
+      position: [Math.cos(angle) * 0.27, Math.sin(angle) * 0.27, 0],
       rotation: [0, 0, angle + Math.PI / 2],
     }
   }), [])
 
   return (
-    <group position={[0, 0.35, 0]}>
+    <group position={[0, 0.38, 0]}>
+      {/* 5 片橢圓花瓣 */}
       {petals.map((p, i) => (
-        <mesh key={i} position={p.position} rotation={p.rotation} material={mat}>
-          <capsuleGeometry args={[0.09, 0.24, 4, 8]} />
+        <mesh key={i} position={p.position} rotation={p.rotation} material={petalMat}>
+          <capsuleGeometry args={[0.08, 0.22, 4, 8]} />
         </mesh>
       ))}
-      <mesh material={centerMat}>
-        <sphereGeometry args={[0.14, 12, 12]} />
+
+      {/* 花心 */}
+      <mesh material={petalMat}>
+        <sphereGeometry args={[0.1, 10, 10]} />
       </mesh>
-      <mesh position={[0, -0.85, 0]} material={stemMat}>
-        <cylinderGeometry args={[0.024, 0.024, 1.3, 8]} />
+
+      {/* 花莖 */}
+      <mesh position={[0, -0.62, 0]} material={stemMat}>
+        <cylinderGeometry args={[0.02, 0.02, 1.0, 7]} />
+      </mesh>
+
+      {/* 葉子 1（右側，較高） */}
+      <mesh
+        position={[0.12, -0.3, 0]}
+        rotation={[0, 0, -Math.PI / 3.5]}
+        material={stemMat}
+      >
+        <capsuleGeometry args={[0.034, 0.15, 3, 6]} />
+      </mesh>
+
+      {/* 葉子 2（左側，較低） */}
+      <mesh
+        position={[-0.12, -0.55, 0]}
+        rotation={[0, 0, Math.PI / 3.5]}
+        material={stemMat}
+      >
+        <capsuleGeometry args={[0.034, 0.15, 3, 6]} />
       </mesh>
     </group>
   )
