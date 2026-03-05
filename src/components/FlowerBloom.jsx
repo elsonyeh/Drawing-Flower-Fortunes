@@ -66,77 +66,83 @@ const preloadAllModels = () => {
 // 這裡等 1.5 秒後再開始其他模型，避免搶佔第一個模型的頻寬
 setTimeout(preloadAllModels, 1500)
 
-// ============ 花形 Skeleton Loading（3D 模型載入前的佔位） ============
+// ============ 花形 Skeleton Loading（參考花朵圖示：5圓瓣＋花心洞＋粗莖＋對稱葉） ============
 const FlowerSkeleton = () => {
-  // 花瓣 + 花心：偏紫色調，呼應 app 主題
   const petalMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: '#8b7ab8',
+    color: '#8875bb',
     transparent: true,
-    opacity: 0.18,
+    opacity: 0.22,
     side: THREE.DoubleSide,
   }), [])
 
-  // 花莖 + 葉子：偏綠灰色
-  const stemMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: '#5a7060',
+  // 花心：較深色模擬「圓洞」效果
+  const holeMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: '#1e1230',
     transparent: true,
-    opacity: 0.15,
-    side: THREE.DoubleSide,
+    opacity: 0.5,
   }), [])
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime()
-    // 花瓣：明滅呼吸感
-    petalMat.opacity = 0.13 + Math.sin(t * 1.5) * 0.07
-    // 花莖：稍慢的 phase，製造波動感
-    stemMat.opacity = 0.10 + Math.abs(Math.sin(t * 1.5 + 0.8)) * 0.05
+    const p = Math.sin(t * 1.5) * 0.07
+    petalMat.opacity = 0.15 + p
+    holeMat.opacity = 0.42 + p * 0.4
   })
 
-  // 5 片花瓣，從上方開始排列（更接近真實花朵）
-  const petals = useMemo(() => Array.from({ length: 5 }, (_, i) => {
-    const angle = (i / 5) * Math.PI * 2 - Math.PI / 2
-    return {
-      position: [Math.cos(angle) * 0.27, Math.sin(angle) * 0.27, 0],
-      rotation: [0, 0, angle + Math.PI / 2],
-    }
-  }), [])
+  // 葉子形狀：水滴形，尖端在 [0,0]，圓端延伸至 +Y
+  // 旋轉後尖端貼莖，圓端朝外
+  const leafGeom = useMemo(() => {
+    const s = new THREE.Shape()
+    s.moveTo(0, 0)
+    s.bezierCurveTo(-0.055, 0.06, -0.17, 0.15, -0.15, 0.27)
+    s.bezierCurveTo(-0.13, 0.37, -0.055, 0.42, 0, 0.43)
+    s.bezierCurveTo(0.055, 0.42, 0.13, 0.37, 0.15, 0.27)
+    s.bezierCurveTo(0.17, 0.15, 0.055, 0.06, 0, 0)
+    return new THREE.ShapeGeometry(s, 14)
+  }, [])
+
+  // 5 顆球形花瓣排成五邊形，從正上方開始
+  // 花瓣球半徑 0.135，環半徑 0.19 → 相鄰花瓣相切產生「泡泡圓瓣」效果
+  const petalPositions = useMemo(() =>
+    Array.from({ length: 5 }, (_, i) => {
+      const a = (i / 5) * Math.PI * 2 - Math.PI / 2
+      return [Math.cos(a) * 0.19, Math.sin(a) * 0.19, 0]
+    }), [])
 
   return (
-    <group position={[0, 0.38, 0]}>
-      {/* 5 片橢圓花瓣 */}
-      {petals.map((p, i) => (
-        <mesh key={i} position={p.position} rotation={p.rotation} material={petalMat}>
-          <capsuleGeometry args={[0.08, 0.22, 4, 8]} />
+    <group position={[0, 0.4, 0]}>
+      {/* 5 顆圓形花瓣 */}
+      {petalPositions.map((pos, i) => (
+        <mesh key={i} position={pos} material={petalMat}>
+          <sphereGeometry args={[0.135, 10, 10]} />
         </mesh>
       ))}
 
-      {/* 花心 */}
-      <mesh material={petalMat}>
-        <sphereGeometry args={[0.1, 10, 10]} />
+      {/* 花心圓洞（浮在花瓣前方） */}
+      <mesh position={[0, 0, 0.06]} material={holeMat}>
+        <circleGeometry args={[0.085, 16]} />
       </mesh>
 
-      {/* 花莖 */}
-      <mesh position={[0, -0.62, 0]} material={stemMat}>
-        <cylinderGeometry args={[0.02, 0.02, 1.0, 7]} />
+      {/* 粗直花莖 */}
+      <mesh position={[0, -0.56, 0]} material={petalMat}>
+        <cylinderGeometry args={[0.042, 0.042, 1.02, 8]} />
       </mesh>
 
-      {/* 葉子 1（右側，較高） */}
+      {/* 左葉：尖端貼莖，圓端朝左下（旋轉 126° CCW → +Y 指向 216°，即左下方） */}
       <mesh
-        position={[0.12, -0.3, 0]}
-        rotation={[0, 0, -Math.PI / 3.5]}
-        material={stemMat}
-      >
-        <capsuleGeometry args={[0.034, 0.15, 3, 6]} />
-      </mesh>
+        position={[-0.02, -0.3, 0]}
+        rotation={[0, 0, 2.2]}
+        geometry={leafGeom}
+        material={petalMat}
+      />
 
-      {/* 葉子 2（左側，較低） */}
+      {/* 右葉：尖端貼莖，圓端朝右下（旋轉 126° CW → +Y 指向 324°，即右下方） */}
       <mesh
-        position={[-0.12, -0.55, 0]}
-        rotation={[0, 0, Math.PI / 3.5]}
-        material={stemMat}
-      >
-        <capsuleGeometry args={[0.034, 0.15, 3, 6]} />
-      </mesh>
+        position={[0.02, -0.3, 0]}
+        rotation={[0, 0, -2.2]}
+        geometry={leafGeom}
+        material={petalMat}
+      />
     </group>
   )
 }
