@@ -25,7 +25,7 @@ const MODEL_PATHS = {
   hydrangea: '/models/hydrangea/hydrangea.glb',
 }
 
-// 更新進度條
+// 更新進度條（0-100）
 const updateLoadingProgress = (percent) => {
   const bar = document.getElementById('loading-bar')
   const text = document.getElementById('loading-percent')
@@ -46,22 +46,37 @@ const hideLoadingScreen = () => {
   }
 }
 
-// 預載入第一個模型（有 3 秒超時）
-//
-// 解決雙重下載問題的關鍵流程：
-//   1. fetch() 下載 GLB 並追蹤進度（顯示進度條）
-//   2. 將檔案內容存入 THREE.Cache（相對 + 絕對路徑都存）
-//   3. useGLTF.preload() 從 THREE.Cache 讀取並 parse → 存入 drei 的 useGLTF cache
-//   4. 用戶有 5-6 秒的抽卡動畫時間，parse 必定完成，result 頁不會出現 skeleton
+// 預載入第一個模型，完整流程：
+//   1. 用 fetch() 下載 GLB，逐 chunk 更新進度條（0% → 90%）
+//   2. 將完整 bytes 存入 THREE.Cache（相對 + 絕對路徑都存）
+//   3. 呼叫 useGLTF.preload()：從 THREE.Cache 讀取檔案（0 延遲）→ parse GLB → 存入 suspend-react cache
+//      同時 DRACOLoader 也會從 CDN 下載 WASM decoder（首次訪問需額外時間）
+//   4. 監聽 THREE.DefaultLoadingManager.onLoad，等待 parse + Draco decoder 全部完成
+//   5. 進度推到 100%，loading screen 才隱藏
+//   → 保證 FlowerGLBModel 呼叫 useGLTF() 時 suspend-react cache 已有結果，不顯示 skeleton
 const preloadFirstModel = async () => {
   const queue = initDrawQueue()
   const firstFlower = queue[0]
   const path = MODEL_PATHS[firstFlower?.model]
-
   if (!path) return
 
+  // ── Step 1: 在觸發 preload 之前先安裝 onLoad 監聽器 ──
+  // DefaultLoadingManager.onLoad 在所有 managed 資源（模型 + Draco WASM）完成時觸發
+  const parseComplete = new Promise((resolve) => {
+    const mgr = THREE.DefaultLoadingManager
+    const prevOnLoad = mgr.onLoad
+
+    mgr.onLoad = () => {
+      mgr.onLoad = prevOnLoad  // 還原，避免影響後續載入
+      resolve()
+    }
+
+    // 安全網：若 onLoad 6 秒內未觸發（例如 Draco CDN 很慢），直接繼續
+    setTimeout(resolve, 6000)
+  })
+
+  // ── Step 2: fetch() 下載 GLB，追蹤 byte-level 進度（0% → 90%） ──
   try {
-    // Step 1: fetch 下載並追蹤 byte-level 進度
     const res = await fetch(path)
     const total = Number(res.headers.get('content-length') || 0)
     const chunks = []
@@ -73,24 +88,31 @@ const preloadFirstModel = async () => {
       if (done) break
       chunks.push(value)
       loaded += value.byteLength
-      if (total > 0) updateLoadingProgress((loaded / total) * 100)
+      // 保留 90-100% 給 parse 階段，讓進度條看起來還在跑
+      if (total > 0) updateLoadingProgress((loaded / total) * 90)
     }
 
-    // Step 2: 合併 chunks 並存入 THREE.Cache
-    // 同時存相對路徑和絕對路徑，確保 THREE.FileLoader 無論用哪種 key 都能命中
+    // 合併並存入 THREE.Cache
     const buf = new Uint8Array(loaded)
     let offset = 0
     for (const chunk of chunks) { buf.set(chunk, offset); offset += chunk.byteLength }
-    const absoluteUrl = new URL(path, window.location.href).href
     THREE.Cache.add(path, buf.buffer)
-    THREE.Cache.add(absoluteUrl, buf.buffer)
+    THREE.Cache.add(new URL(path, window.location.href).href, buf.buffer)
 
+    // 進入 parse 階段，顯示 93%
+    updateLoadingProgress(93)
   } catch {
-    // 網路錯誤時 fallback，讓 useGLTF 自行下載
+    // 網路失敗：讓 useGLTF 自行下載（會有 skeleton，但不 block）
+    updateLoadingProgress(90)
   }
 
-  // Step 3: 觸發 drei 的 preload，從 THREE.Cache 讀取並 parse（背景執行）
+  // ── Step 3: 觸發 drei 的 preload ──
+  // 讀 THREE.Cache（幾乎瞬間）→ parse → 存入 useGLTF / suspend-react cache
+  // DefaultLoadingManager 同時追蹤 Draco WASM 的下載
   useGLTF.preload(path, true)
+
+  // ── Step 4: 等待 parse 完整完成（含 Draco decoder） ──
+  await parseComplete
 }
 
 // 渲染 React
@@ -100,8 +122,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>,
 )
 
-// 最多等 3 秒，或第一個模型下載完成後顯示
+// 最多等 10 秒（從 3 秒延長：確保大模型 + Draco 下載都有足夠時間）
+// 正常情況下：fetch 完成 + parse 完成後會提早退出
 Promise.race([
   preloadFirstModel(),
-  new Promise(resolve => setTimeout(resolve, 3000))
+  new Promise(resolve => setTimeout(resolve, 10000))
 ]).then(hideLoadingScreen)
