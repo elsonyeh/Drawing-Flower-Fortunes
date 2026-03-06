@@ -154,9 +154,9 @@ export const flowerConfigs = {
   },
 
   // 9. 梔子花 - 螺旋白花瓣，朝上
-  gardenia: {
+  magnolia: {
     name: '梔子花',
-    petalType: 'gardenia',
+    petalType: 'magnolia',
     petalCount: 6,
     layers: 3,
     petalSize: 0.55,

@@ -23,6 +23,7 @@ const MODEL_PATHS = {
   chrysanthemum: '/models/chrysanthemum/chrysanthemum.glb',
   peony: '/models/peony/peony.glb',
   hydrangea: '/models/hydrangea/hydrangea.glb',
+  magnolia: '/models/magnolia/magnolia.glb',
 }
 
 // 更新進度條（0-100）
