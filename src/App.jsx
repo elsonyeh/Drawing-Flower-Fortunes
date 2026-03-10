@@ -39,10 +39,10 @@ function App() {
     setStage('emotionScan')
   }
 
-  // 情緒掃描完成：flower 由 emotionMapper 決定，emotion 為情緒資料
-  const handleEmotionComplete = (flower, emotion) => {
+  // 面相解讀完成：flower 由 faceReader 決定，data 包含 archetype 等面相資料
+  const handleEmotionComplete = (flower, data) => {
     setSelectedFlower(flower)
-    setEmotionData(emotion)
+    setEmotionData(data)
     saveCollectedFlower(flower)
     setStage('gacha')
   }
