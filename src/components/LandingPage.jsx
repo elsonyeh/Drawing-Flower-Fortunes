@@ -401,7 +401,7 @@ const BambooBasket = ({ isMobile, isTransforming }) => (
 )
 
 // 主組件
-const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
+const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan }) => {
   const [particles, setParticles] = useState([])
   const [petals, setPetals] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(null)
@@ -624,6 +624,28 @@ const LandingPage = ({ onPetalSelect, onOpenCollection }) => {
         >
           ✦ 點擊任意一枝花開始抽籤 ✦
         </motion.p>
+      )}
+
+      {/* 情緒解籤按鈕 */}
+      {!isTransforming && onEmotionScan && (
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.4 }}
+          onClick={onEmotionScan}
+          className="mt-3 relative z-10 px-5 py-2 rounded-full text-xs md:text-sm text-purple-300/80 border border-purple-500/30 hover:border-purple-400/60 hover:text-purple-200 transition-colors backdrop-blur-sm flex items-center gap-2"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9V5.5A2.5 2.5 0 0 1 5.5 3H9" /><path d="M15 3h3.5A2.5 2.5 0 0 1 21 5.5V9" />
+            <path d="M21 15v3.5A2.5 2.5 0 0 1 18.5 21H15" /><path d="M9 21H5.5A2.5 2.5 0 0 1 3 18.5V15" />
+            <ellipse cx="12" cy="11.5" rx="5" ry="5.5" />
+            <circle cx="10" cy="10.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="14" cy="10.5" r="0.6" fill="currentColor" stroke="none" />
+            <path d="M9.5 13.5c.6 1 1.4 1.5 2.5 1.5s1.9-.5 2.5-1.5" />
+          </svg>
+          情緒解籤
+        </motion.button>
       )}
     </motion.div>
   )

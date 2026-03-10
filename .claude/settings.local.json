@@ -13,7 +13,26 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: 花語解籤 \\(Drawing Flower Fortunes\\)\n\nFeatures:\n- Gacha animation with card shuffle, draw, and flip effects\n- 3D flower display using React Three Fiber\n- SSR \\(Super Rare\\) cards with special effects\n- Flower collection system with card flip animations\n- 15 common flowers + 5 SSR flowers\n- Dark themed UI with purple color scheme\n- Mobile responsive design\n- Smooth animations with Framer Motion\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git push:*)",
       "Bash(git checkout:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git stash:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npm run lint)",
+      "Bash(git status:*)",
+      "Bash(copy \"D:\\\\花語解籤\\\\lily.fbx\" \"D:\\\\花語解籤\\\\public\\\\models\\\\lily\\\\lily.fbx\")",
+      "Bash(cmd /c copy \"D:\\\\花語解籤\\\\lily.fbx\" \"D:\\\\花語解籤\\\\public\\\\models\\\\lily\\\\lily.fbx\")",
+      "Bash(cmd /c dir \"D:\\\\花語解籤\\\\public\\\\models\\\\lily\")",
+      "Bash(powershell:*)",
+      "Bash(gltf-transform optimize:*)",
+      "Bash(git pull:*)",
+      "Bash(powershell -Command \"Rename-Item ''D:\\\\花語解籤\\\\public\\\\models\\\\繡球花'' ''hydrangea''\")",
+      "Bash(powershell -Command \"Rename-Item ''D:\\\\花語解籤\\\\public\\\\models\\\\hydrangea\\\\繡球花.glb'' ''hydrangea.glb''\")",
+      "Bash(gltf-transform inspect:*)",
+      "Bash(gltf-transform simplify:*)",
+      "Bash(gltf-transform copy:*)",
+      "Bash(dir:*)",
+      "Bash(cmd /c \"dir /s D:\\\\花語解籤\\\\public\\\\models\\\\*.glb\")",
+      "Bash(node -e:*)",
+      "WebSearch"
     ]
   }
 }

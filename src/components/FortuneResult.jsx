@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion'
 import { useEffect, useRef } from 'react'
 import FlowerBloom from './FlowerBloom'
+import { EMOTION_META } from '../utils/emotionMapper'
 
-const FortuneResult = ({ flower, onReset, isFromCollection = false }) => {
+const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData = null }) => {
   const containerRef = useRef(null)
   const isSSR = flower?.rarity === 'ssr'
 
@@ -151,6 +152,35 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false }) => {
         </motion.div>
 
         {/* Flower name and meaning */}
+        {/* 情緒解籤標籤 */}
+        {emotionData && EMOTION_META[emotionData.emotion] && (
+          <motion.div
+            className="flex flex-col items-center gap-1 mb-4"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <div
+              className="px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-2"
+              style={{
+                background: `${EMOTION_META[emotionData.emotion].color}20`,
+                border: `1px solid ${EMOTION_META[emotionData.emotion].color}50`,
+                color: EMOTION_META[emotionData.emotion].color,
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9V5.5A2.5 2.5 0 0 1 5.5 3H9" /><path d="M15 3h3.5A2.5 2.5 0 0 1 21 5.5V9" />
+                <path d="M21 15v3.5A2.5 2.5 0 0 1 18.5 21H15" /><path d="M9 21H5.5A2.5 2.5 0 0 1 3 18.5V15" />
+                <ellipse cx="12" cy="11.5" rx="5" ry="5.5" />
+                <circle cx="10" cy="10.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="14" cy="10.5" r="0.6" fill="currentColor" stroke="none" />
+                <path d="M9.5 13.5c.6 1 1.4 1.5 2.5 1.5s1.9-.5 2.5-1.5" />
+              </svg>
+              <span>根據你的情緒「{EMOTION_META[emotionData.emotion].zh}」推薦</span>
+            </div>
+            <p className="text-white/40 text-xs">{EMOTION_META[emotionData.emotion].desc}</p>
+          </motion.div>
+        )}
+
         <motion.div
           variants={!isFromCollection ? itemVariants : undefined}
           initial={isFromCollection ? { opacity: 0, y: 30 } : undefined}

@@ -5,13 +5,14 @@ import GachaAnimation from './components/GachaAnimation'
 import FortuneResult from './components/FortuneResult'
 import CollectionPage from './components/CollectionPage'
 import AdminPage from './components/AdminPage'
+import EmotionScanPage from './components/EmotionScanPage'
 import { getRandomFlower, saveCollectedFlower } from './utils/fortuneHelper'
 
 // 引入 FlowerBloom 觸發背景預載入其他模型
 import './components/FlowerBloom'
 
 function App() {
-  const [stage, setStage] = useState('landing') // 'landing', 'gacha', 'result', 'collection', 'admin'
+  const [stage, setStage] = useState('landing') // 'landing', 'gacha', 'result', 'collection', 'admin', 'emotionScan'
 
   // Check for admin route on mount
   useEffect(() => {
@@ -21,15 +22,29 @@ function App() {
   }, [])
   const [selectedFlower, setSelectedFlower] = useState(null)
   const [viewingFlower, setViewingFlower] = useState(null) // For viewing from collection
+  const [emotionData, setEmotionData] = useState(null)     // 情緒解籤模式的情緒資料
 
   const handlePetalSelect = () => {
     // 花瓣選擇後，生成花卉並進入抽卡動畫
     const flower = getRandomFlower()
     setSelectedFlower(flower)
+    setEmotionData(null)
     setStage('gacha')
 
     // Save to collection
     saveCollectedFlower(flower)
+  }
+
+  const handleEmotionScan = () => {
+    setStage('emotionScan')
+  }
+
+  // 情緒掃描完成：flower 由 emotionMapper 決定，emotion 為情緒資料
+  const handleEmotionComplete = (flower, emotion) => {
+    setSelectedFlower(flower)
+    setEmotionData(emotion)
+    saveCollectedFlower(flower)
+    setStage('gacha')
   }
 
   const handleGachaComplete = () => {
@@ -45,6 +60,7 @@ function App() {
       // Otherwise go to landing
       setStage('landing')
       setSelectedFlower(null)
+      setEmotionData(null)
     }
   }
 
@@ -69,6 +85,15 @@ function App() {
             key="landing"
             onPetalSelect={handlePetalSelect}
             onOpenCollection={handleOpenCollection}
+            onEmotionScan={handleEmotionScan}
+          />
+        )}
+
+        {stage === 'emotionScan' && (
+          <EmotionScanPage
+            key="emotionScan"
+            onComplete={handleEmotionComplete}
+            onBack={() => setStage('landing')}
           />
         )}
 
@@ -86,6 +111,7 @@ function App() {
             flower={viewingFlower || selectedFlower}
             onReset={handleReset}
             isFromCollection={!!viewingFlower}
+            emotionData={emotionData}
           />
         )}
 
