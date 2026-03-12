@@ -404,8 +404,7 @@ function ShareModal({ flower, emotionData, flowerImageUrl, onClose }) {
 
       <motion.div
         className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-3xl overflow-hidden"
-        style={{ maxHeight: '80vh' }}
-        style={{ background: 'linear-gradient(to bottom, #1a0a2e, #0d0a1a)', border: '1px solid rgba(167,139,250,0.2)' }}
+        style={{ maxHeight: '80vh', background: 'linear-gradient(to bottom, #1a0a2e, #0d0a1a)', border: '1px solid rgba(167,139,250,0.2)' }}
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
