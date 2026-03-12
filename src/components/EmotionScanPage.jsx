@@ -230,7 +230,7 @@ export default function EmotionScanPage({ onComplete, onBack }) {
   // ── 確認開始解籤 ──────────────────────────────────────────
   const handleConfirm = useCallback(() => {
     stopCamera()
-    onComplete(result.flower, { archetype: result.archetypeName })
+    onComplete(result.flower, { archetype: result.archetypeName, archetypeData: result.archetype })
   }, [result, stopCamera, onComplete])
 
   // ═══════════════════════════════════════════════════════
@@ -349,9 +349,7 @@ export default function EmotionScanPage({ onComplete, onBack }) {
             exit={{ opacity: 0 }}
           >
             <p className="text-white/70 text-sm">
-              {faceDetected
-                ? `解讀中⋯（已擷取 ${frameCount} 幀）`
-                : '請將臉部對準畫面中央'}
+              {faceDetected ? '掃描中⋯' : '請將臉部對準畫面中央'}
             </p>
 
             {/* 鏡頭視窗 */}
@@ -489,7 +487,7 @@ export default function EmotionScanPage({ onComplete, onBack }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: 'easeOut' }}
             exit={{ opacity: 0 }}
-            onAnimationComplete={() => setTimeout(() => setPhase('ready'), 1200)}
+            onAnimationComplete={() => setTimeout(() => handleConfirm(), 2800)}
           >
             <p className="text-white/50 text-xs tracking-widest uppercase">面相解讀完成</p>
 

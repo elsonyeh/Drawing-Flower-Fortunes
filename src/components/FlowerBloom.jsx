@@ -2497,7 +2497,7 @@ const FlowerBloom = ({ flower }) => {
   return (
     <Canvas
       camera={{ position: [0, 0.08, 2.75], fov: 38 }}
-      gl={{ alpha: true, antialias: true, localClippingEnabled: true }}
+      gl={{ alpha: true, antialias: true, localClippingEnabled: true, preserveDrawingBuffer: true }}
     >
       <FixedAspectCamera />
       <ambientLight intensity={0.5} />
