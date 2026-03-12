@@ -136,37 +136,40 @@ export function getFlowerByFace(features) {
   const scores = { sunny: 0, wise: 0, romantic: 0, mysterious: 0, gentle: 0, free: 0 }
 
   // ── 臉型 ──────────────────────────────────────────────────
-  // landmarks 0-16 為下頷輪廓，高比 = 臉寬相對頜長
-  if      (faceRatio > 0.92) { scores.sunny += 2; scores.gentle += 1 }     // 圓臉/短頜
-  else if (faceRatio < 0.68) { scores.wise += 2; scores.mysterious += 1 }  // 長臉/長頜
-  else                        { scores.romantic += 1; scores.free += 1 }    // 鵝蛋/標準
+  if      (faceRatio > 0.92) { scores.sunny += 2; scores.gentle += 1 }     // 圓臉
+  else if (faceRatio < 0.68) { scores.wise += 2; scores.mysterious += 1 }  // 長臉
+  else if (faceRatio >= 0.80) { scores.free += 2; scores.romantic += 1 }   // 偏寬鵝蛋 → 自由
+  else                         { scores.gentle += 1; scores.wise += 1 }     // 偏窄鵝蛋 → 溫柔/智慧
 
-  // ── 眉梢角度（閾值提高，避免普通眉被誤判）────────────────
-  if      (browSlope < -0.10) { scores.mysterious += 2; scores.wise += 1 } // 眉尾明顯上揚
-  else if (browSlope >  0.10) { scores.gentle += 2; scores.romantic += 1 } // 眉尾明顯下垂
-  // 中間範圍（平眉/微弓眉）→ 不給分，避免偏向任一原型
+  // ── 眉梢角度 ──────────────────────────────────────────────
+  if      (browSlope < -0.08) { scores.mysterious += 2; scores.wise += 1 } // 眉尾上揚
+  else if (browSlope >  0.08) { scores.gentle += 2; scores.romantic += 1 } // 眉尾下垂
+  else                         { scores.free += 1; scores.wise += 1 }       // 平眉 → 自由/智慧
 
   // ── 眼睛開合 ──────────────────────────────────────────────
-  if      (eyeOpenness > 0.38) { scores.romantic += 2; scores.sunny += 1 } // 大眼有神
-  else if (eyeOpenness < 0.20) { scores.wise += 2; scores.mysterious += 1 }// 細長眼
-  // 中間 → 不給分
+  if      (eyeOpenness > 0.38) { scores.romantic += 2; scores.sunny += 1 } // 大眼
+  else if (eyeOpenness < 0.22) { scores.wise += 2; scores.mysterious += 1 }// 細長眼
+  else                          { scores.wise += 1; scores.gentle += 1 }    // 中等眼 → 智慧/溫柔
 
-  // ── 眼距（閾值校正：典型東亞臉型眼距約 0.18~0.25）────────
-  if      (eyeGap > 0.27) { scores.free += 2; scores.romantic += 1 }       // 眼距寬
+  // ── 眼距 ──────────────────────────────────────────────────
+  if      (eyeGap > 0.24) { scores.free += 2; scores.romantic += 1 }       // 眼距寬 → 自由（降低門檻）
   else if (eyeGap < 0.16) { scores.mysterious += 2; scores.wise += 1 }     // 眼距近
+  else                     { scores.gentle += 1; scores.free += 1 }         // 中等眼距 → 溫柔/自由
 
-  // ── 嘴角弧度（正規化後，正 = 下垂，趨 0 或負 = 上揚）────
-  // 典型中性臉：mouthCurve ≈ 0.01~0.04（嘴角略低於唇峰）
-  if      (mouthCurve < 0.005) { scores.sunny += 2; scores.free += 1 }     // 嘴角接近/超過唇峰 = 上揚
-  else if (mouthCurve > 0.050) { scores.gentle += 1; scores.romantic += 1 }// 嘴角明顯低於唇峰 = 下垂
+  // ── 嘴角弧度 ──────────────────────────────────────────────
+  if      (mouthCurve < -0.005) { scores.sunny += 2; scores.free += 1 }    // 真正上揚（提高門檻，減少陽光型）
+  else if (mouthCurve > 0.035)  { scores.gentle += 2; scores.romantic += 1 }// 下垂（降低門檻，更多溫柔型）
+  else                           { scores.free += 1; scores.wise += 1 }     // 中性嘴角 → 自由/智慧
 
   // ── 嘴巴寬度 ──────────────────────────────────────────────
-  if      (mouthWidth > 0.52) { scores.sunny += 1; scores.free += 1 }      // 大嘴
-  else if (mouthWidth < 0.34) { scores.wise += 1; scores.mysterious += 1 } // 小嘴
+  if      (mouthWidth > 0.50) { scores.sunny += 1; scores.free += 1 }      // 大嘴
+  else if (mouthWidth < 0.36) { scores.wise += 2; scores.mysterious += 1 } // 小嘴 → 智慧加強
+  else                         { scores.gentle += 1 }                       // 中等 → 溫柔
 
   // ── 鼻翼寬度 ──────────────────────────────────────────────
-  if      (noseWidth > 0.33) { scores.gentle += 2; scores.sunny += 1 }     // 鼻翼寬
-  else if (noseWidth < 0.20) { scores.romantic += 1; scores.mysterious += 1}
+  if      (noseWidth > 0.30) { scores.gentle += 2; scores.sunny += 1 }     // 鼻翼寬 → 溫柔（降低門檻）
+  else if (noseWidth < 0.22) { scores.romantic += 1; scores.mysterious += 1}
+  else                        { scores.wise += 1 }                          // 中等鼻翼 → 智慧
 
   // ── 無明顯特徵時隨機選原型，避免永遠陽光型 ──────────────
   const total = Object.values(scores).reduce((s, v) => s + v, 0)

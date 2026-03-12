@@ -1634,7 +1634,7 @@ const flower3DConfigs = {
     obj: "/models/sunflower/10455_Sunflower_v1_max2010_it2.obj",
     scale: 0.019, // 縮放比例
     position: [0, -2.0, 0], // 往下移 2 單位
-    rotation: [-Math.PI / 2, 0, 0], // X軸旋轉 -90度（原模型躺著）
+    rotation: [-Math.PI / 2, Math.PI, 0], // X軸旋轉 -90度 + Y軸翻面朝前
     clipThreshold: 80, // 裁切 Z < 80 的部分（移除長莖）
     clipAxis: "z",
     clipDirection: ">",

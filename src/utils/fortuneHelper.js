@@ -13,9 +13,9 @@ const generateRandomFlower = () => {
   const ssrCards = flowersData.filter(f => f.rarity === 'ssr')
   const commonCards = flowersData.filter(f => f.rarity === 'common')
 
-  // SSR: 10% 總機率 (5張各2%)
-  if (random < 10) {
-    const ssrIndex = Math.floor(random / 2)
+  // SSR: 5% 總機率 (5張各1%)
+  if (random < 5) {
+    const ssrIndex = Math.floor(random)
     return ssrCards[ssrIndex]
   }
 
