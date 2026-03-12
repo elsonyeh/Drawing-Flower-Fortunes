@@ -292,7 +292,7 @@ export default function EmotionScanPage({ onComplete, onBack }) {
             >
               <FaceScanIcon size={64} />
             </motion.div>
-            <h2 className="text-xl font-bold text-white">觀臉取花</h2>
+            <h2 className="text-xl font-bold text-white">相由花緣</h2>
             <p className="text-white/60 text-sm leading-relaxed">
               透過鏡頭解讀你的面相輪廓，
               分析五官比例與氣質特徵，

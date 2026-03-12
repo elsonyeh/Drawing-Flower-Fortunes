@@ -626,25 +626,26 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan }) => {
         </motion.p>
       )}
 
-      {/* 情緒解籤按鈕 */}
+      {/* 相由花緣按鈕 */}
       {!isTransforming && onEmotionScan && (
         <motion.button
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.4 }}
           onClick={onEmotionScan}
-          className="mt-3 relative z-10 px-5 py-2 rounded-full text-xs md:text-sm text-purple-300/80 border border-purple-500/30 hover:border-purple-400/60 hover:text-purple-200 transition-colors backdrop-blur-sm flex items-center gap-2"
-          whileHover={{ scale: 1.05 }}
+          className="mt-3 relative z-10 px-6 py-2.5 rounded-full text-sm font-semibold text-white border border-purple-400/60 hover:border-purple-300 transition-colors backdrop-blur-sm flex items-center gap-2"
+          style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.5), rgba(79,70,229,0.5))' }}
+          whileHover={{ scale: 1.06, boxShadow: '0 0 18px rgba(167,139,250,0.45)' }}
           whileTap={{ scale: 0.97 }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 9V5.5A2.5 2.5 0 0 1 5.5 3H9" /><path d="M15 3h3.5A2.5 2.5 0 0 1 21 5.5V9" />
             <path d="M21 15v3.5A2.5 2.5 0 0 1 18.5 21H15" /><path d="M9 21H5.5A2.5 2.5 0 0 1 3 18.5V15" />
             <ellipse cx="12" cy="11.5" rx="5" ry="5.5" />
             <circle cx="10" cy="10.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="14" cy="10.5" r="0.6" fill="currentColor" stroke="none" />
             <path d="M9.5 13.5c.6 1 1.4 1.5 2.5 1.5s1.9-.5 2.5-1.5" />
           </svg>
-          情緒解籤
+          相由花緣
         </motion.button>
       )}
     </motion.div>
