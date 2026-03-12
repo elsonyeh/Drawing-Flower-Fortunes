@@ -176,7 +176,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
       <div className="max-w-6xl mx-auto px-4 pb-8">
         <div className="bg-night-800/50 rounded-lg p-4 border border-primary-500/20">
           <p className="text-sm text-gray-400 text-center">
-            💡 點擊卡片翻轉查看花朵 · SSR 卡片機率各 5% · 持續抽取收集完整圖鑑！
+            💡 點擊卡片翻轉查看花朵 · SSR 卡片機率各 1% · 持續抽取收集完整圖鑑！
           </p>
         </div>
       </div>
