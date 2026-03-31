@@ -413,6 +413,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
   const fireflyPosRef = useRef({ x: 0, y: 0 })
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+  // 螢幕高度 < 700px（iPhone SE、小型 Android）需要更緊湊的佈局
+  const isSmallScreen = typeof window !== 'undefined' && window.innerHeight < 700
 
   // 螢火蟲目標位置
   const getFireflyTarget = useCallback((idx) => {
@@ -473,10 +475,13 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
       animate={{ opacity: 1 }}
       exit={{ opacity: 1 }}
       transition={{ exit: { duration: 0 } }}
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      className="relative flex flex-col items-center justify-center overflow-hidden"
       style={{
-        paddingTop: '5rem',      /* 清開右上角按鈕底部（約 52px），並平衡 paddingBottom 對 justify-center 的偏移 */
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 5rem)',
+        height: '100dvh',
+        paddingTop: isSmallScreen ? '3rem' : '5rem',
+        paddingBottom: isSmallScreen
+          ? 'calc(env(safe-area-inset-bottom, 0px) + 3rem)'
+          : 'calc(env(safe-area-inset-bottom, 0px) + 5rem)',
       }}
     >
       {/* 右上角：圖鑑 + 登入/用戶 */}
@@ -555,16 +560,16 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="text-center mb-4 md:mb-6 relative z-10"
+        className={`text-center ${isSmallScreen ? 'mb-2' : 'mb-4 md:mb-6'} relative z-10`}
         style={{ opacity: isTransforming ? 0.3 : 1 }}
       >
-        <h1 className="text-5xl md:text-7xl font-bold mb-2 md:mb-4 text-gradient glow">埕花</h1>
-        <p className="text-lg md:text-2xl text-primary-200 mb-1 md:mb-2">鹽夏不夜埕</p>
+        <h1 className={`${isSmallScreen ? 'text-4xl' : 'text-5xl md:text-7xl'} font-bold ${isSmallScreen ? 'mb-1' : 'mb-2 md:mb-4'} text-gradient glow`}>埕花</h1>
+        <p className={`${isSmallScreen ? 'text-base' : 'text-lg md:text-2xl'} text-primary-200 ${isSmallScreen ? 'mb-0.5' : 'mb-1 md:mb-2'}`}>鹽夏不夜埕</p>
         <motion.p
           key={isTransforming ? 't' : 's'}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-base md:text-xl text-gray-300"
+          className={`${isSmallScreen ? 'text-sm' : 'text-base md:text-xl'} text-gray-300`}
         >
           {isTransforming ? '花語顯現中...' : '選擇一枝花，開啟今夜的指引'}
         </motion.p>
@@ -593,12 +598,12 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
       {/* 花束區域 */}
       <div
         className="relative flex flex-col items-center"
-        style={{ zIndex: 10, width: isMobile ? 280 : 360, height: isMobile ? 300 : 380 }}
+        style={{ zIndex: 10, width: isSmallScreen ? 230 : (isMobile ? 280 : 360), height: isSmallScreen ? 240 : (isMobile ? 300 : 380) }}
       >
         {/* 花朵容器 - 莖底部對齊 */}
         <div
           className="relative flex items-end justify-center"
-          style={{ width: '100%', height: isMobile ? 180 : 230, marginBottom: isMobile ? -25 : -35 }}
+          style={{ width: '100%', height: isSmallScreen ? 145 : (isMobile ? 180 : 230), marginBottom: isSmallScreen ? -20 : (isMobile ? -25 : -35) }}
         >
           {/* 螢火蟲 */}
           {showFirefly && !isTransforming && selectedIndex === null && (
@@ -655,7 +660,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
             opacity: { duration: 2, repeat: Infinity },
             textShadow: { duration: 2, repeat: Infinity },
           }}
-          className="text-sm md:text-base text-amber-200/90 text-center tracking-widest font-medium mt-4 relative z-10"
+          className={`text-sm md:text-base text-amber-200/90 text-center tracking-widest font-medium ${isSmallScreen ? 'mt-2' : 'mt-4'} relative z-10`}
         >
           ✦ 點擊任意一枝花開始抽籤 ✦
         </motion.p>
@@ -668,7 +673,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.4 }}
           onClick={onEmotionScan}
-          className="mt-3 relative z-10 px-6 py-2.5 rounded-full text-sm font-semibold text-white border border-purple-400/60 hover:border-purple-300 transition-colors backdrop-blur-sm flex items-center gap-2"
+          className={`${isSmallScreen ? 'mt-2 py-2 px-5' : 'mt-3 py-2.5 px-6'} relative z-10 rounded-full text-sm font-semibold text-white border border-purple-400/60 hover:border-purple-300 transition-colors backdrop-blur-sm flex items-center gap-2`}
           style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.5), rgba(79,70,229,0.5))' }}
           whileHover={{ scale: 1.06, boxShadow: '0 0 18px rgba(167,139,250,0.45)' }}
           whileTap={{ scale: 0.97 }}
@@ -691,7 +696,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           animate={{ opacity: 1 }}
           transition={{ delay: 1.5 }}
           onClick={onOpenAuth}
-          className="mt-3 relative z-10 text-white/40 text-xs tracking-widest hover:text-white/70 transition-colors"
+          className={`${isSmallScreen ? 'mt-1.5' : 'mt-3'} relative z-10 text-white/40 text-xs tracking-widest hover:text-white/70 transition-colors`}
         >
           登入以保存花語蒐集
         </motion.button>
