@@ -503,16 +503,6 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
                   <span>登入</span>
                 )}
               </motion.button>
-              {!user && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1.2 }}
-                  className="text-white/50 text-xs pr-1"
-                >
-                  登入以保存花語蒐集
-                </motion.p>
-              )}
             </div>
           )}
 
@@ -665,6 +655,19 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
         >
           ✦ 點擊任意一枝花開始抽籤 ✦
         </motion.p>
+      )}
+
+      {/* 登入提示 */}
+      {!isTransforming && !user && onOpenAuth && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          onClick={onOpenAuth}
+          className="mt-3 relative z-10 text-white/40 text-xs tracking-widest hover:text-white/70 transition-colors"
+        >
+          登入以保存花語蒐集
+        </motion.button>
       )}
 
       {/* 相由花緣按鈕 */}
