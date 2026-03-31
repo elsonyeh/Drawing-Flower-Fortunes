@@ -105,27 +105,37 @@ export const getCommonFlowers = () => {
  * @param {Object} flower - Flower object to save
  */
 export const saveCollectedFlower = (flower) => {
-  const collected = getCollectedFlowers()
-
-  // Check if already collected
-  if (!collected.find(f => f.id === flower.id)) {
-    collected.push({
-      id: flower.id,
-      flower: flower.flower,
-      rarity: flower.rarity,
-      collectedAt: new Date().toISOString()
-    })
-    localStorage.setItem('collectedFlowers', JSON.stringify(collected))
+  const map = getCollectedMap()
+  if (!(flower.id in map)) {
+    map[flower.id] = new Date().toISOString()
+    localStorage.setItem('collectedFlowers', JSON.stringify(map))
   }
 }
 
 /**
+ * Get raw collected map from localStorage: { [flowerId]: collectedAt }
+ */
+export const getCollectedMap = () => {
+  const stored = localStorage.getItem('collectedFlowers')
+  if (!stored) return {}
+  const parsed = JSON.parse(stored)
+  // 相容舊格式（陣列）
+  if (Array.isArray(parsed)) {
+    const map = {}
+    parsed.forEach(f => { map[f.id] = f.collectedAt || new Date().toISOString() })
+    localStorage.setItem('collectedFlowers', JSON.stringify(map))
+    return map
+  }
+  return parsed
+}
+
+/**
  * Get all collected flowers from localStorage
- * @returns {Array} Array of collected flower IDs with metadata
+ * @returns {Array} Array of {id, collectedAt}
  */
 export const getCollectedFlowers = () => {
-  const stored = localStorage.getItem('collectedFlowers')
-  return stored ? JSON.parse(stored) : []
+  const map = getCollectedMap()
+  return Object.entries(map).map(([id, collectedAt]) => ({ id: Number(id), collectedAt }))
 }
 
 /**
@@ -134,8 +144,7 @@ export const getCollectedFlowers = () => {
  * @returns {boolean} True if collected
  */
 export const isFlowerCollected = (flowerId) => {
-  const collected = getCollectedFlowers()
-  return collected.some(f => f.id === flowerId)
+  return flowerId in getCollectedMap()
 }
 
 /**
@@ -143,19 +152,20 @@ export const isFlowerCollected = (flowerId) => {
  * @returns {Object} Collection stats
  */
 export const getCollectionStats = () => {
-  const collected = getCollectedFlowers()
+  const map = getCollectedMap()
+  const ids = Object.keys(map).map(Number)
   const total = flowersData.length
-  const ssrCollected = collected.filter(f => f.id > 100).length
-  const commonCollected = collected.filter(f => f.id <= 100).length
+  const ssrCollected = ids.filter(id => id > 100).length
+  const commonCollected = ids.filter(id => id <= 100).length
 
   return {
-    total: collected.length,
+    total: ids.length,
     totalCards: total,
     ssr: ssrCollected,
     totalSSR: 5,
     common: commonCollected,
     totalCommon: 15,
-    percentage: Math.round((collected.length / total) * 100)
+    percentage: Math.round((ids.length / total) * 100)
   }
 }
 
@@ -195,13 +205,10 @@ export const isFlowerViewed = (flowerId) => {
  * Adds all flowers to the collection
  */
 export const unlockAllFlowers = () => {
-  const allFlowers = flowersData.map(flower => ({
-    id: flower.id,
-    flower: flower.flower,
-    rarity: flower.rarity,
-    collectedAt: new Date().toISOString()
-  }))
-  localStorage.setItem('collectedFlowers', JSON.stringify(allFlowers))
+  const now = new Date().toISOString()
+  const map = {}
+  flowersData.forEach(f => { map[f.id] = now })
+  localStorage.setItem('collectedFlowers', JSON.stringify(map))
 }
 
 /**

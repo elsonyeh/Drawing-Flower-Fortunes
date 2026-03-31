@@ -401,7 +401,7 @@ const BambooBasket = ({ isMobile, isTransforming }) => (
 )
 
 // 主組件
-const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan }) => {
+const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAuth, user }) => {
   const [particles, setParticles] = useState([])
   const [petals, setPetals] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(null)
@@ -475,20 +475,61 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan }) => {
       transition={{ exit: { duration: 0 } }}
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
     >
-      {/* 圖鑑按鈕 - 抽卡時隱藏 */}
+      {/* 右上角：圖鑑 + 登入/用戶 */}
       {!isTransforming && (
-        <motion.button
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
-          onClick={onOpenCollection}
-          className="absolute top-4 right-4 md:top-6 md:right-6 z-20 px-3 py-2 md:px-4 md:py-2 bg-gradient-to-r from-primary-600/80 to-pink-600/80 backdrop-blur-sm rounded-full text-white text-sm md:text-base font-medium flex items-center gap-2 border border-primary-400/30 shadow-lg"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <CollectionIcon className="w-4 h-4 md:w-5 md:h-5" color="white" />
-          <span className="hidden sm:inline">圖鑑</span>
-        </motion.button>
+        <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex items-center gap-2">
+          {/* 登入 / 用戶頭像 */}
+          {onOpenAuth && (
+            <div className="flex flex-col items-end gap-1">
+              <motion.button
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                onClick={onOpenAuth}
+                className="px-3 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white text-sm font-medium flex items-center gap-2 border border-white/20 hover:bg-white/20 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {user ? (
+                  <>
+                    {user.user_metadata?.avatar_url && (
+                      <img src={user.user_metadata.avatar_url} alt="" className="w-5 h-5 rounded-full" />
+                    )}
+                    <span className="max-w-[80px] truncate">
+                      {user.user_metadata?.full_name || user.user_metadata?.name || '用戶'}
+                    </span>
+                  </>
+                ) : (
+                  <span>登入</span>
+                )}
+              </motion.button>
+              {!user && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.2 }}
+                  className="text-white/50 text-xs pr-1"
+                >
+                  登入以保存花語蒐集
+                </motion.p>
+              )}
+            </div>
+          )}
+
+          {/* 圖鑑按鈕 */}
+          <motion.button
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1 }}
+            onClick={onOpenCollection}
+            className="px-3 py-2 md:px-4 md:py-2 bg-gradient-to-r from-primary-600/80 to-pink-600/80 backdrop-blur-sm rounded-full text-white text-sm md:text-base font-medium flex items-center gap-2 border border-primary-400/30 shadow-lg"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <CollectionIcon className="w-4 h-4 md:w-5 md:h-5" color="white" />
+            <span className="hidden sm:inline">圖鑑</span>
+          </motion.button>
+        </div>
       )}
 
       {/* 背景飄落花瓣 */}

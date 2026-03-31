@@ -116,10 +116,17 @@ const preloadFirstModel = async () => {
   await parseComplete
 }
 
+import { AuthProvider } from './hooks/useAuth.jsx'
+import LineCallback from './components/LineCallback.jsx'
+
 // 渲染 React
+const isCallback = window.location.pathname === '/auth/callback'
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <AuthProvider>
+      {isCallback ? <LineCallback /> : <App />}
+    </AuthProvider>
   </React.StrictMode>,
 )
 

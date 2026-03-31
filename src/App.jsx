@@ -6,7 +6,10 @@ import FortuneResult from './components/FortuneResult'
 import CollectionPage from './components/CollectionPage'
 import AdminPage from './components/AdminPage'
 import EmotionScanPage from './components/EmotionScanPage'
+import AuthModal from './components/AuthModal'
 import { getRandomFlower, saveCollectedFlower } from './utils/fortuneHelper'
+import { useAuth } from './hooks/useAuth'
+import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile } from './utils/collectionSync'
 
 // 引入 FlowerBloom 觸發背景預載入其他模型
 import './components/FlowerBloom'
@@ -23,6 +26,18 @@ function App() {
   const [selectedFlower, setSelectedFlower] = useState(null)
   const [viewingFlower, setViewingFlower] = useState(null) // For viewing from collection
   const [emotionData, setEmotionData] = useState(null)     // 情緒解籤模式的情緒資料
+  const [showAuthModal, setShowAuthModal] = useState(false)
+
+  const { user } = useAuth()
+
+  // 登入後：同步本地資料到雲端，並載入雲端資料合併
+  useEffect(() => {
+    if (user) {
+      ensureProfile(user).then(() => {
+        syncLocalToCloud(user.id).then(() => loadCloudToLocal(user.id))
+      })
+    }
+  }, [user])
 
   const handlePetalSelect = () => {
     // 花瓣選擇後，生成花卉並進入抽卡動畫
@@ -31,8 +46,10 @@ function App() {
     setEmotionData(null)
     setStage('gacha')
 
-    // Save to collection
+    // Save to localStorage (always)
     saveCollectedFlower(flower)
+    // Save to cloud (if logged in)
+    if (user) saveFlowerToCloud(user.id, flower)
   }
 
   const handleEmotionScan = () => {
@@ -44,6 +61,7 @@ function App() {
     setSelectedFlower(flower)
     setEmotionData(data)
     saveCollectedFlower(flower)
+    if (user) saveFlowerToCloud(user.id, flower)
     setStage('gacha')
   }
 
@@ -86,6 +104,8 @@ function App() {
             onPetalSelect={handlePetalSelect}
             onOpenCollection={handleOpenCollection}
             onEmotionScan={handleEmotionScan}
+            onOpenAuth={() => setShowAuthModal(true)}
+            user={user}
           />
         )}
 
@@ -129,6 +149,8 @@ function App() {
           />
         )}
       </AnimatePresence>
+
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   )
 }

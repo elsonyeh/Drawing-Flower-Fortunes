@@ -32,7 +32,17 @@
       "Bash(dir:*)",
       "Bash(cmd /c \"dir /s D:\\\\花語解籤\\\\public\\\\models\\\\*.glb\")",
       "Bash(node -e:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git fetch:*)",
+      "Bash(xargs grep:*)",
+      "WebFetch(domain:supabase.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:developers.line.biz)",
+      "Bash(npx supabase:*)",
+      "Bash(du -sh D:花語解籤publicmodels/*)",
+      "Bash(for model:*)",
+      "Bash(do echo:*)",
+      "WebFetch(domain:bobtung.medium.com)"
     ]
   }
 }

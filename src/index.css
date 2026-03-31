@@ -10,11 +10,21 @@
   box-sizing: border-box;
 }
 
+html {
+  background-color: #0f0a1e;
+}
+
 body {
   font-family: 'Noto Sans TC', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  background-color: #0f0a1e;
+  /* iOS safe area: 避免內容被 notch / Home Bar 遮住 */
+  padding-top: constant(safe-area-inset-top);     /* iOS < 11.2 */
+  padding-top: env(safe-area-inset-top);           /* iOS >= 11.2 */
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
