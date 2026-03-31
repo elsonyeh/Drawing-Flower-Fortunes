@@ -474,6 +474,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
       exit={{ opacity: 1 }}
       transition={{ exit: { duration: 0 } }}
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 5rem)' }}
     >
       {/* 右上角：圖鑑 + 登入/用戶 */}
       {!isTransforming && (
@@ -657,19 +658,6 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
         </motion.p>
       )}
 
-      {/* 登入提示 */}
-      {!isTransforming && !user && onOpenAuth && (
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          onClick={onOpenAuth}
-          className="mt-3 relative z-10 text-white/40 text-xs tracking-widest hover:text-white/70 transition-colors"
-        >
-          登入以保存花語蒐集
-        </motion.button>
-      )}
-
       {/* 相由花緣按鈕 */}
       {!isTransforming && onEmotionScan && (
         <motion.button
@@ -690,6 +678,19 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
             <path d="M9.5 13.5c.6 1 1.4 1.5 2.5 1.5s1.9-.5 2.5-1.5" />
           </svg>
           相由花緣
+        </motion.button>
+      )}
+
+      {/* 登入提示 */}
+      {!isTransforming && !user && onOpenAuth && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          onClick={onOpenAuth}
+          className="mt-3 relative z-10 text-white/40 text-xs tracking-widest hover:text-white/70 transition-colors"
+        >
+          登入以保存花語蒐集
         </motion.button>
       )}
     </motion.div>

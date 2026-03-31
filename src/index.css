@@ -41,7 +41,8 @@ body,
 }
 
 #root {
-  min-height: 100vh;
+  min-height: 100vh;    /* fallback */
+  min-height: 100dvh;   /* iOS Safari: dynamic viewport height，扣除瀏覽器工具列 */
   width: 100%;
 }
 
