@@ -474,7 +474,10 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
       exit={{ opacity: 1 }}
       transition={{ exit: { duration: 0 } }}
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
-      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 5rem)' }}
+      style={{
+        paddingTop: '5rem',      /* 清開右上角按鈕底部（約 52px），並平衡 paddingBottom 對 justify-center 的偏移 */
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 5rem)',
+      }}
     >
       {/* 右上角：圖鑑 + 登入/用戶 */}
       {!isTransforming && (
