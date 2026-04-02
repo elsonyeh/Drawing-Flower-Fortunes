@@ -9,7 +9,7 @@ import EmotionScanPage from './components/EmotionScanPage'
 import AuthModal from './components/AuthModal'
 import { getRandomFlower, saveCollectedFlower } from './utils/fortuneHelper'
 import { useAuth } from './hooks/useAuth'
-import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile } from './utils/collectionSync'
+import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile } from './utils/collectionSync'
 
 // 引入 FlowerBloom 觸發背景預載入其他模型
 import './components/FlowerBloom'
@@ -33,7 +33,32 @@ function App() {
   // 登入後：同步本地資料到雲端，並載入雲端資料合併
   useEffect(() => {
     if (user) {
-      ensureProfile(user).then(() => {
+      ensureProfile(user).then(async () => {
+        // 偵測「LINE 用戶連結 Google」完成
+        // 改用 localStorage（sessionStorage 在 OAuth 跨 origin 跳轉後可能被清空）
+        const linkForUserId = localStorage.getItem('pending_link_user_id')
+        const linkLineUserId = localStorage.getItem('pending_link_line_user_id')
+        const linkTs = parseInt(localStorage.getItem('pending_link_ts') || '0')
+        const isExpired = Date.now() - linkTs > 10 * 60 * 1000
+
+        console.log('[App] pending_link_user_id:', linkForUserId)
+        console.log('[App] pending_link_line_user_id:', linkLineUserId)
+        console.log('[App] current user.id:', user.id)
+        console.log('[App] isExpired:', isExpired, 'age(s):', Math.round((Date.now() - linkTs) / 1000))
+
+        if (linkForUserId && linkLineUserId && !isExpired && user.id !== linkForUserId) {
+          console.log('[App] 執行 linkLineToProfile')
+          localStorage.removeItem('pending_link_user_id')
+          localStorage.removeItem('pending_link_line_user_id')
+          localStorage.removeItem('pending_link_ts')
+          await linkLineToProfile(user.id, linkLineUserId)
+        } else if (linkForUserId) {
+          console.log('[App] linkLineToProfile 未執行，原因：',
+            !linkLineUserId ? 'lineUserId 空' :
+            isExpired ? '已過期' :
+            user.id === linkForUserId ? 'user ID 相同' : '未知'
+          )
+        }
         syncLocalToCloud(user.id).then(() => loadCloudToLocal(user.id))
       })
     }

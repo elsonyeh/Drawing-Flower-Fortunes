@@ -2,8 +2,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { isSupabaseEnabled } from '../lib/supabase'
 
+const PROVIDER_LABEL = { google: 'Google', line: 'LINE' }
+
 export default function AuthModal({ isOpen, onClose }) {
-  const { user, signInWithGoogle, signInWithLine, signOut } = useAuth()
+  const { user, isNewUser, linkedLineId, signInWithGoogle, signInWithLine, signOut } = useAuth()
+  const lastProvider = localStorage.getItem('last_login_provider')
+
+  // 判斷目前帳號類型與連結狀態（靠 profiles.linked_line_id，不靠 user_metadata 避免 OAuth 覆蓋）
+  const isLineAccount = user?.email?.endsWith('@line.user')
+  const hasLinkedLine = !!linkedLineId
+
+  // 未登入時：有 last_login_provider 代表曾經登入過
+  const hasUsedBefore = !!lastProvider
 
   if (!isSupabaseEnabled) return null
 
@@ -36,11 +46,45 @@ export default function AuthModal({ isOpen, onClose }) {
                     {user.user_metadata?.avatar_url && (
                       <img src={user.user_metadata.avatar_url} alt="" className="w-16 h-16 rounded-full mx-auto mb-3 border-2 border-white/20" />
                     )}
+                    <p className="text-white/50 text-xs mb-1">
+                      {isNewUser ? '歡迎加入' : '歡迎回來'}
+                    </p>
                     <h2 className="text-xl font-bold text-white">
                       {user.user_metadata?.full_name || user.user_metadata?.name || '用戶'}
                     </h2>
-                    <p className="text-green-400 text-xs mt-2">✓ 花語蒐集已同步到雲端</p>
+                    {lastProvider && (
+                      <p className="text-white/40 text-xs mt-1">
+                        透過 {PROVIDER_LABEL[lastProvider]} {isNewUser ? '註冊' : '登入'}
+                      </p>
+                    )}
+                    <p className="text-green-400 text-xs mt-1">
+                      {isNewUser ? '✓ 帳號已建立，花語蒐集開始同步' : '✓ 花語蒐集已同步到雲端'}
+                    </p>
                   </div>
+                  {/* 連結其他登入方式：先判斷是否已連結，再判斷帳號類型 */}
+                  {hasLinkedLine ? (
+                    <button
+                      disabled
+                      className="w-full flex items-center justify-center gap-2 bg-white/5 text-white/30 text-sm font-medium py-3 px-6 rounded-2xl border border-white/8 mb-3 cursor-not-allowed"
+                    >
+                      <span>✓</span> 已連結 Google 與 LINE
+                    </button>
+                  ) : isLineAccount ? (
+                    <button
+                      onClick={() => { signInWithGoogle(); onClose() }}
+                      className="w-full flex items-center justify-center gap-2 bg-white/8 text-white/60 text-sm font-medium py-3 px-6 rounded-2xl hover:bg-white/15 active:scale-95 transition-all border border-white/10 mb-3"
+                    >
+                      <span>🔗</span> 連結 Google 帳號
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { signInWithLine(); onClose() }}
+                      className="w-full flex items-center justify-center gap-2 bg-white/8 text-white/60 text-sm font-medium py-3 px-6 rounded-2xl hover:bg-white/15 active:scale-95 transition-all border border-white/10 mb-3"
+                    >
+                      <span>🔗</span> 連結 LINE 帳號
+                    </button>
+                  )}
+
                   <button
                     onClick={() => { signOut(); onClose() }}
                     className="w-full flex items-center justify-center gap-2 bg-white/10 text-white/70 font-medium py-3 px-6 rounded-2xl hover:bg-white/20 active:scale-95 transition-all border border-white/10"
@@ -60,24 +104,34 @@ export default function AuthModal({ isOpen, onClose }) {
                   {/* 標題 */}
                   <div className="text-center mb-8">
                     <div className="text-4xl mb-3">🌸</div>
-                    <h2 className="text-xl font-bold text-white">登入帳戶</h2>
-                    <p className="text-white/50 text-sm mt-2">登入後花語蒐集永久保存</p>
+                    <h2 className="text-xl font-bold text-white">
+                      {hasUsedBefore ? '歡迎回來' : '加入花語'}
+                    </h2>
+                    <p className="text-white/50 text-sm mt-2">
+                      {hasUsedBefore ? '繼續你的花語蒐集之旅' : '登入後花語蒐集永久保存'}
+                    </p>
                   </div>
 
                   {/* 登入按鈕 */}
                   <div className="space-y-3">
                     <button
                       onClick={() => { signInWithGoogle(); onClose() }}
-                      className="w-full flex items-center justify-center bg-white text-gray-800 font-medium py-3 px-6 rounded-2xl hover:bg-gray-100 active:scale-95 transition-all"
+                      className="w-full flex items-center justify-center gap-2 bg-white text-gray-800 font-medium py-3 px-6 rounded-2xl hover:bg-gray-100 active:scale-95 transition-all"
                     >
                       使用 Google 登入
+                      {lastProvider === 'google' && (
+                        <span className="text-xs text-gray-400 font-normal">上次使用</span>
+                      )}
                     </button>
 
                     <button
                       onClick={() => { signInWithLine(); onClose() }}
-                      className="w-full flex items-center justify-center bg-[#06C755] text-white font-medium py-3 px-6 rounded-2xl hover:bg-[#05b34d] active:scale-95 transition-all"
+                      className="w-full flex items-center justify-center gap-2 bg-[#06C755] text-white font-medium py-3 px-6 rounded-2xl hover:bg-[#05b34d] active:scale-95 transition-all"
                     >
                       使用 LINE 登入
+                      {lastProvider === 'line' && (
+                        <span className="text-xs text-white/60 font-normal">上次使用</span>
+                      )}
                     </button>
                   </div>
 

@@ -31,9 +31,12 @@ CREATE TABLE IF NOT EXISTS collections (
 ALTER TABLE profiles    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE collections ENABLE ROW LEVEL SECURITY;
 
--- profiles：只能讀/改自己的資料
+-- profiles：只能讀/寫/改自己的資料
 CREATE POLICY "Users can view own profile"
   ON profiles FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile"
+  ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE USING (auth.uid() = id);
@@ -75,3 +78,24 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+-- =============================================
+-- Migration: 帳號連結支援
+-- 在 Supabase Dashboard > SQL Editor 執行以下語句（已存在則跳過）
+-- =============================================
+
+-- 連結的 LINE user ID（例如 "U1234abcd..."）
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS linked_line_id TEXT UNIQUE;
+
+-- LINE 用戶反向查詢：檢查此 LINE user ID 是否已被某個帳號連結
+-- SECURITY DEFINER 讓此函式以 postgres 身份執行，可跨 user 查詢，不受 RLS 限制
+CREATE OR REPLACE FUNCTION is_line_user_linked(p_line_user_id TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles WHERE linked_line_id = p_line_user_id
+  );
+$$;

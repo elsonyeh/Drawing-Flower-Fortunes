@@ -33,10 +33,14 @@ export default function LineCallback() {
 
     const redirectUri = `${window.location.origin}/auth/callback`
 
-    console.log('[LINE Callback] 呼叫 Edge Function，redirectUri:', redirectUri)
+    // 若是連結模式，取出並清除連結意圖
+    const linkUserId = sessionStorage.getItem('line_link_for_user_id') || null
+    if (linkUserId) sessionStorage.removeItem('line_link_for_user_id')
+
+    console.log('[LINE Callback] 呼叫 Edge Function，redirectUri:', redirectUri, '連結模式:', !!linkUserId)
 
     supabase.functions.invoke('line-auth', {
-      body: { code, redirectUri },
+      body: { code, redirectUri, linkUserId },
     }).then(async ({ data, error }) => {
       // 若有 HTTP 錯誤，嘗試讀取 response body
       if (error) {
