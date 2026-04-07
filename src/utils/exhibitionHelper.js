@@ -33,7 +33,6 @@ export const initExhibitionWithCloud = async () => {
   const cloud = await loadExhibitionFromCloud()
   if (cloud) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cloud))
-    console.log('[exhibitionHelper] 從雲端還原展覽進度')
     return cloud
   }
 

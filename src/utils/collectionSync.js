@@ -90,8 +90,6 @@ export const syncLocalToCloud = async (userId) => {
 
   if (error) {
     console.error('同步本地資料到雲端失敗:', error.message)
-  } else {
-    console.log(`已同步 ${rows.length} 筆本地蒐集到雲端`)
   }
 }
 
@@ -99,11 +97,7 @@ export const syncLocalToCloud = async (userId) => {
  * 將 LINE user ID 連結到現有帳號的 profile（Google 連結 LINE 時使用）
  */
 export const linkLineToProfile = async (userId, lineUserId) => {
-  console.log('[linkLineToProfile] 開始連結, userId:', userId, 'lineUserId:', lineUserId)
-  if (!isSupabaseEnabled || !userId || !lineUserId) {
-    console.warn('[linkLineToProfile] 缺少參數，跳過')
-    return
-  }
+  if (!isSupabaseEnabled || !userId || !lineUserId) return
 
   const { error } = await supabase
     .from('profiles')
@@ -115,14 +109,11 @@ export const linkLineToProfile = async (userId, lineUserId) => {
     return
   }
 
-  console.log('[linkLineToProfile] DB 更新成功')
-
   // 同步更新 auth user metadata，使前端 user 物件立即反映連結狀態
   await supabase.auth.updateUser({ data: { line_user_id: lineUserId } })
 
   // 快取到 localStorage，讓 LINE 用戶下次登入時也能立即看到已連結狀態
   localStorage.setItem(`line_linked_${lineUserId}`, '1')
-  console.log('[linkLineToProfile] 連結完成，localStorage 已寫入')
 }
 
 /**

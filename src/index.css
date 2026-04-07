@@ -69,3 +69,21 @@ canvas[data-engine*="three.js"] + div {
                  0 0 30px rgba(224, 60, 238, 0.1);
   }
 }
+
+/* Keyboard focus indicator */
+:focus-visible {
+  outline: 2px solid rgba(167, 139, 250, 0.8);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

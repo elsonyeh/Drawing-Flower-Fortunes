@@ -33,7 +33,6 @@ export const getOrCreateVisitorId = () => {
     id = getCookieId()
     if (id) {
       localStorage.setItem(VISITOR_ID_KEY, id)
-      console.log('[exhibitionSync] 從 Cookie 還原訪客 ID:', id)
     }
   }
 
@@ -41,7 +40,6 @@ export const getOrCreateVisitorId = () => {
     // 全新訪客
     id = crypto.randomUUID()
     localStorage.setItem(VISITOR_ID_KEY, id)
-    console.log('[exhibitionSync] 建立新訪客 ID:', id)
   }
 
   // 每次都更新 Cookie（延長有效期）
@@ -68,7 +66,6 @@ export const syncExhibitionToCloud = async (state) => {
     }, { onConflict: 'visitor_id' })
 
   if (error) console.error('[exhibitionSync] 同步失敗:', error.message)
-  else console.log('[exhibitionSync] 已同步，tickets:', state.tickets, 'visited:', state.visited.length)
 }
 
 /**
@@ -91,7 +88,6 @@ export const loadExhibitionFromCloud = async () => {
   }
   if (!data) return null
 
-  console.log('[exhibitionSync] 從雲端還原進度，tickets:', data.tickets, 'visited:', data.visited?.length)
   return {
     visited: data.visited || [],
     tickets: data.tickets ?? 1,

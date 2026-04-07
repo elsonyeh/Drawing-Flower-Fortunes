@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import LandingPage from './components/LandingPage'
 import GachaAnimation from './components/GachaAnimation'
 import FortuneResult from './components/FortuneResult'
-import CollectionPage from './components/CollectionPage'
-import AdminPage from './components/AdminPage'
-import EmotionScanPage from './components/EmotionScanPage'
-import ExhibitionScanPage from './components/ExhibitionScanPage'
-import QRScanPage from './components/QRScanPage'
-import AuthModal from './components/AuthModal'
+const CollectionPage = lazy(() => import('./components/CollectionPage'))
+const AdminPage = lazy(() => import('./components/AdminPage'))
+const EmotionScanPage = lazy(() => import('./components/EmotionScanPage'))
+const ExhibitionScanPage = lazy(() => import('./components/ExhibitionScanPage'))
+const QRScanPage = lazy(() => import('./components/QRScanPage'))
+const AuthModal = lazy(() => import('./components/AuthModal'))
 import { getRandomFlower, saveCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
 import { isExhibitionMode, getDrawTickets, getUnlockedPools, consumeTicket } from './utils/exhibitionHelper'
 import { useAuth } from './hooks/useAuth'
@@ -63,23 +63,11 @@ function App() {
         const linkTs = parseInt(localStorage.getItem('pending_link_ts') || '0')
         const isExpired = Date.now() - linkTs > 10 * 60 * 1000
 
-        console.log('[App] pending_link_user_id:', linkForUserId)
-        console.log('[App] pending_link_line_user_id:', linkLineUserId)
-        console.log('[App] current user.id:', user.id)
-        console.log('[App] isExpired:', isExpired, 'age(s):', Math.round((Date.now() - linkTs) / 1000))
-
         if (linkForUserId && linkLineUserId && !isExpired && user.id !== linkForUserId) {
-          console.log('[App] 執行 linkLineToProfile')
           localStorage.removeItem('pending_link_user_id')
           localStorage.removeItem('pending_link_line_user_id')
           localStorage.removeItem('pending_link_ts')
           await linkLineToProfile(user.id, linkLineUserId)
-        } else if (linkForUserId) {
-          console.log('[App] linkLineToProfile 未執行，原因：',
-            !linkLineUserId ? 'lineUserId 空' :
-            isExpired ? '已過期' :
-            user.id === linkForUserId ? 'user ID 相同' : '未知'
-          )
         }
         syncLocalToCloud(user.id).then(() => loadCloudToLocal(user.id))
       })
@@ -169,6 +157,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-night-900 via-night-800 to-night-700 text-white">
+      <Suspense fallback={null}>
       <AnimatePresence mode="wait">
         {stage === 'qrScan' && (
           <QRScanPage
@@ -246,8 +235,11 @@ function App() {
           />
         )}
       </AnimatePresence>
+      </Suspense>
 
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <Suspense fallback={null}>
+        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      </Suspense>
     </div>
   )
 }
