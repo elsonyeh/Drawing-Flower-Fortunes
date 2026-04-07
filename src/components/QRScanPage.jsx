@@ -8,6 +8,15 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
   const successFiredRef = useRef(false)
   const genRef = useRef(0) // generation counter，解決 StrictMode 雙重 mount 競爭
 
+  // 攔截 html5-qrcode 內部 video.play() 在 StrictMode 下被中斷的 AbortError
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.reason?.name === 'AbortError') e.preventDefault()
+    }
+    window.addEventListener('unhandledrejection', handler)
+    return () => window.removeEventListener('unhandledrejection', handler)
+  }, [])
+
   useEffect(() => {
     const gen = ++genRef.current // 每次 mount 遞增，過期的 start() 會被攔截
 
