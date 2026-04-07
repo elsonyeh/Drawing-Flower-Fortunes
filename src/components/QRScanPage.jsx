@@ -12,7 +12,14 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
     const gen = ++genRef.current // 每次 mount 遞增，過期的 start() 會被攔截
 
     const container = document.getElementById('qr-reader-container')
-    if (container) container.innerHTML = ''
+    if (container) {
+      // 先 pause 所有 video，避免移除播放中的元素觸發 AbortError
+      container.querySelectorAll('video').forEach(v => {
+        v.pause()
+        v.srcObject = null
+      })
+      container.innerHTML = ''
+    }
 
     const qr = new Html5Qrcode('qr-reader-container')
 
