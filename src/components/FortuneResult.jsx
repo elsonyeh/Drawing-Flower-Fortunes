@@ -413,7 +413,7 @@ function ShareModal({ flower, emotionData, flowerImageUrl, onClose }) {
         {/* 標題 */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
           <h3 className="text-white font-semibold text-lg">分享花語</h3>
-          <button onClick={onClose} className="text-white/40 hover:text-white/80 transition-colors text-xl">✕</button>
+          <button onClick={onClose} aria-label="關閉分享" className="text-white/40 hover:text-white/80 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full">✕</button>
         </div>
 
         {/* 預覽圖 */}

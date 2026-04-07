@@ -2,20 +2,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { getAllFlowers, getCollectedFlowers, getCollectionStats, isFlowerCollected, isFlowerViewed, markFlowerAsViewed } from '../utils/fortuneHelper'
 import { isExhibitionMode, getZoneProgress, getDrawTickets, getUnlockedPools } from '../utils/exhibitionHelper'
+import { ZONE_THEME, ZONE_ARTWORKS } from '../utils/exhibitionConstants'
 import CardBack from './CardBack'
 import FlowerBloom from './FlowerBloom'
-
-const ZONE_THEME = {
-  A: { name: '呼吸', color: '#a78bfa' },
-  B: { name: '蔓延', color: '#f472b6' },
-  C: { name: '共生', color: '#34d399' },
-}
-
-const ZONE_ARTWORKS = {
-  A: ['A1', 'A2', 'A3', 'A4', 'A5'],
-  B: ['B1', 'B2', 'B3', 'B4', 'B5'],
-  C: ['C1', 'C2', 'C3', 'C4', 'C5'],
-}
 
 const CollectionPage = ({ onClose, onSelectFlower }) => {
   const [selectedTab, setSelectedTab] = useState('all') // 'all', 'ssr', 'common'
@@ -63,9 +52,10 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
             <h1 className="text-2xl font-bold text-gradient">花語圖鑑</h1>
             <button
               onClick={onClose}
-              className="p-2 rounded-full bg-night-700/50 hover:bg-night-700 transition-colors"
+              aria-label="關閉圖鑑"
+              className="p-3 rounded-full bg-night-700/50 hover:bg-night-700 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
-              <span className="text-2xl">×</span>
+              <span className="text-2xl" aria-hidden="true">×</span>
             </button>
           </div>
 

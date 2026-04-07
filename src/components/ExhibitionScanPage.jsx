@@ -1,12 +1,7 @@
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { recordVisit, getExhibitionState, initExhibitionWithCloud, getUnlockedPools, getZoneProgress } from '../utils/exhibitionHelper'
-
-const ZONE_THEME = {
-  A: { name: '呼吸', color: '#a78bfa', desc: '感知自我・內在靜觀' },
-  B: { name: '蔓延', color: '#f472b6', desc: '情緒擴散・與他人連結' },
-  C: { name: '共生', color: '#34d399', desc: '相互依存・紮根共存' },
-}
+import { ZONE_THEME } from '../utils/exhibitionConstants'
 
 export default function ExhibitionScanPage({ zone, workId, workName, onDraw, onBack }) {
   const [isNewVisit, setIsNewVisit] = useState(false)

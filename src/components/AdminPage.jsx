@@ -3,26 +3,9 @@ import { motion } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
 import { unlockAllFlowers, clearAllFlowers, getCollectionStats } from '../utils/fortuneHelper'
 import { getExhibitionState } from '../utils/exhibitionHelper'
+import { ZONE_THEME, ARTWORKS } from '../utils/exhibitionConstants'
 
-const ARTWORKS = [
-  { zone: 'A', id: 'A1', name: '當我聽見我',          location: '光榮國小外空地' },
-  { zone: 'A', id: 'A2', name: '一瞬花綻',            location: '光榮國小陶壺後空地' },
-  { zone: 'A', id: 'A3', name: '炎赫',                location: '千葉素食館' },
-  { zone: 'A', id: 'A4', name: '關於情緒的棲息方式',   location: '國小國中外草地（綠廊）' },
-  { zone: 'A', id: 'A5', name: '流金歲月',            location: '光榮國小建築物空隙' },
-  { zone: 'B', id: 'B1', name: '花落成流',            location: '欄杆區／光榮國小牆外' },
-  { zone: 'B', id: 'B2', name: '情緒共振實驗室',       location: '鹽埕國中外牆花圃' },
-  { zone: 'B', id: 'B3', name: '這裡有很多按鈕',       location: '克朗德美術館騎樓' },
-  { zone: 'B', id: 'B4', name: '著花',                location: '巴黎花紙行' },
-  { zone: 'B', id: 'B5', name: '花鹽',                location: '雍之川流古董師交易館' },
-  { zone: 'C', id: 'C1', name: '聽見花開：聲與光的共存', location: '沙地里空屋一樓' },
-  { zone: 'C', id: 'C2', name: '鹽晶．緣進',           location: '老房間（里長）' },
-  { zone: 'C', id: 'C3', name: '起家：紮根',           location: '老房間（居民）' },
-  { zone: 'C', id: 'C4', name: '聲綻',                location: '瑞士大飯店' },
-  { zone: 'C', id: 'C5', name: '日常的封存',           location: '岸等' },
-]
-
-const ZONE_COLOR = { A: '#a78bfa', B: '#f472b6', C: '#34d399' }
+const ZONE_COLOR = Object.fromEntries(Object.entries(ZONE_THEME).map(([k, v]) => [k, v.color]))
 
 function AdminPage() {
   const [stats, setStats] = useState(getCollectionStats())
@@ -80,7 +63,7 @@ function AdminPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
                 activeTab === tab.id
                   ? 'bg-white/20 text-white'
                   : 'bg-white/5 text-white/50 hover:bg-white/10'
@@ -133,12 +116,14 @@ function AdminPage() {
           <div>
             {/* Base URL setting */}
             <div className="bg-white/5 rounded-xl p-4 mb-5">
-              <label className="text-white/60 text-xs mb-1 block">App 網址（用於生成 QR Code）</label>
+              <label htmlFor="base-url-input" className="text-white/60 text-xs mb-1 block">App 網址（用於生成 QR Code）</label>
               <input
+                id="base-url-input"
                 type="text"
                 value={baseUrl}
                 onChange={e => setBaseUrl(e.target.value)}
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/40"
+                aria-label="App 網址"
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-white/40 min-h-[44px]"
               />
             </div>
 

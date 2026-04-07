@@ -100,12 +100,13 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
       <div className="flex items-center gap-4 px-5 py-4 bg-black/70 backdrop-blur-sm border-b border-white/10">
         <button
           onClick={onBack}
-          className="text-white/60 hover:text-white transition-colors text-sm flex items-center gap-1"
+          aria-label="返回"
+          className="text-white/60 hover:text-white transition-colors text-sm flex items-center gap-1 min-w-[44px] min-h-[44px]"
         >
           ← 返回
         </button>
         <h2 className="text-white font-bold flex-1 text-center tracking-wide">掃描作品 QR Code</h2>
-        <div className="w-12" />
+        <div className="w-[44px]" aria-hidden="true" />
       </div>
 
       {/* Scanner */}
@@ -130,10 +131,11 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
           {/* Corner overlay */}
           {status === 'scanning' && (
             <div className="absolute inset-0 pointer-events-none">
-              {/* Scanning animation */}
+              {/* Scanning animation — 用 translateY 取代 top，避免 layout thrash */}
               <motion.div
                 className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-purple-400 to-transparent"
-                animate={{ top: ['20%', '80%', '20%'] }}
+                style={{ top: '20%' }}
+                animate={{ y: ['0%', '300%', '0%'] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               />
               {/* Corner markers */}
