@@ -170,15 +170,6 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
         )}
       </div>
 
-      <div className="pb-8 text-center">
-        <button
-          onClick={onBack}
-          className="text-white/30 text-sm hover:text-white/60 transition-colors"
-        >
-          取消
-        </button>
-      </div>
-
       {/* 隱藏 html5-qrcode 預設的控制面板與邊框 */}
       <style>{`
         #qr-reader-container { border: none !important; }
