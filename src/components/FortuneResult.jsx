@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import FlowerBloom from './FlowerBloom'
 import { ARTWORKS } from '../utils/exhibitionConstants'
-import { isExhibitionMode } from '../utils/exhibitionHelper'
+import { isExhibitionMode, getExhibitionState } from '../utils/exhibitionHelper'
 
 // ─── Canvas 花朵繪製 ─────────────────────────────────────────
 function drawFlower(ctx, cx, cy, color, grad1, grad2, grad3, isSSR) {
@@ -507,12 +507,14 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
   const [flowerSnapshot, setFlowerSnapshot] = useState(null)
   const isSSR = flower?.rarity === 'ssr'
 
-  // 展覽模式：若花有 exhibitionZone，改顯示該展區的裝置藝術
+  // 展覽模式：若花有 exhibitionZone，改顯示該展區尚未拜訪的裝置藝術
   const exhibitionZone = flower?.exhibitionZone
   const inExhibition = isExhibitionMode()
-  const zoneArtworks = (inExhibition && exhibitionZone)
-    ? ARTWORKS.filter(a => a.zone === exhibitionZone)
-    : null
+  const zoneArtworks = (() => {
+    if (!inExhibition || !exhibitionZone) return null
+    const visited = getExhibitionState()?.visited ?? []
+    return ARTWORKS.filter(a => a.zone === exhibitionZone && !visited.includes(a.id))
+  })()
 
   const handleOpenShare = useCallback(() => {
     // 截取 Three.js WebGL canvas
@@ -806,28 +808,34 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           </h2>
           <div className="space-y-3">
             {zoneArtworks
-              ? zoneArtworks.map((art, index) => (
-                  <motion.div
-                    key={art.id}
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.8 + index * 0.1 }}
-                    className="flex items-start space-x-3 p-4 rounded-lg bg-night-700/40 hover:bg-night-700/60 transition-colors"
-                  >
-                    <div
-                      className="w-3 h-3 rounded-full flex-shrink-0 mt-1.5"
-                      style={{
-                        background: isSSR
-                          ? `linear-gradient(135deg, ${flower.gradientColors?.[0]}, ${flower.gradientColors?.[1]})`
-                          : flower.color
-                      }}
-                    />
-                    <div>
-                      <span className="text-gray-200 text-lg leading-tight">{art.name}</span>
-                      <p className="text-white/40 text-sm mt-0.5">{art.location}</p>
-                    </div>
-                  </motion.div>
-                ))
+              ? zoneArtworks.length > 0
+                ? zoneArtworks.map((art, index) => (
+                    <motion.div
+                      key={art.id}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.8 + index * 0.1 }}
+                      className="flex items-start space-x-3 p-4 rounded-lg bg-night-700/40 hover:bg-night-700/60 transition-colors"
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0 mt-1.5"
+                        style={{
+                          background: isSSR
+                            ? `linear-gradient(135deg, ${flower.gradientColors?.[0]}, ${flower.gradientColors?.[1]})`
+                            : flower.color
+                        }}
+                      />
+                      <div>
+                        <span className="text-gray-200 text-lg leading-tight">{art.name}</span>
+                        <p className="text-white/40 text-sm mt-0.5">{art.location}</p>
+                      </div>
+                    </motion.div>
+                  ))
+                : (
+                  <p className="text-white/40 text-sm text-center py-2">
+                    ✓ 展區 {exhibitionZone} 的裝置藝術已全部拜訪完成
+                  </p>
+                )
               : flower.locations.map((location, index) => (
                   <motion.div
                     key={index}
@@ -851,8 +859,8 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           </div>
         </motion.div>
 
-        {/* Exhibition artwork recommendation */}
-        {flower.artwork && !isFromCollection && (
+        {/* Exhibition artwork recommendation — 隱藏於展覽模式（由上方展區藝術列表取代） */}
+        {flower.artwork && !isFromCollection && !inExhibition && (
           <motion.div
             variants={!isFromCollection ? itemVariants : undefined}
             className="bg-gradient-to-br from-night-800/60 to-night-900/60 backdrop-blur-md rounded-2xl p-6 mb-8 border border-purple-500/30"
