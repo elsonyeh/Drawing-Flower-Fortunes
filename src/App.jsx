@@ -6,8 +6,10 @@ import FortuneResult from './components/FortuneResult'
 import CollectionPage from './components/CollectionPage'
 import AdminPage from './components/AdminPage'
 import EmotionScanPage from './components/EmotionScanPage'
+import ExhibitionScanPage from './components/ExhibitionScanPage'
 import AuthModal from './components/AuthModal'
-import { getRandomFlower, saveCollectedFlower } from './utils/fortuneHelper'
+import { getRandomFlower, saveCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
+import { isExhibitionMode, getDrawTickets, getUnlockedPools, consumeTicket } from './utils/exhibitionHelper'
 import { useAuth } from './hooks/useAuth'
 import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile } from './utils/collectionSync'
 
@@ -15,11 +17,22 @@ import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, l
 import './components/FlowerBloom'
 
 function App() {
-  const [stage, setStage] = useState('landing') // 'landing', 'gacha', 'result', 'collection', 'admin', 'emotionScan'
+  const [stage, setStage] = useState('landing') // 'landing', 'gacha', 'result', 'collection', 'admin', 'emotionScan', 'exhibitionScan'
+  const [scanParams, setScanParams] = useState(null) // { zone, workId, workName }
 
-  // Check for admin route on mount
+  // Check for QR scan params or admin route on mount
   useEffect(() => {
-    if (window.location.pathname === '/elsontest') {
+    const params = new URLSearchParams(window.location.search)
+    const zone = params.get('zone')
+    const work = params.get('work')
+    const name = params.get('name')
+
+    if (zone && work) {
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname)
+      setScanParams({ zone, workId: work, workName: name || work })
+      setStage('exhibitionScan')
+    } else if (window.location.pathname === '/elsontest') {
       setStage('admin')
     }
   }, [])
@@ -66,7 +79,17 @@ function App() {
 
   const handlePetalSelect = () => {
     // 花瓣選擇後，生成花卉並進入抽卡動畫
-    const flower = getRandomFlower()
+    const exMode = isExhibitionMode()
+
+    if (exMode) {
+      const tickets = getDrawTickets()
+      if (tickets <= 0) return
+      consumeTicket()
+    }
+
+    const pools = exMode ? getUnlockedPools() : null
+    const flower = exMode ? getRandomFlowerForExhibition(pools) : getRandomFlower()
+
     setSelectedFlower(flower)
     setEmotionData(null)
     setStage('gacha')
@@ -75,6 +98,18 @@ function App() {
     saveCollectedFlower(flower)
     // Save to cloud (if logged in)
     if (user) saveFlowerToCloud(user.id, flower)
+  }
+
+  const handleExhibitionDraw = () => {
+    if (!consumeTicket()) return
+    const pools = getUnlockedPools()
+    const flower = getRandomFlowerForExhibition(pools)
+    setSelectedFlower(flower)
+    setEmotionData(null)
+    saveCollectedFlower(flower)
+    if (user) saveFlowerToCloud(user.id, flower)
+    setScanParams(null)
+    setStage('gacha')
   }
 
   const handleEmotionScan = () => {
@@ -123,6 +158,20 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-night-900 via-night-800 to-night-700 text-white">
       <AnimatePresence mode="wait">
+        {stage === 'exhibitionScan' && scanParams && (
+          <ExhibitionScanPage
+            key="exhibitionScan"
+            zone={scanParams.zone}
+            workId={scanParams.workId}
+            workName={scanParams.workName}
+            onDraw={handleExhibitionDraw}
+            onBack={() => {
+              setScanParams(null)
+              setStage('landing')
+            }}
+          />
+        )}
+
         {stage === 'landing' && (
           <LandingPage
             key="landing"
@@ -131,6 +180,8 @@ function App() {
             onEmotionScan={handleEmotionScan}
             onOpenAuth={() => setShowAuthModal(true)}
             user={user}
+            exhibitionMode={isExhibitionMode()}
+            exhibitionTickets={getDrawTickets()}
           />
         )}
 

@@ -19,7 +19,9 @@
     "locations": ["愛河之心", "新樂街夜市", "七賢三路美食街"],
     "color": "#D85B8A",
     "model": "rose",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "B",
+    "artwork": {"id": "B1", "name": "花落成流", "location": "欄杆區／光榮國小牆外"}
   },
   {
     "id": 3,
@@ -30,7 +32,9 @@
     "locations": ["高雄市電影館", "鹽埕圖書館", "大溝頂老街"],
     "color": "#8B6DC6",
     "model": "lavender",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "A",
+    "artwork": {"id": "A4", "name": "關於情緒的棲息方式", "location": "國小國中外草地（綠廊）"}
   },
   {
     "id": 4,
@@ -41,7 +45,9 @@
     "locations": ["駁二大義倉庫群", "蓬萊商港區", "哈瑪星鐵道文化園區"],
     "color": "#D99A30",
     "model": "sunflower",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "A",
+    "artwork": {"id": "A3", "name": "炎赫", "location": "千葉素食館"}
   },
   {
     "id": 5,
@@ -52,7 +58,9 @@
     "locations": ["鹽埕第一公有市場", "新樂街", "五福四路老店"],
     "color": "#C5C2D6",
     "model": "jasmine",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "B",
+    "artwork": {"id": "B5", "name": "花鹽", "location": "雍之川流古董師交易館"}
   },
   {
     "id": 6,
@@ -63,7 +71,9 @@
     "locations": ["鹽埕埔站前廣場", "駁二藝術廣場", "大勇路咖啡街"],
     "color": "#9B8EC2",
     "model": "hydrangea",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "B",
+    "artwork": {"id": "B2", "name": "情緒共振實驗室", "location": "鹽埕國中外牆花圃"}
   },
   {
     "id": 7,
@@ -74,7 +84,9 @@
     "locations": ["高雄市立歷史博物館", "鹽埕教會", "愛河畔"],
     "color": "#E8C5CB",
     "model": "lotus",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "C",
+    "artwork": {"id": "C1", "name": "聽見花開：聲與光的共存", "location": "沙地里空屋一樓"}
   },
   {
     "id": 8,
@@ -85,7 +97,9 @@
     "locations": ["駁二書店街", "鹽埕老字號冰店", "堀江商場"],
     "color": "#D85BA0",
     "model": "tulip",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "B",
+    "artwork": {"id": "B3", "name": "這裡有很多按鈕", "location": "克朗德美術館騎樓"}
   },
   {
     "id": 9,
@@ -96,7 +110,9 @@
     "locations": ["鹽埕老街巷弄", "大溝頂夜市", "五福四路商圈"],
     "color": "#7DAE9A",
     "model": "magnolia",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "C",
+    "artwork": {"id": "C4", "name": "聲綻", "location": "瑞士大飯店"}
   },
   {
     "id": 10,
@@ -107,7 +123,9 @@
     "locations": ["鹽埕埔老店", "瀨南街", "大仁路美食"],
     "color": "#7B5FC7",
     "model": "bellflower",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "A",
+    "artwork": {"id": "A1", "name": "當我聽見我", "location": "光榮國小外空地"}
   },
   {
     "id": 11,
@@ -129,7 +147,9 @@
     "locations": ["鹽埕區公所周邊", "必忠街", "富野路老店"],
     "color": "#D9A4B8",
     "model": "carnation",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "C",
+    "artwork": {"id": "C3", "name": "起家：紮根", "location": "老房間（居民）"}
   },
   {
     "id": 13,
@@ -151,7 +171,9 @@
     "locations": ["鹽埕美食街", "大勇路餐廳", "七賢路商圈"],
     "color": "#D61486",
     "model": "peony",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "C",
+    "artwork": {"id": "C5", "name": "日常的封存", "location": "岸等"}
   },
   {
     "id": 15,
@@ -162,7 +184,9 @@
     "locations": ["高雄市立美術館", "內惟藝術中心", "鼓山區文化景點"],
     "color": "#FFE55C",
     "model": "chrysanthemum",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "A",
+    "artwork": {"id": "A5", "name": "流金歲月", "location": "光榮國小建築物空隙"}
   },
   {
     "id": 101,
@@ -174,7 +198,9 @@
     "color": "#FFD700",
     "gradientColors": ["#FFD700", "#FFA500", "#FF8C00"],
     "model": "epiphyllum",
-    "rarity": "ssr"
+    "rarity": "ssr",
+    "exhibitionZone": "A",
+    "artwork": {"id": "A2", "name": "一瞬花綻", "location": "光榮國小陶壺後空地"}
   },
   {
     "id": 102,
@@ -186,7 +212,9 @@
     "color": "#5B9BD8",
     "gradientColors": ["#90B8E0", "#5B9BD8", "#3D7BC0"],
     "model": "blue_rose",
-    "rarity": "ssr"
+    "rarity": "ssr",
+    "exhibitionZone": "C",
+    "artwork": {"id": "C2", "name": "鹽晶．緣進", "location": "老房間（里長）"}
   },
   {
     "id": 103,
@@ -198,7 +226,9 @@
     "color": "#FF4500",
     "gradientColors": ["#FF4500", "#FF6347", "#FFD700"],
     "model": "phoenix_flower",
-    "rarity": "ssr"
+    "rarity": "ssr",
+    "exhibitionZone": "B",
+    "artwork": {"id": "B4", "name": "著花", "location": "巴黎花紙行"}
   },
   {
     "id": 104,

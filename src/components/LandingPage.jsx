@@ -401,7 +401,7 @@ const BambooBasket = ({ isMobile, isTransforming }) => (
 )
 
 // 主組件
-const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAuth, user }) => {
+const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAuth, user, exhibitionMode, exhibitionTickets }) => {
   const [particles, setParticles] = useState([])
   const [petals, setPetals] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(null)
@@ -464,6 +464,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
 
   const handleFlowerClick = (index) => {
     if (isTransforming) return
+    if (exhibitionMode && exhibitionTickets <= 0) return  // no tickets
     setSelectedIndex(index)
     setIsTransforming(true)
     setTimeout(() => onPetalSelect(), 2800)
@@ -648,22 +649,36 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
 
       {/* 提示文字 */}
       {!isTransforming && (
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            y: 0,
-            textShadow: ['0 0 8px rgba(255,200,150,0.3)', '0 0 16px rgba(255,200,150,0.6)', '0 0 8px rgba(255,200,150,0.3)']
-          }}
-          transition={{
-            delay: 1,
-            opacity: { duration: 2, repeat: Infinity },
-            textShadow: { duration: 2, repeat: Infinity },
-          }}
-          className={`text-sm md:text-base text-amber-200/90 text-center tracking-widest font-medium ${isSmallScreen ? 'mt-2' : 'mt-4'} relative z-10`}
-        >
-          ✦ 點擊任意一枝花開始抽籤 ✦
-        </motion.p>
+        <div className={`flex flex-col items-center ${isSmallScreen ? 'mt-2' : 'mt-4'} relative z-10`}>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{
+              opacity: exhibitionMode && exhibitionTickets <= 0 ? 0.3 : [0.6, 1, 0.6],
+              y: 0,
+              textShadow: ['0 0 8px rgba(255,200,150,0.3)', '0 0 16px rgba(255,200,150,0.6)', '0 0 8px rgba(255,200,150,0.3)']
+            }}
+            transition={{
+              delay: 1,
+              opacity: { duration: 2, repeat: exhibitionMode && exhibitionTickets <= 0 ? 0 : Infinity },
+              textShadow: { duration: 2, repeat: Infinity },
+            }}
+            className="text-sm md:text-base text-amber-200/90 text-center tracking-widest font-medium"
+          >
+            {exhibitionMode && exhibitionTickets <= 0
+              ? '✦ 無抽卡次數・請繼續探索作品 ✦'
+              : '✦ 點擊任意一枝花開始抽籤 ✦'}
+          </motion.p>
+          {exhibitionMode && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+              className="text-white/50 text-sm mt-2"
+            >
+              🎟 剩餘抽卡次數：{exhibitionTickets}
+            </motion.div>
+          )}
+        </div>
       )}
 
       {/* 相由花緣按鈕 */}

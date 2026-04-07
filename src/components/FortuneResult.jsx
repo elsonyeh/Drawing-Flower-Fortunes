@@ -818,6 +818,26 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           </div>
         </motion.div>
 
+        {/* Exhibition artwork recommendation */}
+        {flower.artwork && !isFromCollection && (
+          <motion.div
+            variants={!isFromCollection ? itemVariants : undefined}
+            className="bg-gradient-to-br from-night-800/60 to-night-900/60 backdrop-blur-md rounded-2xl p-6 mb-8 border border-purple-500/30"
+          >
+            <h2 className="text-xl font-semibold text-purple-300 mb-4 flex items-center">
+              <span className="mr-2">🎨</span>
+              前往探索
+            </h2>
+            <div className="rounded-xl p-4 bg-white/5 border border-white/10">
+              <p className="text-white/40 text-xs mb-1">{flower.artwork.id} · 展區 {flower.exhibitionZone}</p>
+              <p className="text-white font-bold text-lg mb-1">{flower.artwork.name}</p>
+              <p className="text-white/60 text-sm flex items-center gap-1">
+                <span>📍</span>{flower.artwork.location}
+              </p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Action buttons */}
         <motion.div
           variants={!isFromCollection ? itemVariants : undefined}

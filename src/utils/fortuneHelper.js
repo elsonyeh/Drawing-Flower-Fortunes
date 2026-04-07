@@ -68,6 +68,26 @@ export const getRandomFlower = () => {
 }
 
 /**
+ * Exhibition mode: draw from unlocked zone pools
+ * @param {string[]} unlockedPools - array of unlocked zones e.g. ['A', 'B']
+ * @returns {Object} Random flower from unlocked pools
+ */
+export const getRandomFlowerForExhibition = (unlockedPools) => {
+  const eligible = flowersData.filter(f => f.exhibitionZone && unlockedPools.includes(f.exhibitionZone))
+  if (eligible.length === 0) return getRandomFlower()
+
+  const ssrCards = eligible.filter(f => f.rarity === 'ssr')
+  const commonCards = eligible.filter(f => f.rarity === 'common')
+
+  const random = Math.random() * 100
+  // SSR: ~1% per SSR card in pool
+  if (ssrCards.length > 0 && random < ssrCards.length) {
+    return ssrCards[Math.floor(random)]
+  }
+  return commonCards[Math.floor(Math.random() * commonCards.length)]
+}
+
+/**
  * Get flower by ID
  * @param {number} id - Flower ID
  * @returns {Object|null} Flower object or null if not found
