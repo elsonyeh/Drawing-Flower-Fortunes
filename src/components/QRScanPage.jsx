@@ -5,22 +5,32 @@ import { Html5Qrcode } from 'html5-qrcode'
 export default function QRScanPage({ onScanSuccess, onBack }) {
   const [status, setStatus] = useState('init') // 'init', 'scanning', 'error'
   const [errorMsg, setErrorMsg] = useState('')
-  const qrRef = useRef(null)
   const successFiredRef = useRef(false)
+  const genRef = useRef(0) // generation counter，解決 StrictMode 雙重 mount 競爭
 
   useEffect(() => {
-    // 同步清空容器，避免 StrictMode 雙重 mount 留下兩個 video 元素
+    const gen = ++genRef.current // 每次 mount 遞增，過期的 start() 會被攔截
+
     const container = document.getElementById('qr-reader-container')
     if (container) container.innerHTML = ''
 
     const qr = new Html5Qrcode('qr-reader-container')
-    qrRef.current = qr
+
+    const stopQR = () => {
+      try {
+        qr.stop()
+          .then(() => { try { qr.clear() } catch {} })
+          .catch(() => { try { qr.clear() } catch {} })
+      } catch {
+        try { qr.clear() } catch {}
+      }
+    }
 
     qr.start(
       { facingMode: 'environment' },
       { fps: 10, qrbox: { width: 240, height: 240 } },
       (decodedText) => {
-        if (successFiredRef.current) return
+        if (genRef.current !== gen || successFiredRef.current) return
         try {
           const url = new URL(decodedText)
           const zone = url.searchParams.get('zone')
@@ -40,22 +50,21 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
       },
       () => { /* ignore frame errors */ }
     ).then(() => {
+      if (genRef.current !== gen) {
+        // 這個 scanner 已過期（StrictMode 第一次 mount），立刻停掉
+        stopQR()
+        return
+      }
       setStatus('scanning')
     }).catch(() => {
-      setStatus('error')
-      setErrorMsg('無法開啟相機，請允許相機使用權限後重試')
+      if (genRef.current === gen) {
+        setStatus('error')
+        setErrorMsg('無法開啟相機，請允許相機使用權限後重試')
+      }
     })
 
     return () => {
-      // 無論 scanner 是否已啟動都嘗試 stop + clear
-      // stop() 可能因 scanner 尚未啟動而丟錯，統一吞掉
-      try {
-        qr.stop()
-          .then(() => { try { qr.clear() } catch {} })
-          .catch(() => { try { qr.clear() } catch {} })
-      } catch {
-        try { qr.clear() } catch {}
-      }
+      stopQR()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
