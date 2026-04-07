@@ -96,10 +96,10 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
         )}
 
         {/* Camera view */}
-        <div className="relative w-full max-w-xs">
+        <div className="relative w-full max-w-xs rounded-2xl overflow-hidden bg-black">
           <div
             id="qr-reader-container"
-            className="w-full rounded-2xl overflow-hidden bg-black"
+            className="w-full"
             style={{ minHeight: 280 }}
           />
           {/* Corner overlay */}
@@ -153,6 +153,18 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
           取消
         </button>
       </div>
+
+      {/* 隱藏 html5-qrcode 預設的控制面板與邊框 */}
+      <style>{`
+        #qr-reader-container { border: none !important; }
+        #qr-reader-container__dashboard { display: none !important; }
+        #qr-reader-container video {
+          width: 100% !important;
+          height: auto !important;
+          display: block;
+        }
+        #qr-reader-container canvas { display: none !important; }
+      `}</style>
     </motion.div>
   )
 }
