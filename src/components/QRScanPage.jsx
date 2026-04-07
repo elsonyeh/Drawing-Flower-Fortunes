@@ -11,7 +11,6 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
   useEffect(() => {
     const qr = new Html5Qrcode('qr-reader-container')
     qrRef.current = qr
-    let isRunning = false  // 追蹤 scanner 是否真的在跑
 
     qr.start(
       { facingMode: 'environment' },
@@ -25,7 +24,6 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
           const name = url.searchParams.get('name')
           if (zone && work) {
             successFiredRef.current = true
-            // 讓 cleanup 負責 stop，這裡只觸發回調
             onScanSuccess({ zone, workId: work, workName: name ? decodeURIComponent(name) : work })
           } else {
             setErrorMsg('不是展覽 QR Code，請掃描展場的作品 QR Code')
@@ -38,7 +36,6 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
       },
       () => { /* ignore frame errors */ }
     ).then(() => {
-      isRunning = true
       setStatus('scanning')
     }).catch(() => {
       setStatus('error')
@@ -46,10 +43,14 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
     })
 
     return () => {
-      // 只在 scanner 確實已啟動時才 stop
-      if (isRunning) {
-        qr.stop().catch(() => {})
-        isRunning = false
+      // 無論 scanner 是否已啟動都嘗試 stop + clear
+      // stop() 可能因 scanner 尚未啟動而丟錯，統一吞掉
+      try {
+        qr.stop()
+          .then(() => { try { qr.clear() } catch {} })
+          .catch(() => { try { qr.clear() } catch {} })
+      } catch {
+        try { qr.clear() } catch {}
       }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
