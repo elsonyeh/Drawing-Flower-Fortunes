@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { recordVisit, getExhibitionState, initExhibition, getUnlockedPools, getZoneProgress } from '../utils/exhibitionHelper'
+import { recordVisit, getExhibitionState, initExhibitionWithCloud, getUnlockedPools, getZoneProgress } from '../utils/exhibitionHelper'
 
 const ZONE_THEME = {
   A: { name: '呼吸', color: '#a78bfa', desc: '感知自我・內在靜觀' },
@@ -16,27 +16,31 @@ export default function ExhibitionScanPage({ zone, workId, workName, onDraw, onB
   const [newPoolUnlocked, setNewPoolUnlocked] = useState(null)
 
   useEffect(() => {
-    // Init exhibition if first time
-    initExhibition()
-    const prev = getExhibitionState()
-    const wasVisited = prev?.visited?.includes(workId)
-    const poolsBefore = getUnlockedPools()
+    const init = async () => {
+      // 初始化展覽（含雲端還原：若 localStorage 消失會從 Supabase 還原）
+      await initExhibitionWithCloud()
 
-    // Record this visit
-    const newState = recordVisit(workId)
-    setIsNewVisit(!wasVisited)
-    setState(newState)
-    setProgress(getZoneProgress())
+      const prev = getExhibitionState()
+      const wasVisited = prev?.visited?.includes(workId)
+      const poolsBefore = getUnlockedPools()
 
-    const poolsAfter = getUnlockedPools()
-    setPools(poolsAfter)
+      // Record this visit
+      const newState = recordVisit(workId)
+      setIsNewVisit(!wasVisited)
+      setState(newState)
+      setProgress(getZoneProgress())
 
-    // Check if a new pool was unlocked by this visit
-    if (!poolsBefore.includes('B') && poolsAfter.includes('B')) {
-      setNewPoolUnlocked('B')
-    } else if (!poolsBefore.includes('C') && poolsAfter.includes('C')) {
-      setNewPoolUnlocked('C')
+      const poolsAfter = getUnlockedPools()
+      setPools(poolsAfter)
+
+      // Check if a new pool was unlocked by this visit
+      if (!poolsBefore.includes('B') && poolsAfter.includes('B')) {
+        setNewPoolUnlocked('B')
+      } else if (!poolsBefore.includes('C') && poolsAfter.includes('C')) {
+        setNewPoolUnlocked('C')
+      }
     }
+    init()
   }, [workId])
 
   const theme = ZONE_THEME[zone] || ZONE_THEME.A

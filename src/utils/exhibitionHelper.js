@@ -1,4 +1,5 @@
 // Exhibition mode state management
+import { syncExhibitionToCloud, loadExhibitionFromCloud } from './exhibitionSync'
 
 const STORAGE_KEY = 'exhibitionState'
 
@@ -14,11 +15,31 @@ export const getExhibitionState = () => {
   return JSON.parse(stored)
 }
 
-export const initExhibition = () => {
-  const existing = getExhibitionState()
-  if (existing) return existing
-  const state = defaultState()
+const saveState = (state) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  // Fire-and-forget sync to cloud
+  syncExhibitionToCloud(state).catch(console.error)
+}
+
+/**
+ * 同步版初始化（首次進展覽時呼叫）
+ * 若 localStorage 無資料，嘗試從 Supabase 還原
+ */
+export const initExhibitionWithCloud = async () => {
+  const existing = getExhibitionState()
+  if (existing) return existing  // localStorage 有資料，直接用
+
+  // localStorage 消失了，嘗試從雲端還原
+  const cloud = await loadExhibitionFromCloud()
+  if (cloud) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cloud))
+    console.log('[exhibitionHelper] 從雲端還原展覽進度')
+    return cloud
+  }
+
+  // 全新訪客
+  const state = defaultState()
+  saveState(state)
   return state
 }
 
@@ -48,7 +69,7 @@ export const recordVisit = (workId) => {
     state.visited.push(workId)
     state.tickets += 1  // +1 ticket per new scan
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  saveState(state)
   return state
 }
 
@@ -56,7 +77,7 @@ export const consumeTicket = () => {
   const state = getExhibitionState()
   if (!state || state.tickets <= 0) return false
   state.tickets -= 1
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  saveState(state)
   return true
 }
 
