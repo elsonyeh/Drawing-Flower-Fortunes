@@ -1,8 +1,21 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { getAllFlowers, getCollectedFlowers, getCollectionStats, isFlowerCollected, isFlowerViewed, markFlowerAsViewed } from '../utils/fortuneHelper'
+import { isExhibitionMode, getZoneProgress, getDrawTickets, getUnlockedPools } from '../utils/exhibitionHelper'
 import CardBack from './CardBack'
 import FlowerBloom from './FlowerBloom'
+
+const ZONE_THEME = {
+  A: { name: '呼吸', color: '#a78bfa' },
+  B: { name: '蔓延', color: '#f472b6' },
+  C: { name: '共生', color: '#34d399' },
+}
+
+const ZONE_ARTWORKS = {
+  A: ['A1', 'A2', 'A3', 'A4', 'A5'],
+  B: ['B1', 'B2', 'B3', 'B4', 'B5'],
+  C: ['C1', 'C2', 'C3', 'C4', 'C5'],
+}
 
 const CollectionPage = ({ onClose, onSelectFlower }) => {
   const [selectedTab, setSelectedTab] = useState('all') // 'all', 'ssr', 'common'
@@ -11,6 +24,11 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
   const allFlowers = getAllFlowers()
   const stats = getCollectionStats()
   const collectedIds = getCollectedFlowers().map(f => f.id)
+
+  const exMode = isExhibitionMode()
+  const exProgress = exMode ? getZoneProgress() : null
+  const exTickets = exMode ? getDrawTickets() : 0
+  const unlockedPools = exMode ? getUnlockedPools() : []
 
   const filteredFlowers = allFlowers.filter(flower => {
     if (selectedTab === 'ssr') return flower.rarity === 'ssr'
@@ -69,6 +87,48 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
               <p className="text-xs text-gray-400">普通</p>
             </div>
           </div>
+
+          {/* Exhibition Progress */}
+          {exMode && exProgress && (
+            <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                <span className="text-xs text-white/50 tracking-widest font-medium">展覽進度</span>
+                <span className="text-xs text-yellow-300">🎟 {exTickets} 次</span>
+              </div>
+              <div className="grid grid-cols-3 divide-x divide-white/8">
+                {['A', 'B', 'C'].map(zone => {
+                  const theme = ZONE_THEME[zone]
+                  const visited = exProgress[zone] || []
+                  const total = ZONE_ARTWORKS[zone].length
+                  const unlocked = unlockedPools.includes(zone)
+                  const pct = Math.round((visited.length / total) * 100)
+                  return (
+                    <div key={zone} className="px-3 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1 mb-1.5">
+                        <span className="text-sm font-bold" style={{ color: unlocked ? theme.color : 'rgba(255,255,255,0.2)' }}>
+                          {zone}
+                        </span>
+                        <span className="text-xs text-white/40">{theme.name}</span>
+                        {!unlocked && <span className="text-xs">🔒</span>}
+                      </div>
+                      <div className="h-1 rounded-full bg-white/10 overflow-hidden mb-1">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.8, ease: 'easeOut' }}
+                          className="h-full rounded-full"
+                          style={{ background: unlocked ? theme.color : 'rgba(255,255,255,0.15)' }}
+                        />
+                      </div>
+                      <span className="text-xs" style={{ color: unlocked ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)' }}>
+                        {visited.length}/{total}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Tabs */}
           <div className="flex gap-2">

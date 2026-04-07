@@ -7,6 +7,7 @@ import CollectionPage from './components/CollectionPage'
 import AdminPage from './components/AdminPage'
 import EmotionScanPage from './components/EmotionScanPage'
 import ExhibitionScanPage from './components/ExhibitionScanPage'
+import QRScanPage from './components/QRScanPage'
 import AuthModal from './components/AuthModal'
 import { getRandomFlower, saveCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
 import { isExhibitionMode, getDrawTickets, getUnlockedPools, consumeTicket } from './utils/exhibitionHelper'
@@ -17,8 +18,16 @@ import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, l
 import './components/FlowerBloom'
 
 function App() {
-  const [stage, setStage] = useState('landing') // 'landing', 'gacha', 'result', 'collection', 'admin', 'emotionScan', 'exhibitionScan'
+  const [stage, setStage] = useState('landing') // 'landing', 'gacha', 'result', 'collection', 'admin', 'emotionScan', 'exhibitionScan', 'qrScan'
   const [scanParams, setScanParams] = useState(null) // { zone, workId, workName }
+  const [exhibitionTickets, setExhibitionTickets] = useState(() => getDrawTickets())
+
+  // Refresh ticket count whenever stage changes to landing
+  useEffect(() => {
+    if (stage === 'landing') {
+      setExhibitionTickets(getDrawTickets())
+    }
+  }, [stage])
 
   // Check for QR scan params or admin route on mount
   useEffect(() => {
@@ -30,7 +39,7 @@ function App() {
     if (zone && work) {
       // Clean URL
       window.history.replaceState({}, '', window.location.pathname)
-      setScanParams({ zone, workId: work, workName: name || work })
+      setScanParams({ zone, workId: work, workName: name ? decodeURIComponent(name) : work })
       setStage('exhibitionScan')
     } else if (window.location.pathname === '/elsontest') {
       setStage('admin')
@@ -82,9 +91,7 @@ function App() {
     const exMode = isExhibitionMode()
 
     if (exMode) {
-      const tickets = getDrawTickets()
-      if (tickets <= 0) return
-      consumeTicket()
+      if (!consumeTicket()) return
     }
 
     const pools = exMode ? getUnlockedPools() : null
@@ -110,6 +117,11 @@ function App() {
     if (user) saveFlowerToCloud(user.id, flower)
     setScanParams(null)
     setStage('gacha')
+  }
+
+  const handleQRScanSuccess = ({ zone, workId, workName }) => {
+    setScanParams({ zone, workId, workName })
+    setStage('exhibitionScan')
   }
 
   const handleEmotionScan = () => {
@@ -158,6 +170,14 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-night-900 via-night-800 to-night-700 text-white">
       <AnimatePresence mode="wait">
+        {stage === 'qrScan' && (
+          <QRScanPage
+            key="qrScan"
+            onScanSuccess={handleQRScanSuccess}
+            onBack={() => setStage('landing')}
+          />
+        )}
+
         {stage === 'exhibitionScan' && scanParams && (
           <ExhibitionScanPage
             key="exhibitionScan"
@@ -179,9 +199,10 @@ function App() {
             onOpenCollection={handleOpenCollection}
             onEmotionScan={handleEmotionScan}
             onOpenAuth={() => setShowAuthModal(true)}
+            onQRScan={() => setStage('qrScan')}
             user={user}
             exhibitionMode={isExhibitionMode()}
-            exhibitionTickets={getDrawTickets()}
+            exhibitionTickets={exhibitionTickets}
           />
         )}
 

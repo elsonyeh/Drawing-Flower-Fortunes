@@ -240,7 +240,8 @@
     "color": "#DC143C",
     "gradientColors": ["#8B0000", "#DC143C", "#FFD700"],
     "model": "red_spider_lily",
-    "rarity": "ssr"
+    "rarity": "ssr",
+    "exhibitionZone": "C"
   },
   {
     "id": 105,
@@ -252,6 +253,7 @@
     "color": "#9370DB",
     "gradientColors": ["#9370DB", "#BA55D3", "#FFD700"],
     "model": "corn_poppy",
-    "rarity": "ssr"
+    "rarity": "ssr",
+    "exhibitionZone": "B"
   }
 ]

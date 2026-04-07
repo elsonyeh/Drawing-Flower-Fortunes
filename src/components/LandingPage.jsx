@@ -401,7 +401,7 @@ const BambooBasket = ({ isMobile, isTransforming }) => (
 )
 
 // 主組件
-const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAuth, user, exhibitionMode, exhibitionTickets }) => {
+const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAuth, onQRScan, user, exhibitionMode, exhibitionTickets }) => {
   const [particles, setParticles] = useState([])
   const [petals, setPetals] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(null)
@@ -679,6 +679,26 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
             </motion.div>
           )}
         </div>
+      )}
+
+      {/* 掃描 QR Code 按鈕（展覽模式或通用） */}
+      {!isTransforming && onQRScan && (
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.3 }}
+          onClick={onQRScan}
+          className={`${isSmallScreen ? 'mt-2 py-2 px-5' : 'mt-3 py-2.5 px-6'} relative z-10 rounded-full text-sm font-semibold text-white border border-green-400/60 hover:border-green-300 transition-colors backdrop-blur-sm flex items-center gap-2`}
+          style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.4), rgba(5,150,105,0.4))' }}
+          whileHover={{ scale: 1.06, boxShadow: '0 0 18px rgba(52,211,153,0.4)' }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" />
+            <path d="M14 14h1v1h-1z" /><path d="M17 14h1v1h-1z" /><path d="M14 17h1v1h-1z" /><path d="M17 17h1v1h-1z" /><path d="M20 14v1" /><path d="M20 18v3" /><path d="M14 20h3" />
+          </svg>
+          掃描作品 QR
+        </motion.button>
       )}
 
       {/* 相由花緣按鈕 */}
