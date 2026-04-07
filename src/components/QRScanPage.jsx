@@ -125,7 +125,7 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
           <div
             id="qr-reader-container"
             className="w-full"
-            style={{ minHeight: 280 }}
+            style={{ height: 300 }}
           />
           {/* Corner overlay */}
           {status === 'scanning' && (
@@ -183,10 +183,13 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
       <style>{`
         #qr-reader-container { border: none !important; }
         #qr-reader-container__dashboard { display: none !important; }
+        #qr-reader-container__scan_region { height: 100% !important; }
         #qr-reader-container video {
           width: 100% !important;
-          height: auto !important;
+          height: 100% !important;
+          object-fit: cover;
           display: block;
+          border-radius: 1rem;
         }
         #qr-reader-container canvas { display: none !important; }
       `}</style>
