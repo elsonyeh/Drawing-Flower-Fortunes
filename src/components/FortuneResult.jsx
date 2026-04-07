@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import FlowerBloom from './FlowerBloom'
+import { ARTWORKS } from '../utils/exhibitionConstants'
+import { isExhibitionMode } from '../utils/exhibitionHelper'
 
 // ─── Canvas 花朵繪製 ─────────────────────────────────────────
 function drawFlower(ctx, cx, cy, color, grad1, grad2, grad3, isSSR) {
@@ -505,6 +507,13 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
   const [flowerSnapshot, setFlowerSnapshot] = useState(null)
   const isSSR = flower?.rarity === 'ssr'
 
+  // 展覽模式：若花有 exhibitionZone，改顯示該展區的裝置藝術
+  const exhibitionZone = flower?.exhibitionZone
+  const inExhibition = isExhibitionMode()
+  const zoneArtworks = (inExhibition && exhibitionZone)
+    ? ARTWORKS.filter(a => a.zone === exhibitionZone)
+    : null
+
   const handleOpenShare = useCallback(() => {
     // 截取 Three.js WebGL canvas
     if (flowerRef.current) {
@@ -792,29 +801,53 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           className="bg-gradient-to-br from-night-800/60 to-night-900/60 backdrop-blur-md rounded-2xl p-6 mb-8 border border-primary-500/20"
         >
           <h2 className="text-xl font-semibold text-primary-300 mb-4 flex items-center">
-            <span className="mr-2">📍</span>
-            推薦探索地點
+            <span className="mr-2">{zoneArtworks ? '🎨' : '📍'}</span>
+            {zoneArtworks ? `展區 ${exhibitionZone} 裝置藝術` : '推薦探索地點'}
           </h2>
           <div className="space-y-3">
-            {flower.locations.map((location, index) => (
-              <motion.div
-                key={index}
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.8 + index * 0.1 }}
-                className="flex items-center space-x-3 p-4 rounded-lg bg-night-700/40 hover:bg-night-700/60 transition-colors"
-              >
-                <div
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{
-                    background: isSSR
-                      ? `linear-gradient(135deg, ${flower.gradientColors?.[0]}, ${flower.gradientColors?.[1]})`
-                      : flower.color
-                  }}
-                />
-                <span className="text-gray-200 text-lg">{location}</span>
-              </motion.div>
-            ))}
+            {zoneArtworks
+              ? zoneArtworks.map((art, index) => (
+                  <motion.div
+                    key={art.id}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.8 + index * 0.1 }}
+                    className="flex items-start space-x-3 p-4 rounded-lg bg-night-700/40 hover:bg-night-700/60 transition-colors"
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0 mt-1.5"
+                      style={{
+                        background: isSSR
+                          ? `linear-gradient(135deg, ${flower.gradientColors?.[0]}, ${flower.gradientColors?.[1]})`
+                          : flower.color
+                      }}
+                    />
+                    <div>
+                      <span className="text-gray-200 text-lg leading-tight">{art.name}</span>
+                      <p className="text-white/40 text-sm mt-0.5">{art.location}</p>
+                    </div>
+                  </motion.div>
+                ))
+              : flower.locations.map((location, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.8 + index * 0.1 }}
+                    className="flex items-center space-x-3 p-4 rounded-lg bg-night-700/40 hover:bg-night-700/60 transition-colors"
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{
+                        background: isSSR
+                          ? `linear-gradient(135deg, ${flower.gradientColors?.[0]}, ${flower.gradientColors?.[1]})`
+                          : flower.color
+                      }}
+                    />
+                    <span className="text-gray-200 text-lg">{location}</span>
+                  </motion.div>
+                ))
+            }
           </div>
         </motion.div>
 
