@@ -9,6 +9,10 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
   const successFiredRef = useRef(false)
 
   useEffect(() => {
+    // 同步清空容器，避免 StrictMode 雙重 mount 留下兩個 video 元素
+    const container = document.getElementById('qr-reader-container')
+    if (container) container.innerHTML = ''
+
     const qr = new Html5Qrcode('qr-reader-container')
     qrRef.current = qr
 
