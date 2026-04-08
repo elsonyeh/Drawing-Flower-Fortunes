@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import FlowerBloom from './FlowerBloom'
-import { ARTWORKS } from '../utils/exhibitionConstants'
+import { ARTWORKS, ZONE_THEME } from '../utils/exhibitionConstants'
 import { isExhibitionMode, getExhibitionState } from '../utils/exhibitionHelper'
 
 // ─── Canvas 花朵繪製 ─────────────────────────────────────────
@@ -804,7 +804,9 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
         >
           <h2 className="text-xl font-semibold text-primary-300 mb-4 flex items-center">
             <span className="mr-2">{zoneArtworks ? '🎨' : '📍'}</span>
-            {zoneArtworks ? `展區 ${exhibitionZone} 裝置藝術` : '推薦探索地點'}
+            {zoneArtworks
+              ? (ZONE_THEME[exhibitionZone]?.name ?? exhibitionZone)
+              : '推薦探索地點'}
           </h2>
           <div className="space-y-3">
             {zoneArtworks
@@ -833,7 +835,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
                   ))
                 : (
                   <p className="text-white/40 text-sm text-center py-2">
-                    ✓ 展區 {exhibitionZone} 的裝置藝術已全部拜訪完成
+                    ✓ {ZONE_THEME[exhibitionZone]?.name ?? exhibitionZone} 的裝置藝術已全部拜訪完成
                   </p>
                 )
               : flower.locations.map((location, index) => (

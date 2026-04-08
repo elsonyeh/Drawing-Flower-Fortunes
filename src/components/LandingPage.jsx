@@ -481,55 +481,69 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
         height: '100dvh',
         paddingTop: isSmallScreen ? '3rem' : '5rem',
         paddingBottom: isSmallScreen
-          ? 'calc(env(safe-area-inset-bottom, 0px) + 3rem)'
-          : 'calc(env(safe-area-inset-bottom, 0px) + 5rem)',
+          ? 'calc(env(safe-area-inset-bottom, 0px) + 7rem)'
+          : 'calc(env(safe-area-inset-bottom, 0px) + 9rem)',
       }}
     >
-      {/* 右上角：圖鑑 + 登入/用戶 */}
+      {/* ── 頂部 HUD（遊戲式資源欄）── */}
       {!isTransforming && (
-        <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex items-center gap-2">
-          {/* 登入 / 用戶頭像 */}
-          {onOpenAuth && (
-            <div className="flex flex-col items-end gap-1">
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2"
+          style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}
+        >
+          {/* 左側：抽卡次數（展覽模式才顯示） */}
+          {exhibitionMode ? (
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border ${
+              exhibitionTickets <= 0
+                ? 'bg-white/5 border-white/10'
+                : 'bg-amber-400/10 border-amber-400/30'
+            }`}>
+              <span className="text-base leading-none">🎟</span>
+              <span className={`text-sm font-bold tabular-nums ${exhibitionTickets <= 0 ? 'text-white/30' : 'text-amber-300'}`}>
+                {exhibitionTickets}
+              </span>
+              <span className="text-white/30 text-xs">次</span>
+            </div>
+          ) : <div />}
+
+          {/* 右側：登入 + 圖鑑 */}
+          <div className="flex items-center gap-2">
+            {onOpenAuth && (
               <motion.button
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
                 onClick={onOpenAuth}
-                className="px-3 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white text-sm font-medium flex items-center gap-2 border border-white/20 hover:bg-white/20 transition-colors"
+                className="px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-white text-sm font-medium flex items-center gap-1.5 border border-white/20 hover:bg-white/20 transition-colors min-h-[36px]"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 {user ? (
                   <>
-                    {user.user_metadata?.avatar_url && (
-                      <img src={user.user_metadata.avatar_url} alt="" className="w-5 h-5 rounded-full" />
-                    )}
-                    <span className="max-w-[80px] truncate">
+                    {user.user_metadata?.avatar_url
+                      ? <img src={user.user_metadata.avatar_url} alt="" className="w-5 h-5 rounded-full" />
+                      : <span className="text-xs">👤</span>
+                    }
+                    <span className="max-w-[64px] truncate text-xs">
                       {user.user_metadata?.full_name || user.user_metadata?.name || '用戶'}
                     </span>
                   </>
                 ) : (
-                  <span>登入</span>
+                  <span className="text-xs">登入</span>
                 )}
               </motion.button>
-            </div>
-          )}
-
-          {/* 圖鑑按鈕 */}
-          <motion.button
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
-            onClick={onOpenCollection}
-            className="px-3 py-2 md:px-4 md:py-2 bg-gradient-to-r from-primary-600/80 to-pink-600/80 backdrop-blur-sm rounded-full text-white text-sm md:text-base font-medium flex items-center gap-2 border border-primary-400/30 shadow-lg"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <CollectionIcon className="w-4 h-4 md:w-5 md:h-5" color="white" />
-            <span className="hidden sm:inline">圖鑑</span>
-          </motion.button>
-        </div>
+            )}
+            <motion.button
+              onClick={onOpenCollection}
+              className="px-3 py-1.5 bg-gradient-to-r from-primary-600/80 to-pink-600/80 backdrop-blur-sm rounded-full text-white text-sm font-medium flex items-center gap-1.5 border border-primary-400/30 shadow-lg min-h-[36px]"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <CollectionIcon className="w-4 h-4" color="white" />
+              <span className="text-xs">圖鑑</span>
+            </motion.button>
+          </div>
+        </motion.div>
       )}
 
       {/* 背景飄落花瓣 */}
@@ -668,73 +682,55 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
               ? '✦ 無抽卡次數・請繼續探索作品 ✦'
               : '✦ 點擊任意一枝花開始抽籤 ✦'}
           </motion.p>
-          {exhibitionMode && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2 }}
-              className="text-white/50 text-sm mt-2"
-            >
-              🎟 剩餘抽卡次數：{exhibitionTickets}
-            </motion.div>
-          )}
         </div>
       )}
 
-      {/* 掃描 QR Code 按鈕（展覽模式或通用） */}
-      {!isTransforming && onQRScan && (
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
+      {/* ── 底部操作列（遊戲式 Action Bar）── */}
+      {!isTransforming && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.3 }}
-          onClick={onQRScan}
-          className={`${isSmallScreen ? 'mt-2 py-2 px-5' : 'mt-3 py-2.5 px-6'} relative z-10 rounded-full text-sm font-semibold text-white border border-green-400/60 hover:border-green-300 transition-colors backdrop-blur-sm flex items-center gap-2`}
-          style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.4), rgba(5,150,105,0.4))' }}
-          whileHover={{ scale: 1.06, boxShadow: '0 0 18px rgba(52,211,153,0.4)' }}
-          whileTap={{ scale: 0.97 }}
+          transition={{ delay: 1.2 }}
+          className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-center gap-2 px-6"
+          style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" />
-            <path d="M14 14h1v1h-1z" /><path d="M17 14h1v1h-1z" /><path d="M14 17h1v1h-1z" /><path d="M17 17h1v1h-1z" /><path d="M20 14v1" /><path d="M20 18v3" /><path d="M14 20h3" />
-          </svg>
-          掃描作品 QR
-        </motion.button>
-      )}
+          {/* 主要：掃描 QR（展覽核心動作，全寬顯眼） */}
+          {onQRScan && (
+            <motion.button
+              onClick={onQRScan}
+              className="w-full max-w-xs py-3 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 border border-green-400/50 min-h-[48px]"
+              style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.45), rgba(5,150,105,0.45))', backdropFilter: 'blur(8px)' }}
+              whileHover={{ scale: 1.03, boxShadow: '0 0 20px rgba(52,211,153,0.4)' }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" />
+                <path d="M14 14h1v1h-1z" /><path d="M17 14h1v1h-1z" /><path d="M14 17h1v1h-1z" /><path d="M17 17h1v1h-1z" /><path d="M20 14v1" /><path d="M20 18v3" /><path d="M14 20h3" />
+              </svg>
+              掃描作品 QR Code
+            </motion.button>
+          )}
 
-      {/* 相由花緣按鈕 */}
-      {!isTransforming && onEmotionScan && (
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.4 }}
-          onClick={onEmotionScan}
-          className={`${isSmallScreen ? 'mt-2 py-2 px-5' : 'mt-3 py-2.5 px-6'} relative z-10 rounded-full text-sm font-semibold text-white border border-purple-400/60 hover:border-purple-300 transition-colors backdrop-blur-sm flex items-center gap-2`}
-          style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.5), rgba(79,70,229,0.5))' }}
-          whileHover={{ scale: 1.06, boxShadow: '0 0 18px rgba(167,139,250,0.45)' }}
-          whileTap={{ scale: 0.97 }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 9V5.5A2.5 2.5 0 0 1 5.5 3H9" /><path d="M15 3h3.5A2.5 2.5 0 0 1 21 5.5V9" />
-            <path d="M21 15v3.5A2.5 2.5 0 0 1 18.5 21H15" /><path d="M9 21H5.5A2.5 2.5 0 0 1 3 18.5V15" />
-            <ellipse cx="12" cy="11.5" rx="5" ry="5.5" />
-            <circle cx="10" cy="10.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="14" cy="10.5" r="0.6" fill="currentColor" stroke="none" />
-            <path d="M9.5 13.5c.6 1 1.4 1.5 2.5 1.5s1.9-.5 2.5-1.5" />
-          </svg>
-          相由花緣
-        </motion.button>
-      )}
-
-      {/* 登入提示 */}
-      {!isTransforming && !user && onOpenAuth && (
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          onClick={onOpenAuth}
-          className={`${isSmallScreen ? 'mt-1.5' : 'mt-3'} relative z-10 text-white/40 text-xs tracking-widest hover:text-white/70 transition-colors`}
-        >
-          登入以保存花語蒐集
-        </motion.button>
+          {/* 次要：相由花緣 */}
+          {onEmotionScan && (
+            <motion.button
+              onClick={onEmotionScan}
+              className="w-full max-w-xs py-2.5 rounded-2xl text-sm font-medium text-white/80 flex items-center justify-center gap-2 border border-purple-400/40 min-h-[44px]"
+              style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.35), rgba(79,70,229,0.35))', backdropFilter: 'blur(8px)' }}
+              whileHover={{ scale: 1.03, boxShadow: '0 0 16px rgba(167,139,250,0.35)' }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9V5.5A2.5 2.5 0 0 1 5.5 3H9" /><path d="M15 3h3.5A2.5 2.5 0 0 1 21 5.5V9" />
+                <path d="M21 15v3.5A2.5 2.5 0 0 1 18.5 21H15" /><path d="M9 21H5.5A2.5 2.5 0 0 1 3 18.5V15" />
+                <ellipse cx="12" cy="11.5" rx="5" ry="5.5" />
+                <circle cx="10" cy="10.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="14" cy="10.5" r="0.6" fill="currentColor" stroke="none" />
+                <path d="M9.5 13.5c.6 1 1.4 1.5 2.5 1.5s1.9-.5 2.5-1.5" />
+              </svg>
+              相由花緣
+            </motion.button>
+          )}
+        </motion.div>
       )}
     </motion.div>
   )

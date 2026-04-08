@@ -8,7 +8,8 @@
     "locations": ["駁二藝術特區", "真愛碼頭", "鹽埕埔捷運站周邊"],
     "color": "#D97B94",
     "model": "sakura",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "A"
   },
   {
     "id": 2,
@@ -136,7 +137,8 @@
     "locations": ["鹽埕小巷弄", "老字號餅店", "傳統市場"],
     "color": "#7526C8",
     "model": "violet",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "B"
   },
   {
     "id": 12,
@@ -160,7 +162,8 @@
     "locations": ["駁二藝文展覽空間", "棧貳庫", "高雄港邊"],
     "color": "#D9C670",
     "model": "lily",
-    "rarity": "common"
+    "rarity": "common",
+    "exhibitionZone": "C"
   },
   {
     "id": 14,
