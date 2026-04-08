@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
 import { unlockAllFlowers, clearAllFlowers, getCollectionStats } from '../utils/fortuneHelper'
-import { getExhibitionState } from '../utils/exhibitionHelper'
+import { getExhibitionState, isExhibitionMode, enterExhibitionMode, exitExhibitionMode } from '../utils/exhibitionHelper'
 import { ZONE_THEME, ARTWORKS } from '../utils/exhibitionConstants'
 
 const ZONE_COLOR = Object.fromEntries(Object.entries(ZONE_THEME).map(([k, v]) => [k, v.color]))
@@ -12,6 +12,7 @@ function AdminPage() {
   const [message, setMessage] = useState('')
   const [activeTab, setActiveTab] = useState('stats') // 'stats', 'qrcodes', 'exhibition'
   const [baseUrl, setBaseUrl] = useState(window.location.origin)
+  const [inExhibition, setInExhibition] = useState(isExhibitionMode())
 
   const handleUnlockAll = () => {
     unlockAllFlowers()
@@ -25,6 +26,22 @@ function AdminPage() {
       clearAllFlowers()
       setStats(getCollectionStats())
       setMessage('Collection cleared!')
+      setTimeout(() => setMessage(''), 2000)
+    }
+  }
+
+  const handleEnterExhibition = () => {
+    enterExhibitionMode()
+    setInExhibition(true)
+    setMessage('已切換為展覽模式')
+    setTimeout(() => setMessage(''), 2000)
+  }
+
+  const handleExitExhibition = () => {
+    if (window.confirm('確定要切換回一般模式？展覽進度將被清除。')) {
+      exitExhibitionMode()
+      setInExhibition(false)
+      setMessage('已切換為一般模式')
       setTimeout(() => setMessage(''), 2000)
     }
   }
@@ -175,10 +192,34 @@ function AdminPage() {
         {/* ── Exhibition State Tab ── */}
         {activeTab === 'exhibition' && (
           <div className="space-y-4">
+            {/* 模式切換 */}
+            <div className="bg-white/5 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">目前裝置模式</p>
+                <p className={`text-xs mt-0.5 ${inExhibition ? 'text-green-400' : 'text-white/40'}`}>
+                  {inExhibition ? '展覽模式（自動預設）' : '一般模式'}
+                </p>
+              </div>
+              {inExhibition ? (
+                <button
+                  onClick={handleExitExhibition}
+                  className="px-4 py-2 rounded-lg bg-white/10 text-white/70 text-sm hover:bg-white/20 transition-all min-h-[44px]"
+                >
+                  切換為一般模式
+                </button>
+              ) : (
+                <button
+                  onClick={handleEnterExhibition}
+                  className="px-4 py-2 rounded-lg bg-green-500/20 border border-green-500/40 text-green-300 text-sm hover:bg-green-500/30 transition-all min-h-[44px]"
+                >
+                  切換為展覽模式
+                </button>
+              )}
+            </div>
+
             {!exState ? (
-              <div className="text-center py-12 text-white/40 text-sm">
-                尚未進入展覽模式<br />
-                <span className="text-xs mt-1 block">掃描任意作品 QR Code 後進入</span>
+              <div className="text-center py-8 text-white/40 text-sm">
+                尚未進入展覽模式
               </div>
             ) : (
               <>

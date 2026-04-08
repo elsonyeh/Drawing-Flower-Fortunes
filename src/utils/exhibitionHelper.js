@@ -95,3 +95,34 @@ export const isWorkVisited = (workId) => {
   const state = getExhibitionState()
   return state ? state.visited.includes(workId) : false
 }
+
+export const enterExhibitionMode = () => {
+  const state = defaultState()
+  saveState(state)
+  return state
+}
+
+export const exitExhibitionMode = () => {
+  localStorage.removeItem(STORAGE_KEY)
+}
+
+/**
+ * Option A：預設展覽模式
+ * app 啟動時呼叫，新訪客自動進入展覽模式（1 張票、0 個已訪）
+ * 已有狀態的訪客保持不動
+ */
+export const initAppMode = async () => {
+  const existing = getExhibitionState()
+  if (existing) return
+
+  // 嘗試從雲端還原（清除快取後的用戶）
+  const cloud = await loadExhibitionFromCloud()
+  if (cloud) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cloud))
+    return
+  }
+
+  // 全新訪客 → 自動進入展覽模式
+  const state = defaultState()
+  saveState(state)
+}
