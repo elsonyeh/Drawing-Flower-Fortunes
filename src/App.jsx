@@ -11,6 +11,7 @@ const QRScanPage = lazy(() => import('./components/QRScanPage'))
 const AuthModal = lazy(() => import('./components/AuthModal'))
 import { getRandomFlower, saveCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
 import { isExhibitionMode, getDrawTickets, getUnlockedPools, consumeTicket, initAppMode } from './utils/exhibitionHelper'
+import { fetchGlobalMode, subscribeGlobalMode } from './utils/exhibitionSync'
 import { useAuth } from './hooks/useAuth'
 import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile } from './utils/collectionSync'
 
@@ -22,8 +23,18 @@ function App() {
   const [scanParams, setScanParams] = useState(null) // { zone, workId, workName }
   const [exhibitionTickets, setExhibitionTickets] = useState(() => getDrawTickets())
 
-  // 預設展覽模式：新訪客自動初始化
-  useEffect(() => { initAppMode().then(() => setExhibitionTickets(getDrawTickets())) }, [])
+  // 全域模式管理：fetch 初始值 + 訂閱 Realtime 即時更新
+  useEffect(() => {
+    const applyMode = async (mode) => {
+      await initAppMode(mode)
+      setExhibitionTickets(getDrawTickets())
+    }
+
+    fetchGlobalMode().then(applyMode)
+
+    const unsubscribe = subscribeGlobalMode(applyMode)
+    return unsubscribe
+  }, [])
 
   // Refresh ticket count whenever stage changes to landing
   useEffect(() => {

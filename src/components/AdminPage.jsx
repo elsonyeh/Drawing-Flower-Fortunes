@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
 import { unlockAllFlowers, clearAllFlowers, getCollectionStats } from '../utils/fortuneHelper'
-import { getExhibitionState, isExhibitionMode, enterExhibitionMode, exitExhibitionMode } from '../utils/exhibitionHelper'
+import { getExhibitionState } from '../utils/exhibitionHelper'
+import { fetchGlobalMode, pushGlobalMode } from '../utils/exhibitionSync'
 import { ZONE_THEME, ARTWORKS } from '../utils/exhibitionConstants'
 
 const ZONE_COLOR = Object.fromEntries(Object.entries(ZONE_THEME).map(([k, v]) => [k, v.color]))
@@ -12,7 +13,12 @@ function AdminPage() {
   const [message, setMessage] = useState('')
   const [activeTab, setActiveTab] = useState('stats') // 'stats', 'qrcodes', 'exhibition'
   const [baseUrl, setBaseUrl] = useState(window.location.origin)
-  const [inExhibition, setInExhibition] = useState(isExhibitionMode())
+  const [globalMode, setGlobalMode] = useState(null)   // null = 讀取中
+  const [modeLoading, setModeLoading] = useState(false)
+
+  useEffect(() => {
+    fetchGlobalMode().then(setGlobalMode)
+  }, [])
 
   const handleUnlockAll = () => {
     unlockAllFlowers()
@@ -30,20 +36,22 @@ function AdminPage() {
     }
   }
 
-  const handleEnterExhibition = () => {
-    enterExhibitionMode()
-    setInExhibition(true)
-    setMessage('已切換為展覽模式')
-    setTimeout(() => setMessage(''), 2000)
-  }
-
-  const handleExitExhibition = () => {
-    if (window.confirm('確定要切換回一般模式？展覽進度將被清除。')) {
-      exitExhibitionMode()
-      setInExhibition(false)
-      setMessage('已切換為一般模式')
-      setTimeout(() => setMessage(''), 2000)
+  const handleSwitchGlobalMode = async (targetMode) => {
+    const label = targetMode === 'exhibition' ? '展覽模式' : '一般模式'
+    const warn = targetMode === 'normal'
+      ? '確定切換為一般模式？所有用戶將離開展覽限制。'
+      : '確定切換為展覽模式？所有用戶將自動進入展覽模式。'
+    if (!window.confirm(warn)) return
+    setModeLoading(true)
+    const ok = await pushGlobalMode(targetMode)
+    if (ok) {
+      setGlobalMode(targetMode)
+      setMessage(`已切換為${label}，所有用戶即時生效`)
+    } else {
+      setMessage('切換失敗，請確認 Supabase 連線')
     }
+    setModeLoading(false)
+    setTimeout(() => setMessage(''), 3000)
   }
 
   const handleGoToMain = () => {
@@ -192,29 +200,43 @@ function AdminPage() {
         {/* ── Exhibition State Tab ── */}
         {activeTab === 'exhibition' && (
           <div className="space-y-4">
-            {/* 模式切換 */}
-            <div className="bg-white/5 rounded-xl p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold">目前裝置模式</p>
-                <p className={`text-xs mt-0.5 ${inExhibition ? 'text-green-400' : 'text-white/40'}`}>
-                  {inExhibition ? '展覽模式（自動預設）' : '一般模式'}
-                </p>
+            {/* 全域模式切換 */}
+            <div className={`rounded-xl p-4 border ${
+              globalMode === 'exhibition'
+                ? 'bg-green-500/10 border-green-500/30'
+                : 'bg-white/5 border-white/10'
+            }`}>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-bold">全域模式</p>
+                  <p className="text-xs text-white/40 mt-0.5">切換後即時影響所有用戶</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  globalMode === null
+                    ? 'bg-white/10 text-white/40'
+                    : globalMode === 'exhibition'
+                      ? 'bg-green-500/20 text-green-300'
+                      : 'bg-white/10 text-white/60'
+                }`}>
+                  {globalMode === null ? '讀取中…' : globalMode === 'exhibition' ? '展覽模式' : '一般模式'}
+                </span>
               </div>
-              {inExhibition ? (
+              <div className="flex gap-2">
                 <button
-                  onClick={handleExitExhibition}
-                  className="px-4 py-2 rounded-lg bg-white/10 text-white/70 text-sm hover:bg-white/20 transition-all min-h-[44px]"
+                  onClick={() => handleSwitchGlobalMode('normal')}
+                  disabled={modeLoading || globalMode === 'normal'}
+                  className="flex-1 py-2.5 rounded-lg bg-white/10 text-white/70 text-sm hover:bg-white/20 transition-all disabled:opacity-40 min-h-[44px]"
                 >
                   切換為一般模式
                 </button>
-              ) : (
                 <button
-                  onClick={handleEnterExhibition}
-                  className="px-4 py-2 rounded-lg bg-green-500/20 border border-green-500/40 text-green-300 text-sm hover:bg-green-500/30 transition-all min-h-[44px]"
+                  onClick={() => handleSwitchGlobalMode('exhibition')}
+                  disabled={modeLoading || globalMode === 'exhibition'}
+                  className="flex-1 py-2.5 rounded-lg bg-green-500/20 border border-green-500/40 text-green-300 text-sm hover:bg-green-500/30 transition-all disabled:opacity-40 min-h-[44px]"
                 >
                   切換為展覽模式
                 </button>
-              )}
+              </div>
             </div>
 
             {!exState ? (

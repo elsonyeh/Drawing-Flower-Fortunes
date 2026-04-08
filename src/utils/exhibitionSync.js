@@ -68,6 +68,60 @@ export const syncExhibitionToCloud = async (state) => {
   if (error) console.error('[exhibitionSync] 同步失敗:', error.message)
 }
 
+// ── 全域模式（Global Mode）────────────────────────────────
+
+/**
+ * 從 Supabase 讀取目前全域模式 'normal' | 'exhibition'
+ * Supabase 未啟用時回傳 'normal'（展覽前預設）
+ */
+export const fetchGlobalMode = async () => {
+  if (!isSupabaseEnabled) return 'normal'
+  try {
+    const { data } = await supabase
+      .from('site_config')
+      .select('value')
+      .eq('key', 'global_mode')
+      .maybeSingle()
+    return data?.value ?? 'normal'
+  } catch {
+    return 'normal'
+  }
+}
+
+/**
+ * 管理員切換全域模式（寫入 Supabase，觸發所有 client 的 Realtime 更新）
+ */
+export const pushGlobalMode = async (mode) => {
+  if (!isSupabaseEnabled) return false
+  const { error } = await supabase
+    .from('site_config')
+    .upsert(
+      { key: 'global_mode', value: mode, updated_at: new Date().toISOString() },
+      { onConflict: 'key' }
+    )
+  if (error) console.error('[exhibitionSync] 模式切換失敗:', error.message)
+  return !error
+}
+
+/**
+ * 訂閱全域模式變更（Supabase Realtime）
+ * 回傳 unsubscribe 函式，供 useEffect cleanup 使用
+ */
+export const subscribeGlobalMode = (onChange) => {
+  if (!isSupabaseEnabled) return () => {}
+  const channel = supabase
+    .channel('global_mode_changes')
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'site_config', filter: 'key=eq.global_mode' },
+      (payload) => onChange(payload.new.value)
+    )
+    .subscribe()
+  return () => supabase.removeChannel(channel)
+}
+
+// ── 個人進度同步 ─────────────────────────────────────────
+
 /**
  * 從 Supabase 載入展覽進度（localStorage 消失時還原用）
  * 回傳 null 表示雲端無資料

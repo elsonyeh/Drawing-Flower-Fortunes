@@ -107,22 +107,28 @@ export const exitExhibitionMode = () => {
 }
 
 /**
- * Option A：預設展覽模式
- * app 啟動時呼叫，新訪客自動進入展覽模式（1 張票、0 個已訪）
- * 已有狀態的訪客保持不動
+ * 根據全域模式初始化用戶狀態
+ * - 'exhibition'：新訪客自動進入展覽模式（1 張票）；已有狀態則保持不動
+ * - 'normal'：清除展覽狀態，回到自由抽籤模式
+ * App 啟動時及 Realtime 收到模式變更時皆呼叫
  */
-export const initAppMode = async () => {
-  const existing = getExhibitionState()
-  if (existing) return
+export const initAppMode = async (mode) => {
+  if (mode === 'exhibition') {
+    const existing = getExhibitionState()
+    if (existing) return  // 已有進度，保持不動
 
-  // 嘗試從雲端還原（清除快取後的用戶）
-  const cloud = await loadExhibitionFromCloud()
-  if (cloud) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cloud))
-    return
+    // 嘗試從雲端還原（清除 localStorage 後的回訪者）
+    const cloud = await loadExhibitionFromCloud()
+    if (cloud) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cloud))
+      return
+    }
+
+    // 全新訪客 → 自動進入展覽模式
+    const state = defaultState()
+    saveState(state)
+  } else {
+    // normal mode：移除展覽限制
+    localStorage.removeItem(STORAGE_KEY)
   }
-
-  // 全新訪客 → 自動進入展覽模式
-  const state = defaultState()
-  saveState(state)
 }
