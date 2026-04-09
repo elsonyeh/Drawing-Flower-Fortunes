@@ -5,6 +5,7 @@ import { Html5Qrcode } from 'html5-qrcode'
 export default function QRScanPage({ onScanSuccess, onBack }) {
   const [status, setStatus] = useState('init') // 'init', 'scanning', 'error'
   const [errorMsg, setErrorMsg] = useState('')
+  const [scanKey, setScanKey] = useState(0) // 遞增 key 強制 scanner 重新 mount
   const successFiredRef = useRef(false)
   const genRef = useRef(0) // generation counter，解決 StrictMode 雙重 mount 競爭
 
@@ -47,8 +48,9 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
       { fps: 10, qrbox: { width: 240, height: 240 } },
       (decodedText) => {
         if (genRef.current !== gen || successFiredRef.current) return
+        const text = decodedText.trim()
         try {
-          const url = new URL(decodedText)
+          const url = new URL(text)
           const zone = url.searchParams.get('zone')
           const work = url.searchParams.get('work')
           const name = url.searchParams.get('name')
@@ -56,11 +58,11 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
             successFiredRef.current = true
             onScanSuccess({ zone, workId: work, workName: name ? decodeURIComponent(name) : work })
           } else {
-            setErrorMsg('不是展覽 QR Code，請掃描展場的作品 QR Code')
+            setErrorMsg(`不是展覽 QR Code（缺少 zone/work 參數）\n${text}`)
             setStatus('error')
           }
         } catch {
-          setErrorMsg('無法識別此 QR Code，請重試')
+          setErrorMsg(`無法識別此 QR Code\n內容：${text}`)
           setStatus('error')
         }
       },
@@ -82,11 +84,13 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
     return () => {
       stopQR()
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [scanKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRetry = () => {
+    successFiredRef.current = false
     setErrorMsg('')
-    setStatus('scanning')
+    setStatus('init')
+    setScanKey(k => k + 1) // 重新 mount scanner
   }
 
   return (
@@ -124,6 +128,7 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
         {/* Camera view */}
         <div className="relative w-full max-w-xs rounded-2xl overflow-hidden bg-black">
           <div
+            key={scanKey}
             id="qr-reader-container"
             className="w-full"
             style={{ height: 300 }}
