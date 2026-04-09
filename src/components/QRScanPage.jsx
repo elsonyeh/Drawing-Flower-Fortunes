@@ -49,8 +49,10 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
       (decodedText) => {
         if (genRef.current !== gen || successFiredRef.current) return
         const text = decodedText.trim()
+        // QR code 有時省略 https://，補上再解析
+        const urlText = /^https?:\/\//i.test(text) ? text : `https://${text}`
         try {
-          const url = new URL(text)
+          const url = new URL(urlText)
           const zone = url.searchParams.get('zone')
           const work = url.searchParams.get('work')
           const name = url.searchParams.get('name')

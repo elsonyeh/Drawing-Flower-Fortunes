@@ -10,7 +10,7 @@ const ExhibitionScanPage = lazy(() => import('./components/ExhibitionScanPage'))
 const QRScanPage = lazy(() => import('./components/QRScanPage'))
 const AuthModal = lazy(() => import('./components/AuthModal'))
 import { getRandomFlower, saveCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
-import { isExhibitionMode, getDrawTickets, getUnlockedPools, consumeTicket, initAppMode } from './utils/exhibitionHelper'
+import { isExhibitionMode, getDrawTickets, getUnlockedPools, consumeTicket, initAppMode, recordVisit } from './utils/exhibitionHelper'
 import { fetchGlobalMode, subscribeGlobalMode } from './utils/exhibitionSync'
 import { useAuth } from './hooks/useAuth'
 import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile } from './utils/collectionSync'
@@ -122,8 +122,26 @@ function App() {
   }
 
   const handleQRScanSuccess = ({ zone, workId, workName }) => {
-    setScanParams({ zone, workId, workName })
-    setStage('exhibitionScan')
+    // 記錄拜訪（新作品 +1 票）
+    recordVisit(workId)
+
+    // 消耗一張票並直接進抽卡動畫
+    if (!consumeTicket()) {
+      // 沒有票（即使掃了也沒剩），回首頁
+      setExhibitionTickets(getDrawTickets())
+      setStage('landing')
+      return
+    }
+
+    const pools = getUnlockedPools()
+    const flower = getRandomFlowerForExhibition(pools)
+    setSelectedFlower(flower)
+    setEmotionData(null)
+    saveCollectedFlower(flower)
+    if (user) saveFlowerToCloud(user.id, flower)
+    setScanParams(null)
+    setExhibitionTickets(getDrawTickets())
+    setStage('gacha')
   }
 
   const handleEmotionScan = () => {
