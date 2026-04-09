@@ -121,7 +121,7 @@ export function AuthProvider({ children }) {
     if (!isSupabaseEnabled) return
     if (user) {
       // 連結模式：不更新 last_login_provider，保留原始登入方式
-      sessionStorage.setItem('line_link_for_user_id', user.id)
+      localStorage.setItem('line_link_for_user_id', user.id)
     } else {
       // 真正的登入：記錄登入方式
       localStorage.setItem('last_login_provider', 'line')
@@ -129,7 +129,7 @@ export function AuthProvider({ children }) {
     const clientId = import.meta.env.VITE_LINE_CLIENT_ID
     const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback`)
     const state = crypto.randomUUID()
-    sessionStorage.setItem('line_oauth_state', state)
+    localStorage.setItem('line_oauth_state', state)
     window.location.href = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=profile%20openid%20email`
   }
 

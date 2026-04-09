@@ -11,7 +11,7 @@ export default function LineCallback() {
     const params = new URLSearchParams(window.location.search)
     const code = params.get('code')
     const state = params.get('state')
-    const savedState = sessionStorage.getItem('line_oauth_state')
+    const savedState = localStorage.getItem('line_oauth_state')
 
     console.log('[LINE Callback] code:', code)
     console.log('[LINE Callback] state from URL:', state)
@@ -29,13 +29,13 @@ export default function LineCallback() {
       return
     }
 
-    sessionStorage.removeItem('line_oauth_state')
+    localStorage.removeItem('line_oauth_state')
 
     const redirectUri = `${window.location.origin}/auth/callback`
 
     // 若是連結模式，取出並清除連結意圖
-    const linkUserId = sessionStorage.getItem('line_link_for_user_id') || null
-    if (linkUserId) sessionStorage.removeItem('line_link_for_user_id')
+    const linkUserId = localStorage.getItem('line_link_for_user_id') || null
+    if (linkUserId) localStorage.removeItem('line_link_for_user_id')
 
     console.log('[LINE Callback] 呼叫 Edge Function，redirectUri:', redirectUri, '連結模式:', !!linkUserId)
 
