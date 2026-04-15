@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { QRCodeSVG } from 'qrcode.react'
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react'
 import { unlockAllFlowers, clearAllFlowers, getCollectionStats } from '../utils/fortuneHelper'
 import { getExhibitionState } from '../utils/exhibitionHelper'
 import { fetchGlobalMode, pushGlobalMode } from '../utils/exhibitionSync'
@@ -15,6 +15,8 @@ function AdminPage() {
   const [baseUrl, setBaseUrl] = useState(window.location.origin)
   const [globalMode, setGlobalMode] = useState(null)   // null = 讀取中
   const [modeLoading, setModeLoading] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const qrCanvasRefs = useRef({})
 
   useEffect(() => {
     fetchGlobalMode().then(setGlobalMode)
@@ -58,8 +60,18 @@ function AdminPage() {
     window.location.href = '/'
   }
 
-  const handlePrint = () => {
-    window.print()
+  const handleExportAll = async () => {
+    setExporting(true)
+    for (const art of ARTWORKS) {
+      const canvas = qrCanvasRefs.current[art.id]
+      if (!canvas) continue
+      const link = document.createElement('a')
+      link.download = `${art.name}.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+      await new Promise(r => setTimeout(r, 150))
+    }
+    setExporting(false)
   }
 
   const getQRUrl = (art) =>
@@ -152,11 +164,27 @@ function AdminPage() {
               />
             </div>
 
+            {/* Hidden canvases for export */}
+            <div className="sr-only" aria-hidden="true">
+              {ARTWORKS.map(art => (
+                <QRCodeCanvas
+                  key={art.id}
+                  ref={el => { qrCanvasRefs.current[art.id] = el }}
+                  value={getQRUrl(art)}
+                  size={600}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                  level="M"
+                />
+              ))}
+            </div>
+
             <button
-              onClick={handlePrint}
-              className="w-full mb-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all"
+              onClick={handleExportAll}
+              disabled={exporting}
+              className="w-full mb-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all disabled:opacity-50"
             >
-              列印所有 QR Code
+              {exporting ? '匯出中…' : '匯出所有 QR Code（獨立圖片）'}
             </button>
 
             {/* QR Code Grid by Zone */}
@@ -297,12 +325,7 @@ function AdminPage() {
         )}
       </div>
 
-      <style>{`
-        @media print {
-          body { background: white !important; }
-          .no-print { display: none !important; }
-        }
-      `}</style>
+
     </motion.div>
   )
 }
