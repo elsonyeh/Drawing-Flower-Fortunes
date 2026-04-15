@@ -46,8 +46,7 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
     qr.start(
       { facingMode: 'environment' },
       {
-        fps: 10,
-        qrbox: { width: 240, height: 240 },
+        fps: 15,
         experimentalFeatures: { useBarCodeDetectorIfSupported: true },
       },
       (decodedText) => {
