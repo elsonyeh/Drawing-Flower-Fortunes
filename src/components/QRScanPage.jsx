@@ -5,7 +5,6 @@ import { Html5Qrcode } from 'html5-qrcode'
 export default function QRScanPage({ onScanSuccess, onBack }) {
   const [status, setStatus] = useState('init') // 'init', 'scanning', 'error'
   const [errorMsg, setErrorMsg] = useState('')
-  const [debugText, setDebugText] = useState('') // 暫時 debug
   const [scanKey, setScanKey] = useState(0) // 遞增 key 強制 scanner 重新 mount
   const successFiredRef = useRef(false)
   const genRef = useRef(0) // generation counter，解決 StrictMode 雙重 mount 競爭
@@ -52,7 +51,6 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
         experimentalFeatures: { useBarCodeDetectorIfSupported: true },
       },
       (decodedText) => {
-        setDebugText(`[掃到] ${decodedText.trim().slice(0, 80)}`)
         if (genRef.current !== gen || successFiredRef.current) return
         const text = decodedText.trim()
         // QR code 有時省略 https://，補上再解析
@@ -168,12 +166,6 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
           <p className="text-white/40 text-sm">正在啟動相機⋯</p>
         )}
 
-        {/* 暫時 debug：確認 QR 有沒有被 decode */}
-        {debugText ? (
-          <p className="text-yellow-300 text-xs text-center break-all px-2 bg-black/40 rounded-lg p-2">{debugText}</p>
-        ) : status === 'scanning' ? (
-          <p className="text-white/20 text-xs text-center">等待掃描中…</p>
-        ) : null}
 
         {status === 'error' && (
           <motion.div

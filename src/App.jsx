@@ -10,7 +10,7 @@ const ExhibitionScanPage = lazy(() => import('./components/ExhibitionScanPage'))
 const QRScanPage = lazy(() => import('./components/QRScanPage'))
 const AuthModal = lazy(() => import('./components/AuthModal'))
 import { getRandomFlower, saveCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
-import { isExhibitionMode, getDrawTickets, getUnlockedPools, consumeTicket, initAppMode, recordVisit } from './utils/exhibitionHelper'
+import { isExhibitionMode, getDrawTickets, getUnlockedPools, consumeTicket, initAppMode, recordVisit, enterExhibitionMode } from './utils/exhibitionHelper'
 import { fetchGlobalMode, subscribeGlobalMode } from './utils/exhibitionSync'
 import { useAuth } from './hooks/useAuth'
 import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile } from './utils/collectionSync'
@@ -122,6 +122,11 @@ function App() {
   }
 
   const handleQRScanSuccess = ({ zone, workId, workName }) => {
+    // 若尚未進入展覽模式，掃碼即自動初始化（確保掃碼永遠可用）
+    if (!isExhibitionMode()) {
+      enterExhibitionMode()
+    }
+
     // 記錄拜訪（新作品 +1 票）
     recordVisit(workId)
 
