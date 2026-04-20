@@ -45,7 +45,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
       className="min-h-screen text-white overflow-y-auto"
     >
       {/* Header */}
-      <div className="sticky top-0 z-20 backdrop-blur-md border-b" style={{ background: 'rgba(12,15,30,0.88)', borderColor: 'rgba(242,126,147,0.18)' }}>
+      <div className="sticky top-0 z-20 backdrop-blur-md border-b" style={{ background: 'rgba(14,20,42,0.86)', borderColor: 'rgba(242,126,147,0.18)' }}>
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gradient">花語圖鑑</h1>
@@ -83,7 +83,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
           {/* Exhibition Progress */}
           {exMode && exProgress && (
             <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="px-4 py-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <div className="px-4 py-3" style={{ background: 'rgba(91,123,168,0.08)' }}>
                 <span className="text-xs text-white/50 tracking-widest font-medium">展覽進度</span>
               </div>
               <div className="grid grid-cols-3 divide-x divide-white/8">
