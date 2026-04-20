@@ -4,6 +4,9 @@ import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, useProgress, Html } from "@react-three/drei";
 import * as THREE from "three";
 
+// Draco decoder 統一指向本地（與 main.jsx 一致）
+useGLTF.setDecoderPath('/draco/')
+
 // 固定相機比例組件 - 防止 3D 內容被拉伸
 function FixedAspectCamera() {
   const { camera, size } = useThree();
@@ -24,6 +27,7 @@ import { getDrawQueue } from "../utils/fortuneHelper";
 
 // ============ 模型路徑對照表 ============
 const MODEL_PATHS = {
+  sunflower: "/models/sunflower/sunflower.glb",
   rose: "/models/rose/rose.glb",
   sakura: "/models/sakura/sakura.glb",
   lavender: "/models/lavender/lavender.glb",
@@ -66,6 +70,7 @@ const preloadAllModels = () => {
 // main.jsx 已負責第一個模型（fetch 進度條 + THREE.Cache + useGLTF.preload）
 // 這裡等 1.5 秒後再開始其他模型，避免搶佔第一個模型的頻寬
 setTimeout(preloadAllModels, 1500);
+
 
 // ============ 花形 Skeleton Loading（參考花朵圖示：5圓瓣＋花心洞＋粗莖＋對稱葉） ============
 const FlowerSkeleton = () => {
@@ -1627,7 +1632,14 @@ const BaseLeaves = () => {
 // └─────────────────┴────────────────────────────────────────────────────────┘
 //
 const flower3DConfigs = {
-  // 向日葵：OBJ 模型過重導致 WebGL Context Lost，改用程序化渲染
+  // 向日葵 - OBJ 格式（已透過 fetch 預熱 HTTP 快取，建議日後轉 GLB）
+  sunflower: {
+    type: "glb",
+    glb: "/models/sunflower/sunflower.glb",
+    scale: 0.019,
+    position: [0, -2.0, 0],
+    rotation: [-Math.PI / 2, Math.PI, 0],
+  },
 
   // 玫瑰 - GLB 格式模型
   rose: {
@@ -2487,6 +2499,12 @@ const FlowerBloom = ({ flower }) => {
     <Canvas
       camera={{ position: [0, 0.08, 2.75], fov: 38 }}
       gl={{ alpha: true, antialias: true, localClippingEnabled: true, preserveDrawingBuffer: true }}
+      onCreated={({ gl }) => {
+        // context lost 時呼叫 preventDefault 才能觸發後續的 restore
+        gl.domElement.addEventListener('webglcontextlost', (e) => {
+          e.preventDefault()
+        }, false)
+      }}
     >
       <FixedAspectCamera />
       <ambientLight intensity={0.5} />

@@ -50,7 +50,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
     setSelectedFlowerIdx(index)
     setIsFlowerTransforming(true)
     setBurstActive(true)
-    setTimeout(() => setStage('show_card'), 1300)
+    setTimeout(() => setStage('show_card'), 320) // 讓爆發粒子閃一下即切換
   }
 
   const handleCardClick = () => {
@@ -131,7 +131,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
             style={{ zIndex: 2 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
+            exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.2, delay: 0 } }}
             transition={{ delay: 0.5, duration: 0.35 }}
           >
             <motion.p

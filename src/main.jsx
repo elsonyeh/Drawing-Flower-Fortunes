@@ -9,8 +9,12 @@ import * as THREE from 'three'
 // 啟用 THREE.js 全域 cache，讓 fetch() 下載的資料可以被 useGLTF 共用
 THREE.Cache.enabled = true
 
+// Draco decoder 指向本地（避免每次從 CDN 下載 WASM）
+useGLTF.setDecoderPath('/draco/')
+
 // 模型路徑對照表
 const MODEL_PATHS = {
+  sunflower: '/models/sunflower/sunflower.glb',
   rose: '/models/rose/rose.glb',
   sakura: '/models/sakura/sakura.glb',
   lavender: '/models/lavender/lavender.glb',
