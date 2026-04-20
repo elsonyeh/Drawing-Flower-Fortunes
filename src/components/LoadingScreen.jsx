@@ -7,9 +7,14 @@ export default function LoadingScreen() {
       style={{
         /* 從右上角琥珀金 → 左下角深桃 → 底部珊瑚，與主背景區隔 */
         background: [
-          'radial-gradient(ellipse 80% 70% at 85% 5%, rgba(242,190,92,0.35) 0%, transparent 55%)',
-          'radial-gradient(ellipse 70% 60% at 15% 95%, rgba(242,126,147,0.30) 0%, transparent 55%)',
-          'linear-gradient(135deg, #100e1c 0%, #1a1228 50%, #0f1020 100%)',
+          /* 頂部藍灰天光 */
+          'radial-gradient(ellipse 110% 55% at 50% -5%, rgba(91,123,168,0.30) 0%, rgba(80,110,158,0.10) 55%, transparent 72%)',
+          /* 右上琥珀暖光 */
+          'radial-gradient(ellipse 70% 60% at 85% 8%, rgba(242,190,92,0.28) 0%, transparent 52%)',
+          /* 底部珊瑚 */
+          'radial-gradient(ellipse 180% 60% at 50% 115%, rgba(224,88,72,0.58) 0%, rgba(242,126,147,0.38) 32%, transparent 65%)',
+          /* 天空基底 */
+          'linear-gradient(175deg, #0e1428 0%, #1a2645 52%, #131e38 100%)',
         ].join(', '),
       }}
     >

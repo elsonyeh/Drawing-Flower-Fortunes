@@ -171,12 +171,14 @@ function App() {
           inset: 0,
           zIndex: 0,
           background: [
+            /* 頂部藍灰天光（呼應主視覺霧藍天空） */
+            'radial-gradient(ellipse 110% 55% at 50% -5%, rgba(91,123,168,0.30) 0%, rgba(80,110,158,0.10) 55%, transparent 72%)',
             /* 中央暖白光暈（月光感） */
-            'radial-gradient(ellipse 95% 60% at 50% 30%, rgba(242,210,190,0.28) 0%, rgba(242,180,150,0.10) 45%, transparent 65%)',
-            /* 底部珊瑚粉地面 */
-            'radial-gradient(ellipse 160% 55% at 50% 108%, rgba(242,126,147,0.55) 0%, rgba(242,164,136,0.25) 40%, transparent 60%)',
-            /* 天空基底：深霧藍 */
-            'linear-gradient(175deg, #0c0f1e 0%, #131a30 45%, #0f1426 100%)',
+            'radial-gradient(ellipse 90% 55% at 48% 28%, rgba(242,210,190,0.38) 0%, rgba(242,180,150,0.14) 45%, transparent 65%)',
+            /* 底部珊瑚地面（加飽和，貼近主視覺橘珊瑚底色） */
+            'radial-gradient(ellipse 180% 65% at 50% 112%, rgba(224,88,72,0.62) 0%, rgba(242,126,147,0.42) 32%, rgba(242,164,136,0.16) 55%, transparent 70%)',
+            /* 天空基底：提亮一階，帶藍灰紫（呼應主視覺天空色） */
+            'linear-gradient(175deg, #0e1428 0%, #1a2645 52%, #131e38 100%)',
           ].join(', '),
         }}
       />
@@ -188,7 +190,7 @@ function App() {
           inset: 0,
           zIndex: 0,
           pointerEvents: 'none',
-          opacity: 0.07,
+          opacity: 0.09,
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23g)'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'repeat',
           backgroundSize: '250px 250px',
