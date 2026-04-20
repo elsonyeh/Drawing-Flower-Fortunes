@@ -179,6 +179,7 @@ function App() {
             workId={scanParams.workId}
             workName={scanParams.workName}
             onDraw={handleExhibitionDraw}
+            onBack={() => { setScanParams(null); setStage('landing') }}
           />
         )}
 

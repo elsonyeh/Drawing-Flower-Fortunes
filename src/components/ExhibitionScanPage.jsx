@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { recordVisit, getExhibitionState, initExhibitionWithCloud, getUnlockedPools, getZoneProgress } from '../utils/exhibitionHelper'
 import { ZONE_THEME, ARTWORKS, ZONE_ARTWORKS } from '../utils/exhibitionConstants'
 
-export default function ExhibitionScanPage({ zone, workId, workName, onDraw }) {
+export default function ExhibitionScanPage({ zone, workId, workName, onDraw, onBack }) {
   const [isNewVisit, setIsNewVisit] = useState(false)
   const [progress, setProgress] = useState(null)
   const [pools, setPools] = useState(['A'])
@@ -84,12 +84,11 @@ export default function ExhibitionScanPage({ zone, workId, workName, onDraw }) {
 
       <div className="w-full max-w-sm relative z-10 flex flex-col items-center gap-6">
 
-        {/* Zone tag + visit badge */}
+        {/* Zone tag — just theme name, no visit badge */}
         <motion.div
           initial={{ y: -16, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="flex items-center gap-2"
         >
           <span
             className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest"
@@ -101,38 +100,15 @@ export default function ExhibitionScanPage({ zone, workId, workName, onDraw }) {
           >
             {theme.name}
           </span>
-          {ready && (
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.35, type: 'spring', stiffness: 220 }}
-              className="px-2.5 py-1 rounded-full text-xs font-bold"
-              style={{
-                background: isNewVisit ? 'rgba(251,191,36,0.12)' : 'rgba(255,255,255,0.07)',
-                color: isNewVisit ? '#fbbf24' : 'rgba(255,255,255,0.35)',
-                border: isNewVisit ? '1px solid rgba(251,191,36,0.35)' : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              {isNewVisit ? '✦ 初遇' : '再遇'}
-            </motion.span>
-          )}
         </motion.div>
 
-        {/* Artwork hero block */}
+        {/* Artwork hero — name only, no icon */}
         <motion.div
           initial={{ scale: 0.94, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.15, duration: 0.45 }}
           className="w-full text-center"
         >
-          <motion.div
-            className="text-5xl mb-4"
-            animate={isNewVisit ? { scale: [1, 1.18, 1], rotate: [0, 6, -4, 0] } : {}}
-            transition={{ delay: 0.5, duration: 0.7 }}
-          >
-            🎨
-          </motion.div>
-
           <h1
             className="text-3xl font-bold text-white mb-2 leading-tight"
             style={{ textShadow: `0 0 36px ${theme.color}55` }}
@@ -141,13 +117,12 @@ export default function ExhibitionScanPage({ zone, workId, workName, onDraw }) {
           </h1>
 
           {artwork?.location && (
-            <p className="text-xs tracking-wider mb-3" style={{ color: `${theme.color}aa` }}>
+            <p className="text-xs tracking-wider" style={{ color: `${theme.color}aa` }}>
               {artwork.location}
             </p>
           )}
 
-          <p className="text-white/30 text-sm">{theme.desc}</p>
-
+          {/* Visit status */}
           {ready && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -236,28 +211,44 @@ export default function ExhibitionScanPage({ zone, workId, workName, onDraw }) {
           </motion.div>
         )}
 
-        {/* Draw button */}
+        {/* Action button — draw on first visit, back on revisit */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
           className="w-full"
         >
-          <motion.button
-            onClick={onDraw}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="w-full py-4 rounded-2xl font-bold text-lg text-white relative overflow-hidden"
-            style={{ background: `linear-gradient(135deg, ${theme.color}, ${theme.color}bb)` }}
-          >
-            <motion.div
-              className="absolute inset-0 rounded-2xl pointer-events-none"
-              animate={{ opacity: [0, 0.35, 0] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ background: `radial-gradient(ellipse at center, white, transparent 70%)` }}
-            />
-            <span className="relative z-10">🌸 立即抽卡</span>
-          </motion.button>
+          {isNewVisit || !ready ? (
+            <motion.button
+              onClick={onDraw}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="w-full py-4 rounded-2xl font-bold text-lg text-white relative overflow-hidden"
+              style={{ background: `linear-gradient(135deg, ${theme.color}, ${theme.color}bb)` }}
+            >
+              <motion.div
+                className="absolute inset-0 rounded-2xl pointer-events-none"
+                animate={{ opacity: [0, 0.35, 0] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                style={{ background: `radial-gradient(ellipse at center, white, transparent 70%)` }}
+              />
+              <span className="relative z-10">🌸 立即抽卡</span>
+            </motion.button>
+          ) : (
+            <motion.button
+              onClick={onBack}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-4 rounded-2xl font-semibold text-base transition-colors"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(255,255,255,0.55)',
+              }}
+            >
+              返回首頁
+            </motion.button>
+          )}
         </motion.div>
 
       </div>
