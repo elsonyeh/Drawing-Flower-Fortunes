@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { getAllFlowers, getCollectedFlowers, getCollectionStats, isFlowerCollected, isFlowerViewed, markFlowerAsViewed } from '../utils/fortuneHelper'
-import { isExhibitionMode, getZoneProgress, getDrawTickets, getUnlockedPools } from '../utils/exhibitionHelper'
+import { isExhibitionMode, getZoneProgress, getUnlockedPools } from '../utils/exhibitionHelper'
 import { ZONE_THEME, ZONE_ARTWORKS } from '../utils/exhibitionConstants'
 import CardBack from './CardBack'
 import FlowerBloom from './FlowerBloom'
@@ -16,7 +16,6 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
 
   const exMode = isExhibitionMode()
   const exProgress = exMode ? getZoneProgress() : null
-  const exTickets = exMode ? getDrawTickets() : 0
   const unlockedPools = exMode ? getUnlockedPools() : []
 
   const filteredFlowers = allFlowers.filter(flower => {
@@ -81,9 +80,8 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
           {/* Exhibition Progress */}
           {exMode && exProgress && (
             <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <div className="px-4 py-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
                 <span className="text-xs text-white/50 tracking-widest font-medium">展覽進度</span>
-                <span className="text-xs text-yellow-300">🎟 {exTickets} 次</span>
               </div>
               <div className="grid grid-cols-3 divide-x divide-white/8">
                 {['A', 'B', 'C'].map(zone => {
@@ -96,10 +94,8 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                     <div key={zone} className="px-3 py-3 text-center">
                       <div className="flex items-center justify-center gap-1 mb-1.5">
                         <span className="text-sm font-bold" style={{ color: unlocked ? theme.color : 'rgba(255,255,255,0.2)' }}>
-                          {zone}
+                          {unlocked ? theme.name : '🔒'}
                         </span>
-                        <span className="text-xs text-white/40">{theme.name}</span>
-                        {!unlocked && <span className="text-xs">🔒</span>}
                       </div>
                       <div className="h-1 rounded-full bg-white/10 overflow-hidden mb-1">
                         <motion.div

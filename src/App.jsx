@@ -10,7 +10,7 @@ const ExhibitionScanPage = lazy(() => import('./components/ExhibitionScanPage'))
 const QRScanPage = lazy(() => import('./components/QRScanPage'))
 const AuthModal = lazy(() => import('./components/AuthModal'))
 import { getRandomFlower, saveCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
-import { isExhibitionMode, getDrawTickets, getUnlockedPools, consumeTicket, initAppMode, recordVisit, enterExhibitionMode } from './utils/exhibitionHelper'
+import { isExhibitionMode, getUnlockedPools, initAppMode, enterExhibitionMode } from './utils/exhibitionHelper'
 import { fetchGlobalMode, subscribeGlobalMode } from './utils/exhibitionSync'
 import { useAuth } from './hooks/useAuth'
 import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile } from './utils/collectionSync'
@@ -21,13 +21,11 @@ import './components/FlowerBloom'
 function App() {
   const [stage, setStage] = useState('landing') // 'landing', 'gacha', 'result', 'collection', 'admin', 'emotionScan', 'exhibitionScan', 'qrScan'
   const [scanParams, setScanParams] = useState(null) // { zone, workId, workName }
-  const [exhibitionTickets, setExhibitionTickets] = useState(() => getDrawTickets())
 
   // 全域模式管理：fetch 初始值 + 訂閱 Realtime 即時更新
   useEffect(() => {
     const applyMode = async (mode) => {
       await initAppMode(mode)
-      setExhibitionTickets(getDrawTickets())
     }
 
     fetchGlobalMode().then(applyMode)
@@ -35,13 +33,6 @@ function App() {
     const unsubscribe = subscribeGlobalMode(applyMode)
     return unsubscribe
   }, [])
-
-  // Refresh ticket count whenever stage changes to landing
-  useEffect(() => {
-    if (stage === 'landing') {
-      setExhibitionTickets(getDrawTickets())
-    }
-  }, [stage])
 
   // Check for QR scan params or admin route on mount
   useEffect(() => {
@@ -91,11 +82,6 @@ function App() {
   const handlePetalSelect = () => {
     // 花瓣選擇後，生成花卉並進入抽卡動畫
     const exMode = isExhibitionMode()
-
-    if (exMode) {
-      if (!consumeTicket()) return
-    }
-
     const pools = exMode ? getUnlockedPools() : null
     const flower = exMode ? getRandomFlowerForExhibition(pools) : getRandomFlower()
 
@@ -110,7 +96,6 @@ function App() {
   }
 
   const handleExhibitionDraw = () => {
-    if (!consumeTicket()) return
     const pools = getUnlockedPools()
     const flower = getRandomFlowerForExhibition(pools)
     setSelectedFlower(flower)
@@ -127,26 +112,9 @@ function App() {
       enterExhibitionMode()
     }
 
-    // 記錄拜訪（新作品 +1 票）
-    recordVisit(workId)
-
-    // 消耗一張票並直接進抽卡動畫
-    if (!consumeTicket()) {
-      // 沒有票（即使掃了也沒剩），回首頁
-      setExhibitionTickets(getDrawTickets())
-      setStage('landing')
-      return
-    }
-
-    const pools = getUnlockedPools()
-    const flower = getRandomFlowerForExhibition(pools)
-    setSelectedFlower(flower)
-    setEmotionData(null)
-    saveCollectedFlower(flower)
-    if (user) saveFlowerToCloud(user.id, flower)
-    setScanParams(null)
-    setExhibitionTickets(getDrawTickets())
-    setStage('gacha')
+    // 顯示作品資訊頁（ExhibitionScanPage 會記錄拜訪並讓用戶點擊抽卡）
+    setScanParams({ zone, workId, workName })
+    setStage('exhibitionScan')
   }
 
   const handleEmotionScan = () => {
@@ -211,10 +179,6 @@ function App() {
             workId={scanParams.workId}
             workName={scanParams.workName}
             onDraw={handleExhibitionDraw}
-            onBack={() => {
-              setScanParams(null)
-              setStage('landing')
-            }}
           />
         )}
 
@@ -228,7 +192,6 @@ function App() {
             onQRScan={() => setStage('qrScan')}
             user={user}
             exhibitionMode={isExhibitionMode()}
-            exhibitionTickets={exhibitionTickets}
           />
         )}
 

@@ -401,7 +401,7 @@ const BambooBasket = ({ isMobile, isTransforming }) => (
 )
 
 // 主組件
-const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAuth, onQRScan, user, exhibitionMode, exhibitionTickets }) => {
+const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAuth, onQRScan, user, exhibitionMode }) => {
   const [particles, setParticles] = useState([])
   const [petals, setPetals] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(null)
@@ -464,7 +464,6 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
 
   const handleFlowerClick = (index) => {
     if (isTransforming) return
-    if (exhibitionMode && exhibitionTickets <= 0) return  // no tickets
     setSelectedIndex(index)
     setIsTransforming(true)
     setTimeout(() => onPetalSelect(), 2800)
@@ -494,20 +493,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2"
           style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}
         >
-          {/* 左側：抽卡次數（展覽模式才顯示） */}
-          {exhibitionMode ? (
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border ${
-              exhibitionTickets <= 0
-                ? 'bg-white/5 border-white/10'
-                : 'bg-amber-400/10 border-amber-400/30'
-            }`}>
-              <span className="text-base leading-none">🎟</span>
-              <span className={`text-sm font-bold tabular-nums ${exhibitionTickets <= 0 ? 'text-white/30' : 'text-amber-300'}`}>
-                {exhibitionTickets}
-              </span>
-              <span className="text-white/30 text-xs">次</span>
-            </div>
-          ) : <div />}
+          {/* 左側：空白佔位 */}
+          <div />
 
           {/* 右側：登入 + 圖鑑 */}
           <div className="flex items-center gap-2">
@@ -667,20 +654,18 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{
-              opacity: exhibitionMode && exhibitionTickets <= 0 ? 0.3 : [0.6, 1, 0.6],
+              opacity: [0.6, 1, 0.6],
               y: 0,
               textShadow: ['0 0 8px rgba(255,200,150,0.3)', '0 0 16px rgba(255,200,150,0.6)', '0 0 8px rgba(255,200,150,0.3)']
             }}
             transition={{
               delay: 1,
-              opacity: { duration: 2, repeat: exhibitionMode && exhibitionTickets <= 0 ? 0 : Infinity },
+              opacity: { duration: 2, repeat: Infinity },
               textShadow: { duration: 2, repeat: Infinity },
             }}
             className="text-sm md:text-base text-amber-200/90 text-center tracking-widest font-medium"
           >
-            {exhibitionMode && exhibitionTickets <= 0
-              ? '✦ 無抽卡次數・請繼續探索作品 ✦'
-              : '✦ 點擊任意一枝花開始抽籤 ✦'}
+            ✦ 點擊任意一枝花開始抽籤 ✦
           </motion.p>
         </div>
       )}
