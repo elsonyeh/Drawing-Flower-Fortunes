@@ -45,7 +45,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
       className="min-h-screen text-white overflow-y-auto"
     >
       {/* Header */}
-      <div className="sticky top-0 z-20 backdrop-blur-md border-b" style={{ background: 'rgba(14,20,42,0.86)', borderColor: 'rgba(242,126,147,0.18)' }}>
+      <div className="sticky top-0 z-20 backdrop-blur-md border-b" style={{ background: 'rgba(14,20,42,0.18)', borderColor: 'rgba(242,126,147,0.18)' }}>
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gradient">花語圖鑑</h1>
