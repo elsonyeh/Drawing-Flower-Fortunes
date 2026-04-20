@@ -566,8 +566,17 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
         className={`text-center ${isSmallScreen ? 'mb-2' : 'mb-4 md:mb-6'} relative z-10`}
         style={{ opacity: isTransforming ? 0.3 : 1 }}
       >
-        <h1 className={`${isSmallScreen ? 'text-4xl' : 'text-5xl md:text-7xl'} font-bold ${isSmallScreen ? 'mb-1' : 'mb-2 md:mb-4'} text-gradient glow`}>埕花</h1>
-        <p className={`${isSmallScreen ? 'text-base' : 'text-lg md:text-2xl'} text-primary-200 ${isSmallScreen ? 'mb-0.5' : 'mb-1 md:mb-2'}`}>鹽夏不夜埕</p>
+        <h1
+          className={`${isSmallScreen ? 'text-4xl' : 'text-5xl md:text-7xl'} font-bold ${isSmallScreen ? 'mb-1' : 'mb-2 md:mb-4'}`}
+          style={{
+            color: 'rgba(242,217,208,0.96)',
+            textShadow: '0 0 14px rgba(242,126,147,0.45), 0 0 32px rgba(242,190,92,0.20)',
+          }}
+        >埕花</h1>
+        <p
+          className={`${isSmallScreen ? 'text-base' : 'text-lg md:text-2xl'} ${isSmallScreen ? 'mb-0.5' : 'mb-1 md:mb-2'}`}
+          style={{ color: 'rgba(242,190,92,0.75)' }}
+        >鹽夏不夜埕</p>
         <motion.p
           key={isTransforming ? 't' : 's'}
           initial={{ opacity: 0, y: 10 }}
@@ -684,9 +693,9 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           {onQRScan && (
             <motion.button
               onClick={onQRScan}
-              className="w-full max-w-xs py-3 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 border border-green-400/50 min-h-[48px]"
-              style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.45), rgba(5,150,105,0.45))', backdropFilter: 'blur(8px)' }}
-              whileHover={{ scale: 1.03, boxShadow: '0 0 20px rgba(52,211,153,0.4)' }}
+              className="w-full max-w-xs py-3 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 min-h-[48px]"
+              style={{ background: 'linear-gradient(135deg, rgba(242,190,92,0.40), rgba(242,164,136,0.35))', border: '1px solid rgba(242,190,92,0.40)', backdropFilter: 'blur(8px)' }}
+              whileHover={{ scale: 1.03, boxShadow: '0 0 20px rgba(242,190,92,0.35)' }}
               whileTap={{ scale: 0.97 }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -701,9 +710,9 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           {onEmotionScan && (
             <motion.button
               onClick={onEmotionScan}
-              className="w-full max-w-xs py-2.5 rounded-2xl text-sm font-medium text-white/80 flex items-center justify-center gap-2 border border-purple-400/40 min-h-[44px]"
-              style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.35), rgba(79,70,229,0.35))', backdropFilter: 'blur(8px)' }}
-              whileHover={{ scale: 1.03, boxShadow: '0 0 16px rgba(167,139,250,0.35)' }}
+              className="w-full max-w-xs py-2.5 rounded-2xl text-sm font-medium text-white/75 flex items-center justify-center gap-2 min-h-[44px]"
+              style={{ background: 'linear-gradient(135deg, rgba(91,123,168,0.35), rgba(72,100,140,0.28))', border: '1px solid rgba(91,123,168,0.40)', backdropFilter: 'blur(8px)' }}
+              whileHover={{ scale: 1.03, boxShadow: '0 0 16px rgba(91,123,168,0.35)' }}
               whileTap={{ scale: 0.97 }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
