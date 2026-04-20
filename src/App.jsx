@@ -171,11 +171,11 @@ function App() {
           zIndex: 0,
           background: [
             /* 中央暖白光暈（月光感） */
-            'radial-gradient(ellipse 90% 55% at 50% 32%, rgba(242,217,208,0.13) 0%, transparent 60%)',
+            'radial-gradient(ellipse 95% 60% at 50% 30%, rgba(242,210,190,0.28) 0%, rgba(242,180,150,0.10) 45%, transparent 65%)',
             /* 底部珊瑚粉地面 */
-            'radial-gradient(ellipse 140% 45% at 50% 105%, rgba(242,126,147,0.30) 0%, transparent 55%)',
+            'radial-gradient(ellipse 160% 55% at 50% 108%, rgba(242,126,147,0.55) 0%, rgba(242,164,136,0.25) 40%, transparent 60%)',
             /* 天空基底：深霧藍 */
-            'linear-gradient(175deg, #0d1020 0%, #141d36 50%, #101628 100%)',
+            'linear-gradient(175deg, #0c0f1e 0%, #131a30 45%, #0f1426 100%)',
           ].join(', '),
         }}
       />
@@ -187,7 +187,7 @@ function App() {
           inset: 0,
           zIndex: 0,
           pointerEvents: 'none',
-          opacity: 0.045,
+          opacity: 0.07,
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23g)'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'repeat',
           backgroundSize: '250px 250px',
