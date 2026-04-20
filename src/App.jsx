@@ -55,6 +55,7 @@ function App() {
   const [viewingFlower, setViewingFlower] = useState(null) // For viewing from collection
   const [emotionData, setEmotionData] = useState(null)     // 情緒解籤模式的情緒資料
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [gachaSkipFlowerPick, setGachaSkipFlowerPick] = useState(false)
 
   const { user } = useAuth()
 
@@ -81,13 +82,14 @@ function App() {
   }, [user])
 
   const handlePetalSelect = () => {
-    // 花瓣選擇後，生成花卉並進入抽卡動畫
+    // 花瓣選擇後，生成花卉並進入抽卡動畫（首頁已選過花，跳過抽卡內的選花環節）
     const exMode = isExhibitionMode()
     const pools = exMode ? getUnlockedPools() : null
     const flower = exMode ? getRandomFlowerForExhibition(pools) : getRandomFlower()
 
     setSelectedFlower(flower)
     setEmotionData(null)
+    setGachaSkipFlowerPick(true)
     setStage('gacha')
 
     // Save to localStorage (always)
@@ -104,6 +106,7 @@ function App() {
     saveCollectedFlower(flower)
     if (user) saveFlowerToCloud(user.id, flower)
     setScanParams(null)
+    setGachaSkipFlowerPick(false) // 展覽模式需要選花環節
     setStage('gacha')
   }
 
@@ -127,6 +130,7 @@ function App() {
     setSelectedFlower(flower)
     setEmotionData(data)
     // 相由花緣的結果不記錄到圖鑑，僅供當次欣賞
+    setGachaSkipFlowerPick(true)
     setStage('gacha')
   }
 
@@ -243,6 +247,7 @@ function App() {
             key="gacha"
             flower={selectedFlower}
             onComplete={handleGachaComplete}
+            skipFlowerPick={gachaSkipFlowerPick}
           />
         )}
 

@@ -1627,18 +1627,7 @@ const BaseLeaves = () => {
 // └─────────────────┴────────────────────────────────────────────────────────┘
 //
 const flower3DConfigs = {
-  // 向日葵 - OBJ 格式模型
-  sunflower: {
-    type: "obj",
-    mtl: "/models/sunflower/10455_Sunflower_v1_max2010_it2.mtl",
-    obj: "/models/sunflower/10455_Sunflower_v1_max2010_it2.obj",
-    scale: 0.019, // 縮放比例
-    position: [0, -2.0, 0], // 往下移 2 單位
-    rotation: [-Math.PI / 2, Math.PI, 0], // X軸旋轉 -90度 + Y軸翻面朝前
-    clipThreshold: 80, // 裁切 Z < 80 的部分（移除長莖）
-    clipAxis: "z",
-    clipDirection: ">",
-  },
+  // 向日葵：OBJ 模型過重導致 WebGL Context Lost，改用程序化渲染
 
   // 玫瑰 - GLB 格式模型
   rose: {
