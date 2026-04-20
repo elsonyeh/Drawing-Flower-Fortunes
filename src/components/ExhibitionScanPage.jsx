@@ -122,29 +122,23 @@ export default function ExhibitionScanPage({ zone, workId, workName, onDraw, onB
             </p>
           )}
 
-          {/* Visit status */}
-          {ready && (
+          {/* New visit confirmation only */}
+          {ready && isNewVisit && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               className="mt-5 inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full"
               style={{
-                background: isNewVisit ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.05)',
-                color: isNewVisit ? '#34d399' : 'rgba(255,255,255,0.3)',
-                border: isNewVisit ? '1px solid rgba(52,211,153,0.22)' : '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(52,211,153,0.1)',
+                color: '#34d399',
+                border: '1px solid rgba(52,211,153,0.22)',
               }}
             >
-              {isNewVisit ? (
-                <>
-                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: 'spring' }}>
-                    ✓
-                  </motion.span>
-                  作品已記錄
-                </>
-              ) : (
-                <span>已拜訪過此作品</span>
-              )}
+              <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: 'spring' }}>
+                ✓
+              </motion.span>
+              作品已記錄
             </motion.div>
           )}
         </motion.div>
