@@ -161,7 +161,39 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-night-900 via-night-800 to-night-700 text-white">
+    <div className="min-h-screen text-white relative">
+      {/* ── 主視覺背景：重現背景.png 的藍灰天空 + 中央暖光 + 底部珊瑚地面 ── */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          background: [
+            /* 中央暖白光暈（月光感） */
+            'radial-gradient(ellipse 90% 55% at 50% 32%, rgba(242,217,208,0.13) 0%, transparent 60%)',
+            /* 底部珊瑚粉地面 */
+            'radial-gradient(ellipse 140% 45% at 50% 105%, rgba(242,126,147,0.30) 0%, transparent 55%)',
+            /* 天空基底：深霧藍 */
+            'linear-gradient(175deg, #0d1020 0%, #141d36 50%, #101628 100%)',
+          ].join(', '),
+        }}
+      />
+      {/* 穀物紋理層（還原主視覺的噪點質感） */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+          opacity: 0.045,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23g)'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '250px 250px',
+        }}
+      />
+      <div className="relative" style={{ zIndex: 1 }}>
       <Suspense fallback={null}>
       <AnimatePresence mode="wait">
         {stage === 'qrScan' && (
@@ -241,6 +273,7 @@ function App() {
       <Suspense fallback={null}>
         <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       </Suspense>
+      </div>
     </div>
   )
 }
