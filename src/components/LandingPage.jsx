@@ -522,7 +522,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
             )}
             <motion.button
               onClick={onOpenCollection}
-              className="px-3 py-1.5 bg-gradient-to-r from-primary-600/80 to-pink-600/80 backdrop-blur-sm rounded-full text-white text-sm font-medium flex items-center gap-1.5 border border-primary-400/30 shadow-lg min-h-[36px]"
+              className="px-3 py-1.5 backdrop-blur-sm rounded-full text-white text-sm font-medium flex items-center gap-1.5 shadow-lg min-h-[36px]"
+              style={{ background: 'linear-gradient(135deg, rgba(242,126,147,0.55), rgba(242,164,136,0.45))', border: '1px solid rgba(242,126,147,0.35)' }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >

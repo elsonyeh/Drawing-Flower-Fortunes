@@ -42,17 +42,20 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-gradient-to-b from-night-900 via-night-800 to-night-700 text-white overflow-y-auto"
+      className="min-h-screen text-white overflow-y-auto"
     >
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-night-900/90 backdrop-blur-md border-b border-primary-500/20">
+      <div className="sticky top-0 z-20 backdrop-blur-md border-b" style={{ background: 'rgba(12,15,30,0.88)', borderColor: 'rgba(242,126,147,0.18)' }}>
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gradient">花語圖鑑</h1>
             <button
               onClick={onClose}
               aria-label="關閉圖鑑"
-              className="p-3 rounded-full bg-night-700/50 hover:bg-night-700 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-3 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.07)' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.13)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
             >
               <span className="text-2xl" aria-hidden="true">×</span>
             </button>
@@ -60,20 +63,20 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="bg-gradient-to-br from-primary-900/40 to-purple-900/40 rounded-lg p-3 text-center">
-              <p className="text-xs text-gray-400">總收集率</p>
-              <p className="text-2xl font-bold text-primary-300">{stats.percentage}%</p>
-              <p className="text-xs text-gray-400">{stats.total}/{stats.totalCards}</p>
+            <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(242,126,147,0.12)', border: '1px solid rgba(242,126,147,0.22)' }}>
+              <p className="text-xs" style={{ color: 'rgba(242,217,208,0.55)' }}>總收集率</p>
+              <p className="text-2xl font-bold" style={{ color: '#F27E93' }}>{stats.percentage}%</p>
+              <p className="text-xs" style={{ color: 'rgba(242,217,208,0.45)' }}>{stats.total}/{stats.totalCards}</p>
             </div>
-            <div className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 rounded-lg p-3 text-center">
-              <p className="text-xs text-gray-400">SSR</p>
-              <p className="text-2xl font-bold text-yellow-300">{stats.ssr}/{stats.totalSSR}</p>
-              <p className="text-xs text-gray-400">稀有</p>
+            <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(242,190,92,0.12)', border: '1px solid rgba(242,190,92,0.22)' }}>
+              <p className="text-xs" style={{ color: 'rgba(242,217,208,0.55)' }}>SSR</p>
+              <p className="text-2xl font-bold" style={{ color: '#F2BE5C' }}>{stats.ssr}/{stats.totalSSR}</p>
+              <p className="text-xs" style={{ color: 'rgba(242,217,208,0.45)' }}>稀有</p>
             </div>
-            <div className="bg-gradient-to-br from-blue-900/40 to-cyan-900/40 rounded-lg p-3 text-center">
-              <p className="text-xs text-gray-400">一般</p>
-              <p className="text-2xl font-bold text-blue-300">{stats.common}/{stats.totalCommon}</p>
-              <p className="text-xs text-gray-400">普通</p>
+            <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(91,123,168,0.15)', border: '1px solid rgba(91,123,168,0.25)' }}>
+              <p className="text-xs" style={{ color: 'rgba(242,217,208,0.55)' }}>一般</p>
+              <p className="text-2xl font-bold" style={{ color: '#a8c4e0' }}>{stats.common}/{stats.totalCommon}</p>
+              <p className="text-xs" style={{ color: 'rgba(242,217,208,0.45)' }}>普通</p>
             </div>
           </div>
 
@@ -127,10 +130,12 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                 key={tab.id}
                 onClick={() => setSelectedTab(tab.id)}
                 className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
-                  selectedTab === tab.id
-                    ? 'bg-gradient-to-r from-primary-500 to-pink-500 text-white'
-                    : 'bg-night-700/50 text-gray-400 hover:bg-night-700'
+                  selectedTab === tab.id ? 'text-white' : 'text-white/40 hover:text-white/70'
                 }`}
+                style={selectedTab === tab.id
+                  ? { background: 'linear-gradient(135deg, rgba(242,126,147,0.35), rgba(242,164,136,0.25))', border: '1px solid rgba(242,126,147,0.35)' }
+                  : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }
+                }
               >
                 {tab.label} ({tab.count})
               </button>
@@ -180,7 +185,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                   ) : (
                     <>
                       {/* Not collected - show silhouette */}
-                      <div className="w-full h-full bg-gradient-to-br from-night-800 to-night-700 flex items-center justify-center border-2 border-night-600 rounded-xl">
+                      <div className="w-full h-full flex items-center justify-center rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
                         <div className="text-center">
                           <div className="text-4xl mb-2 opacity-30">?</div>
                           <p className="text-xs text-gray-500">未收集</p>
@@ -188,7 +193,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                       </div>
 
                       {/* Lock icon */}
-                      <div className="absolute top-2 right-2 w-6 h-6 bg-night-600 rounded-full flex items-center justify-center">
+                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.10)' }}>
                         <span className="text-xs">🔒</span>
                       </div>
                     </>
@@ -220,8 +225,8 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
 
       {/* Tips */}
       <div className="max-w-6xl mx-auto px-4 pb-8">
-        <div className="bg-night-800/50 rounded-lg p-4 border border-primary-500/20">
-          <p className="text-sm text-gray-400 text-center">
+        <div className="rounded-lg p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(242,126,147,0.12)' }}>
+          <p className="text-sm text-center" style={{ color: 'rgba(242,217,208,0.45)' }}>
             💡 點擊卡片翻轉查看花朵 · SSR 卡片機率各 1% · 持續抽取收集完整圖鑑！
           </p>
         </div>

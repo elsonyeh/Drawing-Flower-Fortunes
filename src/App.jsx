@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import LandingPage from './components/LandingPage'
+import LoadingScreen from './components/LoadingScreen'
 import GachaAnimation from './components/GachaAnimation'
 import FortuneResult from './components/FortuneResult'
 const CollectionPage = lazy(() => import('./components/CollectionPage'))
@@ -194,7 +195,7 @@ function App() {
         }}
       />
       <div className="relative" style={{ zIndex: 1 }}>
-      <Suspense fallback={null}>
+      <Suspense fallback={<LoadingScreen />}>
       <AnimatePresence mode="wait">
         {stage === 'qrScan' && (
           <QRScanPage
