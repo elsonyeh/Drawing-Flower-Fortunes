@@ -135,10 +135,7 @@ export default function ExhibitionScanPage({ zone, workId, workName, onDraw, onB
                 border: '1px solid rgba(52,211,153,0.22)',
               }}
             >
-              <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: 'spring' }}>
-                ✓
-              </motion.span>
-              作品已記錄
+              此刻的相遇，已悄悄留下印記
             </motion.div>
           )}
         </motion.div>
