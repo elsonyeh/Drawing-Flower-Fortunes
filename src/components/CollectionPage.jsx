@@ -52,12 +52,15 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
             <button
               onClick={onClose}
               aria-label="關閉圖鑑"
-              className="p-3 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
               style={{ background: 'rgba(255,255,255,0.07)' }}
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.13)'}
               onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
             >
-              <span className="text-2xl" aria-hidden="true">×</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <line x1="2" y1="2" x2="14" y2="14" />
+                <line x1="14" y1="2" x2="2" y2="14" />
+              </svg>
             </button>
           </div>
 
