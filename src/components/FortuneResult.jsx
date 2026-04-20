@@ -899,7 +899,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            {isFromCollection ? '返回圖鑑' : '再抽一次'}
+            {isFromCollection ? '返回圖鑑' : inExhibition ? '回首頁' : '再抽一次'}
           </motion.button>
 
           <motion.button

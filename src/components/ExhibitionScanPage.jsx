@@ -157,12 +157,7 @@ export default function ExhibitionScanPage({ zone, workId, workName, onDraw, onB
                 此刻的相遇，已悄悄留下印記
               </p>
             ) : (
-              <div className="flex flex-col gap-1.5">
-                <p className="text-base font-medium text-white/60">你曾造訪過這件作品</p>
-                <p className="text-sm text-white/30 leading-relaxed">
-                  那份相遇的印記，仍靜靜地留著
-                </p>
-              </div>
+              <p className="text-base font-medium text-white/60">你曾造訪過這件作品</p>
             )}
           </motion.div>
         )}
