@@ -3,31 +3,36 @@ import { useState, useEffect } from 'react'
 import CardBack from './CardBack'
 import FlowerBloom from './FlowerBloom'
 
+// 選牌扇形配置
+const PICK_FAN = [
+  { angle: -28, dx: -88, dy: 22 },
+  { angle: -14, dx: -42, dy: 6 },
+  { angle:   0, dx:   0, dy: 0 },
+  { angle:  14, dx:  42, dy: 6 },
+  { angle:  28, dx:  88, dy: 22 },
+]
+
 const GachaAnimation = ({ flower, onComplete }) => {
-  const [stage, setStage] = useState('flip') // flip -> reveal
+  const [stage, setStage] = useState('pick') // pick -> flip -> reveal
+  const [selectedCard, setSelectedCard] = useState(null)
   const [showFlower, setShowFlower] = useState(false)
   const isSSR = flower?.rarity === 'ssr'
 
+  // 選牌後啟動 flip → reveal → complete 的計時器
   useEffect(() => {
+    if (stage !== 'flip') return
     const timers = []
-
-    // Stage 1: Card flip (2s)
-    timers.push(setTimeout(() => {
-      setStage('reveal')
-    }, 2000))
-
-    // Stage 1.5: Delay flower rendering (500ms after reveal starts)
-    timers.push(setTimeout(() => {
-      setShowFlower(true)
-    }, 2500))
-
-    // Stage 2: Complete (3.5s display time)
-    timers.push(setTimeout(() => {
-      onComplete?.()
-    }, 6000))
-
+    timers.push(setTimeout(() => setStage('reveal'), 2000))
+    timers.push(setTimeout(() => setShowFlower(true), 2500))
+    timers.push(setTimeout(() => onComplete?.(), 6000))
     return () => timers.forEach(clearTimeout)
-  }, [onComplete, isSSR])
+  }, [stage, onComplete])
+
+  const handlePick = (index) => {
+    if (selectedCard !== null) return
+    setSelectedCard(index)
+    setTimeout(() => setStage('flip'), 900)
+  }
 
   return (
     <motion.div
@@ -44,6 +49,106 @@ const GachaAnimation = ({ flower, onComplete }) => {
         transition={{ duration: 1.2, ease: 'easeOut' }}
         style={{ zIndex: 100 }}
       />
+      {/* ── 選牌階段 ── */}
+      {stage === 'pick' && (
+        <motion.div
+          key="pick"
+          className="flex flex-col items-center gap-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <motion.p
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            className="text-white/65 text-sm tracking-[0.25em]"
+          >
+            選擇一張牌，開啟你的花語
+          </motion.p>
+
+          <div className="relative" style={{ width: 320, height: 190 }}>
+            {PICK_FAN.map((cfg, i) => (
+              <motion.div
+                key={i}
+                style={{
+                  position: 'absolute',
+                  width: 82, height: 123,
+                  left: '50%', bottom: 0,
+                  marginLeft: -41,
+                  transformOrigin: '50% 130%',
+                  zIndex: selectedCard === i ? 20 : 5 - Math.abs(i - 2),
+                }}
+                initial={{ rotate: cfg.angle, x: cfg.dx, y: 80, opacity: 0 }}
+                animate={
+                  selectedCard === i
+                    ? { rotate: 0, x: 0, y: -30, scale: 1.18, opacity: 1 }
+                    : selectedCard !== null
+                    ? { rotate: cfg.angle, x: cfg.dx, y: 0, opacity: 0.25, scale: 0.96 }
+                    : { rotate: cfg.angle, x: cfg.dx, y: 0, opacity: 1, scale: 1 }
+                }
+                transition={{
+                  delay: selectedCard !== null ? 0 : 0.7 + i * 0.08,
+                  duration: selectedCard === i ? 0.45 : 0.5,
+                  type: 'spring', stiffness: 180, damping: 18,
+                }}
+              >
+                <motion.button
+                  whileHover={selectedCard === null ? { y: -14, scale: 1.08 } : {}}
+                  whileTap={selectedCard === null ? { scale: 0.95 } : {}}
+                  onClick={() => handlePick(i)}
+                  disabled={selectedCard !== null}
+                  className="w-full h-full rounded-xl relative overflow-hidden focus:outline-none"
+                  style={{
+                    background: 'linear-gradient(145deg, #F27E93, #F2A488)',
+                    boxShadow: selectedCard === i
+                      ? '0 8px 32px rgba(242,126,147,0.75), 0 0 50px rgba(242,190,92,0.45)'
+                      : '0 4px 18px rgba(0,0,0,0.40)',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                  }}
+                >
+                  {/* dot pattern */}
+                  <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <pattern id={`pp-${i}`} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <circle cx="10" cy="10" r="1.2" fill="white"/>
+                        <circle cx="3" cy="3" r="0.8" fill="white"/>
+                        <circle cx="17" cy="3" r="0.8" fill="white"/>
+                        <circle cx="3" cy="17" r="0.8" fill="white"/>
+                        <circle cx="17" cy="17" r="0.8" fill="white"/>
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill={`url(#pp-${i})`}/>
+                  </svg>
+                  <div className="absolute inset-2.5 border border-white/35 rounded-lg pointer-events-none"/>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <motion.span
+                      className="text-white/65 text-3xl select-none"
+                      animate={selectedCard === null ? { scale: [1, 1.07, 1], rotate: [0, 4, -4, 0] } : {}}
+                      transition={{ duration: 3.5, repeat: Infinity, delay: i * 0.55 }}
+                    >✿</motion.span>
+                  </div>
+                  <span className="absolute top-1 left-1 text-white/40 text-[10px] select-none">❀</span>
+                  <span className="absolute top-1 right-1 text-white/40 text-[10px] select-none">❀</span>
+                  <span className="absolute bottom-1 left-1 text-white/40 text-[10px] select-none">❀</span>
+                  <span className="absolute bottom-1 right-1 text-white/40 text-[10px] select-none">❀</span>
+                  {selectedCard === i && (
+                    <motion.div
+                      className="absolute inset-0 rounded-xl pointer-events-none"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0, 0.65, 0.25, 0.65] }}
+                      transition={{ duration: 0.7, repeat: Infinity }}
+                      style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.45), transparent)', filter: 'blur(4px)' }}
+                    />
+                  )}
+                </motion.button>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       {/* SSR special effects */}
       {isSSR && stage === 'reveal' && (
         <>
@@ -97,7 +202,7 @@ const GachaAnimation = ({ flower, onComplete }) => {
         </>
       )}
 
-      {/* Main card animation area */}
+      {/* ── 翻牌 + 揭示階段 ── */}
       {(stage === 'flip' || stage === 'reveal') && (
         <motion.div
           initial={{ rotateY: 0 }}

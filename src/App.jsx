@@ -126,8 +126,7 @@ function App() {
   const handleEmotionComplete = (flower, data) => {
     setSelectedFlower(flower)
     setEmotionData(data)
-    saveCollectedFlower(flower)
-    if (user) saveFlowerToCloud(user.id, flower)
+    // 相由花緣的結果不記錄到圖鑑，僅供當次欣賞
     setStage('gacha')
   }
 

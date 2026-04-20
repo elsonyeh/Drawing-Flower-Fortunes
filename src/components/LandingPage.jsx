@@ -2,22 +2,13 @@ import { motion, useAnimation } from 'framer-motion'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import CollectionIcon from './CollectionIcon'
 
-// 花束配置 - 5種不同的花
-const BOUQUET_FLOWERS = [
-  { id: 0, color: '#ff69b4' },  // 粉紅
-  { id: 1, color: '#F2BE5C' },  // 琥珀
-  { id: 2, color: '#f472b6' },  // 玫瑰粉
-  { id: 3, color: '#F2A488' },  // 蜜桃
-  { id: 4, color: '#fb7185' },  // 珊瑚粉
-]
-
-// 每枝花的位置配置 - 5枝花，莖從花盆土壤開始
-const FLOWER_POSITIONS = [
-  { angle: -25, stemHeight: 115, x: -45, curve1: 10, curve2: -6, mid: 0.52, yOffset: 15 },  // 左外 - 往上移
-  { angle: -10, stemHeight: 130, x: -20, curve1: -5, curve2: 7, mid: 0.48, yOffset: 10 },   // 左內 - 往上移
-  { angle: 0, stemHeight: 140, x: 0, curve1: 4, curve2: -3, mid: 0.5, yOffset: 8 },         // 中央 - 往上移
-  { angle: 12, stemHeight: 145, x: 22, curve1: -5, curve2: 8, mid: 0.47, yOffset: 0 },      // 右內
-  { angle: 28, stemHeight: 125, x: 48, curve1: 10, curve2: -8, mid: 0.53, yOffset: 0 },     // 右外
+// 卡牌扇形配置
+const CARD_FAN = [
+  { angle: -26, dx: -82, dy: 18 },
+  { angle: -13, dx: -38, dy: 5 },
+  { angle:   0, dx:   0, dy: 0 },
+  { angle:  13, dx:  38, dy: 5 },
+  { angle:  26, dx:  82, dy: 18 },
 ]
 
 // 背景飄落花瓣
@@ -46,6 +37,24 @@ const FloatingPetal = ({ delay, x, duration, size, rotation }) => (
     />
   </motion.div>
 )
+
+// 花束配置
+const BOUQUET_FLOWERS = [
+  { id: 0, color: '#ff69b4' },
+  { id: 1, color: '#F2BE5C' },
+  { id: 2, color: '#f472b6' },
+  { id: 3, color: '#F2A488' },
+  { id: 4, color: '#fb7185' },
+]
+
+// 每枝花的位置配置
+const FLOWER_POSITIONS = [
+  { angle: -25, stemHeight: 115, x: -45, curve1: 10, curve2: -6, mid: 0.52, yOffset: 15 },
+  { angle: -10, stemHeight: 130, x: -20, curve1: -5, curve2: 7, mid: 0.48, yOffset: 10 },
+  { angle: 0, stemHeight: 140, x: 0, curve1: 4, curve2: -3, mid: 0.5, yOffset: 8 },
+  { angle: 12, stemHeight: 145, x: 22, curve1: -5, curve2: 8, mid: 0.47, yOffset: 0 },
+  { angle: 28, stemHeight: 125, x: 48, curve1: 10, curve2: -8, mid: 0.53, yOffset: 0 },
+]
 
 // 單朵花組件
 const FlowerHead = ({ color, size, isSelected, isTransforming, isHighlighted }) => {
@@ -413,6 +422,15 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
   const fireflyControls = useAnimation()
   const fireflyPosRef = useRef({ x: 0, y: 0 })
 
+  // 非展覽模式下，已抽過就鎖定花朵
+  const hasDrawn = !exhibitionMode && (() => {
+    try {
+      const stored = localStorage.getItem('collectedFlowers')
+      if (!stored) return false
+      return Object.keys(JSON.parse(stored)).length > 0
+    } catch { return false }
+  })()
+
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
   // 螢幕高度 < 700px（iPhone SE、小型 Android）需要更緊湊的佈局
   const isSmallScreen = typeof window !== 'undefined' && window.innerHeight < 700
@@ -464,7 +482,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
   }, [fireflyTarget, showFirefly, isTransforming, selectedIndex, fireflyControls, getFireflyTarget])
 
   const handleFlowerClick = (index) => {
-    if (isTransforming) return
+    if (isTransforming || hasDrawn) return
     setSelectedIndex(index)
     setIsTransforming(true)
     setTimeout(() => onPetalSelect(), 2800)
@@ -584,7 +602,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           animate={{ opacity: 1, y: 0 }}
           className={`${isSmallScreen ? 'text-sm' : 'text-base md:text-xl'} text-gray-300`}
         >
-          {isTransforming ? '花語顯現中...' : '選擇一枝花，開啟今夜的指引'}
+          {isTransforming ? '花語顯現中...' : hasDrawn ? '今夜的花語已為你綻放' : '選擇一枝花，開啟今夜的指引'}
         </motion.p>
       </motion.div>
 
@@ -659,8 +677,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
         <BambooBasket isMobile={isMobile} isTransforming={isTransforming} />
       </div>
 
-      {/* 提示文字 */}
-      {!isTransforming && (
+      {/* 提示文字：已抽過就隱藏 */}
+      {!isTransforming && !hasDrawn && (
         <div className={`flex flex-col items-center ${isSmallScreen ? 'mt-2' : 'mt-4'} relative z-10`}>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
