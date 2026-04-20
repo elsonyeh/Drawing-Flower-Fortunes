@@ -143,7 +143,7 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
             <div className="absolute inset-0 pointer-events-none">
               {/* Scanning animation — 用 translateY 取代 top，避免 layout thrash */}
               <motion.div
-                className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-purple-400 to-transparent"
+                className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"
                 style={{ top: '20%' }}
                 animate={{ y: ['0%', '300%', '0%'] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
@@ -155,7 +155,7 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
                 'bottom-2 left-2 border-b-2 border-l-2',
                 'bottom-2 right-2 border-b-2 border-r-2',
               ].map((cls, i) => (
-                <div key={i} className={`absolute w-6 h-6 border-purple-400 rounded-sm ${cls}`} />
+                <div key={i} className={`absolute w-6 h-6 border-amber-400 rounded-sm ${cls}`} />
               ))}
             </div>
           )}

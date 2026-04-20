@@ -36,7 +36,7 @@ const FaceScanIcon = ({ size = 48, className = '' }) => (
 )
 
 // 掃描圈角裝飾
-const CornerFrame = ({ w = 280, h = 340, color = '#a78bfa' }) => {
+const CornerFrame = ({ w = 280, h = 340, color = '#F27E93' }) => {
   const c = 28
   return (
     <svg width={w} height={h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
@@ -286,7 +286,7 @@ export default function EmotionScanPage({ onComplete, onBack }) {
             exit={{ opacity: 0, y: -20 }}
           >
             <motion.div
-              className="text-purple-400"
+              style={{ color: '#F2A488' }}
               animate={{ scale: [1, 1.08, 1], opacity: [0.8, 1, 0.8] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
@@ -299,11 +299,11 @@ export default function EmotionScanPage({ onComplete, onBack }) {
               為你推薦最相符的花語。
               <br /><br />
               所有分析在你的裝置上完成，
-              <span className="text-purple-300">不會儲存或上傳任何影像。</span>
+              <span style={{ color: 'rgba(242,164,136,0.85)' }}>不會儲存或上傳任何影像。</span>
             </p>
             <motion.button
               className="mt-2 px-8 py-3 rounded-full font-semibold text-white"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
+              style={{ background: 'linear-gradient(135deg, #F27E93, #F2A488)' }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
               onClick={initCamera}
@@ -329,7 +329,7 @@ export default function EmotionScanPage({ onComplete, onBack }) {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="text-purple-400"
+              style={{ color: '#F27E93' }}
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
             >
@@ -389,11 +389,11 @@ export default function EmotionScanPage({ onComplete, onBack }) {
 
                 {!faceDetected && (
                   <ellipse cx="140" cy="165" rx="98" ry="125"
-                    fill="none" stroke="rgba(167,139,250,0.5)" strokeWidth="1.5" strokeDasharray="6 4" />
+                    fill="none" stroke="rgba(242,126,147,0.45)" strokeWidth="1.5" strokeDasharray="6 4" />
                 )}
                 {faceDetected && (
                   <ellipse cx="140" cy="165" rx="98" ry="125"
-                    fill="none" stroke="#a78bfa" strokeWidth="2" filter="url(#oval-glow)" />
+                    fill="none" stroke="#F27E93" strokeWidth="2" filter="url(#oval-glow)" />
                 )}
 
                 {!faceDetected && (
@@ -413,7 +413,7 @@ export default function EmotionScanPage({ onComplete, onBack }) {
                   </clipPath>
                   <linearGradient id="scan-grad" x1="0" y1="0" x2="1" y2="0">
                     <stop offset="0%" stopColor="transparent" />
-                    <stop offset="50%" stopColor="#a78bfa" stopOpacity="0.7" />
+                    <stop offset="50%" stopColor="#F27E93" stopOpacity="0.7" />
                     <stop offset="100%" stopColor="transparent" />
                   </linearGradient>
                 </defs>
@@ -442,7 +442,7 @@ export default function EmotionScanPage({ onComplete, onBack }) {
                   ].map((line, i) => (
                     <motion.line key={i}
                       {...line}
-                      stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round"
+                      stroke="#F2A488" strokeWidth="1.5" strokeLinecap="round"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: [0, 0.7, 0.3, 0.7] }}
                       transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.15 }}
@@ -453,7 +453,7 @@ export default function EmotionScanPage({ onComplete, onBack }) {
 
               {/* 角框 */}
               <div className="absolute inset-0 pointer-events-none">
-                <CornerFrame w={280} h={340} color={faceDetected ? '#c4b5fd' : '#a78bfa'} />
+                <CornerFrame w={280} h={340} color={faceDetected ? '#F2A488' : '#F27E93'} />
               </div>
             </div>
 
@@ -466,7 +466,7 @@ export default function EmotionScanPage({ onComplete, onBack }) {
               <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
                 <motion.div
                   className="h-full rounded-full"
-                  style={{ background: 'linear-gradient(to right, #7c3aed, #a78bfa)', width: `${progress * 100}%` }}
+                  style={{ background: 'linear-gradient(to right, #F27E93, #F2BE5C)', width: `${progress * 100}%` }}
                   transition={{ ease: 'linear' }}
                 />
               </div>
@@ -571,8 +571,8 @@ export default function EmotionScanPage({ onComplete, onBack }) {
 
             <motion.button
               className="px-10 py-3.5 rounded-full font-bold text-white text-base"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
-              whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(124,58,237,0.5)' }}
+              style={{ background: 'linear-gradient(135deg, #F27E93, #F2A488)' }}
+              whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(242,126,147,0.45)' }}
               whileTap={{ scale: 0.97 }}
               onClick={handleConfirm}
             >
@@ -607,7 +607,7 @@ export default function EmotionScanPage({ onComplete, onBack }) {
               </button>
               <button
                 className="px-6 py-2 rounded-full text-sm text-white font-semibold"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
+                style={{ background: 'linear-gradient(135deg, #F27E93, #F2A488)' }}
                 onClick={handleRetry}
               >
                 重試

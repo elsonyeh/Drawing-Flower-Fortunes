@@ -469,12 +469,13 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                       className={`w-full py-2 sm:py-2.5 rounded-full font-medium shadow-lg text-sm sm:text-base transition-transform hover:scale-105 active:scale-95 ${
                         flippedCard.rarity === 'ssr'
                           ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white'
-                          : 'bg-gradient-to-r from-primary-500 to-pink-500 text-white'
+                          : 'text-white'
                       }`}
                       style={{
+                        background: flippedCard.rarity === 'ssr' ? undefined : 'linear-gradient(135deg, #F27E93, #F2A488)',
                         boxShadow: flippedCard.rarity === 'ssr'
                           ? '0 4px 15px rgba(255, 215, 0, 0.4)'
-                          : `0 4px 15px ${flippedCard.color}60`,
+                          : '0 4px 15px rgba(242,126,147,0.40)',
                       }}
                     >
                       查看完整內容

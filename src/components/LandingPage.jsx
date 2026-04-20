@@ -5,9 +5,9 @@ import CollectionIcon from './CollectionIcon'
 // 花束配置 - 5種不同的花
 const BOUQUET_FLOWERS = [
   { id: 0, color: '#ff69b4' },  // 粉紅
-  { id: 1, color: '#c084fc' },  // 紫色
+  { id: 1, color: '#F2BE5C' },  // 琥珀
   { id: 2, color: '#f472b6' },  // 玫瑰粉
-  { id: 3, color: '#a78bfa' },  // 淡紫
+  { id: 3, color: '#F2A488' },  // 蜜桃
   { id: 4, color: '#fb7185' },  // 珊瑚粉
 ]
 
@@ -263,7 +263,8 @@ const SingleFlower = ({ flower, position, index, isSelected, isTransforming, isH
                 {[0, 1, 2].map(i => (
                   <motion.div
                     key={i}
-                    className="absolute inset-[-12px] rounded-full border-2 border-purple-400 pointer-events-none"
+                    className="absolute inset-[-12px] rounded-full border-2 pointer-events-none"
+                    style={{ borderColor: 'rgba(242,190,92,0.6)' }}
                     initial={{ scale: 1, opacity: 0 }}
                     animate={{ scale: [1, 4.5], opacity: [0.8, 0] }}
                     transition={{ duration: 1.4, delay: i * 0.3 }}

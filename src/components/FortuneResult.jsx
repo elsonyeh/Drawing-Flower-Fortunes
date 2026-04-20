@@ -102,7 +102,7 @@ function generateShareCard(flower, emotionData, flowerImageUrl) {
     const ctx = canvas.getContext('2d')
 
     const isSSR = flower.rarity === 'ssr'
-    const color = flower.color || '#a78bfa'
+    const color = flower.color || '#F27E93'
     const grad1 = flower.gradientColors?.[0] || color
     const grad2 = flower.gradientColors?.[1] || color
     const grad3 = flower.gradientColors?.[2] || color
@@ -389,7 +389,7 @@ function ShareModal({ flower, emotionData, flowerImageUrl, onClose }) {
   }, [shareText])
 
   const isSSR = flower.rarity === 'ssr'
-  const color = flower.color || '#a78bfa'
+  const color = flower.color || '#F27E93'
 
   return (
     <motion.div
@@ -424,7 +424,8 @@ function ShareModal({ flower, emotionData, flowerImageUrl, onClose }) {
             {generating ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <motion.div
-                  className="w-8 h-8 rounded-full border-2 border-purple-400 border-t-transparent"
+                  className="w-8 h-8 rounded-full border-2 border-t-transparent"
+                  style={{ borderColor: 'rgba(242,126,147,0.8) rgba(242,126,147,0.8) rgba(242,126,147,0.8) transparent' }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 />
@@ -442,7 +443,7 @@ function ShareModal({ flower, emotionData, flowerImageUrl, onClose }) {
             onClick={handleNativeShare}
             disabled={generating || sharing}
             className="w-full py-3 rounded-2xl font-semibold text-white flex items-center justify-center gap-2"
-            style={{ background: isSSR ? 'linear-gradient(135deg, #f59e0b, #ef4444)' : `linear-gradient(135deg, #7c3aed, #4f46e5)` }}
+            style={{ background: isSSR ? 'linear-gradient(135deg, #f59e0b, #ef4444)' : `linear-gradient(135deg, #F27E93, #F2A488)` }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -780,7 +781,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           className={`rounded-2xl p-6 mb-6 border ${
             isSSR
               ? 'bg-gradient-to-br from-orange-900/40 to-yellow-900/40 border-yellow-400/40'
-              : 'bg-gradient-to-br from-primary-900/40 to-purple-900/40 border-primary-400/30'
+              : 'bg-gradient-to-br from-primary-900/40 to-night-800/60 border-primary-400/30'
           } backdrop-blur-md`}
         >
           <h2 className={`text-xl font-semibold mb-3 flex items-center ${
@@ -865,9 +866,10 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
         {flower.artwork && !isFromCollection && !inExhibition && (
           <motion.div
             variants={!isFromCollection ? itemVariants : undefined}
-            className="bg-gradient-to-br from-night-800/60 to-night-900/60 backdrop-blur-md rounded-2xl p-6 mb-8 border border-purple-500/30"
+            className="bg-gradient-to-br from-night-800/60 to-night-900/60 backdrop-blur-md rounded-2xl p-6 mb-8 border"
+            style={{ borderColor: 'rgba(91,123,168,0.30)' }}
           >
-            <h2 className="text-xl font-semibold text-purple-300 mb-4 flex items-center">
+            <h2 className="text-xl font-semibold mb-4 flex items-center" style={{ color: 'rgba(91,123,168,0.90)' }}>
               <span className="mr-2">🎨</span>
               前往探索
             </h2>
@@ -891,11 +893,10 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
         >
           <motion.button
             onClick={onReset}
-            className={`px-8 py-4 rounded-full font-medium shadow-lg text-lg ${
-              isSSR
-                ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white'
-                : 'bg-gradient-to-r from-primary-500 to-pink-500 text-white'
-            }`}
+            className="px-8 py-4 rounded-full font-medium shadow-lg text-lg text-white"
+            style={isSSR
+              ? { background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }
+              : { background: 'linear-gradient(135deg, #F27E93, #F2A488)' }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -904,7 +905,8 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
 
           <motion.button
             onClick={handleOpenShare}
-            className="px-8 py-4 bg-night-700/80 text-primary-300 rounded-full font-medium border border-primary-500/30 hover:bg-night-700 transition-colors text-lg flex items-center justify-center gap-2"
+            className="px-8 py-4 bg-night-700/80 rounded-full font-medium transition-colors text-lg flex items-center justify-center gap-2"
+            style={{ color: '#F2A488', border: '1px solid rgba(242,126,147,0.30)' }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
