@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react'
 import { unlockAllFlowers, clearAllFlowers, getCollectionStats } from '../utils/fortuneHelper'
-import { getExhibitionState } from '../utils/exhibitionHelper'
+import { getExhibitionState, clearWorkVisit } from '../utils/exhibitionHelper'
 import { fetchGlobalMode, pushGlobalMode } from '../utils/exhibitionSync'
 import { ZONE_THEME, ARTWORKS } from '../utils/exhibitionConstants'
 
@@ -351,7 +351,10 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
                     {ARTWORKS.filter(a => a.zone === zone).map(art => (
                       <button
                         key={art.id}
-                        onClick={() => onSimulateQRScan({ zone: art.zone, workId: art.id, workName: art.name })}
+                        onClick={() => {
+                          clearWorkVisit(art.id)  // 每次測試都視為新拜訪，確保顯示抽卡按鈕
+                          onSimulateQRScan({ zone: art.zone, workId: art.id, workName: art.name })
+                        }}
                         className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all min-h-[44px] hover:bg-white/10"
                         style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${ZONE_COLOR[zone]}25` }}
                       >

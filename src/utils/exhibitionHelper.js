@@ -61,6 +61,14 @@ export const getDrawTickets = () => {
   return state ? state.tickets : Infinity
 }
 
+// 測試用：從已拜訪清單移除某件作品，讓下次掃描視為新拜訪
+export const clearWorkVisit = (workId) => {
+  const state = getExhibitionState()
+  if (!state) return
+  state.visited = state.visited.filter(id => id !== workId)
+  saveState(state)
+}
+
 export const recordVisit = (workId) => {
   const state = getExhibitionState()
   if (!state) return
