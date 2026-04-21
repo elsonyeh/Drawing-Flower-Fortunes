@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import LandingPage from './components/LandingPage'
 import LoadingScreen from './components/LoadingScreen'
 import GachaAnimation from './components/GachaAnimation'
@@ -56,6 +56,7 @@ function App() {
   const [emotionData, setEmotionData] = useState(null)     // 情緒解籤模式的情緒資料
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [gachaSkipFlowerPick, setGachaSkipFlowerPick] = useState(false)
+  const [gachaTransitionFlash, setGachaTransitionFlash] = useState(false)
 
   const { user } = useAuth()
 
@@ -90,6 +91,8 @@ function App() {
     setSelectedFlower(flower)
     setEmotionData(null)
     setGachaSkipFlowerPick(true)
+    // 在換場前立即啟動白光橋接層，覆蓋 LandingPage 消失到 GachaAnimation 出現的黑幀
+    setGachaTransitionFlash(true)
     setStage('gacha')
 
     // Save to localStorage (always)
@@ -281,6 +284,17 @@ function App() {
         <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       </Suspense>
       </div>
+
+      {/* 換場白光橋接層：覆蓋 LandingPage 瞬間消失到 GachaAnimation 白光接手之間的黑幀 */}
+      {gachaTransitionFlash && (
+        <motion.div
+          style={{ position: 'fixed', inset: 0, background: 'white', zIndex: 500, pointerEvents: 'none' }}
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 1.0 }}
+          onAnimationComplete={() => setGachaTransitionFlash(false)}
+        />
+      )}
     </div>
   )
 }

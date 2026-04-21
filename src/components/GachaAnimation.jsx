@@ -4,6 +4,37 @@ import CardBack from './CardBack'
 import FlowerBloom from './FlowerBloom'
 import { BOUQUET_FLOWERS, FLOWER_POSITIONS, SingleFlower, BambooBasket } from './FlowerBouquet'
 
+// 白光消退橋接用的柔光粒子（靜態預算，與花色無關）
+// 分兩層：大型光暈球 + 細小閃爍星點
+const GLOW_ORBS = Array.from({ length: 12 }, (_, i) => {
+  const angle = (i / 12) * Math.PI * 2
+  const dist  = 60 + (i % 4) * 28
+  return {
+    id: i,
+    dx: Math.cos(angle) * dist,
+    dy: Math.sin(angle) * dist - 40,   // 整體偏上
+    size: 80 + (i % 3) * 40,           // 大：80/120/160px
+    blur: 10 + (i % 3) * 5,            // 輕度模糊，保持可見：10/15/20px
+    delay: i * 0.055,
+    dur: 1.9 + (i % 3) * 0.2,
+    colorIdx: i % 3,                   // 0=白 1=花色 2=金
+  }
+})
+const SPARKLE_POINTS = Array.from({ length: 14 }, (_, i) => {
+  const angle = (i / 14) * Math.PI * 2 + 0.22
+  const dist  = 30 + (i % 5) * 22
+  return {
+    id: i,
+    dx: Math.cos(angle) * dist,
+    dy: Math.sin(angle) * dist - 20,
+    size: 5 + (i % 4) * 3,            // 小：5/8/11/14px
+    blur: 2 + (i % 3),
+    delay: 0.05 + i * 0.04,
+    dur: 1.4 + (i % 3) * 0.25,
+    colorIdx: i % 2,                   // 0=白 1=金
+  }
+})
+
 // 預計算，避免 re-render 時位置變動
 const REVEAL_PARTICLES = Array.from({ length: 32 }, (_, i) => ({
   id: i,
@@ -25,8 +56,11 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
   const [cardPulse, setCardPulse] = useState(false)      // 點擊縮放觸覺回饋
   const [midFlipFlash, setMidFlipFlash] = useState(false) // 翻牌到 90° 時的閃光
   const [preFlowerFlash, setPreFlowerFlash] = useState(false) // 花出現前亮光
+  const [transitionFlash, setTransitionFlash] = useState(false) // 點花後白光從花心擴散
+  const [transitionGlow, setTransitionGlow] = useState(false)  // 白光消退時的柔光粒子橋接
   const isSSR = flower?.rarity === 'ssr'
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+  const flashOriginTop = useRef(isMobile ? '40%' : '38%')      // 白光起點：選花束=花位置，主頁=正中
   const flowerColor = flower?.color ?? '#F27E93'
 
   const onCompleteRef = useRef(onComplete)
@@ -34,6 +68,15 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
 
   const timersRef = useRef([])
   useEffect(() => () => timersRef.current.forEach(clearTimeout), [])
+
+  // 主頁流程（skipFlowerPick=true）：掛載即觸發相同的 flash + glow，蓋住換場空隙
+  useEffect(() => {
+    if (!skipFlowerPick) return
+    flashOriginTop.current = '50%'   // 主頁從正中央爆發
+    setTransitionFlash(true)
+    const t = setTimeout(() => setTransitionGlow(true), 270)
+    return () => clearTimeout(t)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // 12 顆環繞粒子位置（依花色）
   const orbitParticles = useMemo(() => Array.from({ length: 12 }, (_, i) => ({
@@ -49,8 +92,10 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
     if (isFlowerTransforming) return
     setSelectedFlowerIdx(index)
     setIsFlowerTransforming(true)
-    setBurstActive(true)
-    setTimeout(() => setStage('show_card'), 320) // 讓爆發粒子閃一下即切換
+    setBurstActive(true)                                // 立即爆發（不延遲，點擊即回饋）
+    setTransitionFlash(true)                           // 白光從花心立即爆發，消除黑幀
+    setTimeout(() => setTransitionGlow(true), 270)    // 白光擴散中，柔光粒子接棒
+    setTimeout(() => setStage('show_card'), 900)       // 拉長白光停留，讓粒子有時間出現
   }
 
   const handleCardClick = () => {
@@ -66,9 +111,9 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
         setTimeout(() => setMidFlipFlash(false), 2850),
         // 翻牌完成切 reveal（4.5s + 緩衝）
         setTimeout(() => setStage('reveal'), 4700),
-        // 光環先慢後快，花在 3.5s 後出現
-        setTimeout(() => setPreFlowerFlash(true), 7800), // 花出現前 400ms 亮光
-        setTimeout(() => setShowFlower(true), 8200),
+        // 光環先慢後快，花在 2.7s 後出現（縮短 800ms，光圈節奏更緊湊）
+        setTimeout(() => setPreFlowerFlash(true), 7000), // 花出現前 400ms 亮光
+        setTimeout(() => setShowFlower(true), 7400),
         setTimeout(() => onCompleteRef.current?.(), 14000),
       ]
     }, 500)
@@ -122,6 +167,137 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
         style={{ zIndex: 100 }}
       />
 
+      {/* ── burst 層：獨立於 AnimatePresence，隨花完整播完 ── */}
+      {burstActive && (
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 15 }}>
+          {[...Array(22)].map((_, i) => {
+            const angle = (i / 22) * Math.PI * 2
+            const dist = 80 + Math.random() * 70
+            return (
+              <motion.div key={`p-${i}`} className="absolute pointer-events-none rounded-full"
+                style={{
+                  left: '50%', top: isMobile ? '40%' : '38%',
+                  width: 5 + Math.random() * 7, height: 5 + Math.random() * 7,
+                  background: i % 3 === 0 ? burstColor : i % 3 === 1 ? '#F2BE5C' : '#fff',
+                  marginLeft: -4, marginTop: -4,
+                }}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 0 }}
+                animate={{ x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, opacity: 0, scale: 1.5 }}
+                transition={{ duration: 0.75 + Math.random() * 0.45, ease: 'easeOut' }}
+              />
+            )
+          })}
+          {[0, 1, 2].map(i => (
+            <motion.div key={`ring-${i}`} className="absolute pointer-events-none rounded-full"
+              style={{
+                left: '50%', top: isMobile ? '40%' : '38%',
+                width: 60, height: 60, marginLeft: -30, marginTop: -30,
+                border: i === 1 ? '1.5px solid rgba(242,190,92,0.8)' : `2px solid ${burstColor}`,
+              }}
+              initial={{ scale: 0.4, opacity: 0.9 }}
+              animate={{ scale: 4 + i * 1.5, opacity: 0 }}
+              transition={{ duration: 0.9 + i * 0.14, ease: [0.22, 1, 0.36, 1], delay: i * 0.12 }}
+            />
+          ))}
+          <motion.div className="absolute pointer-events-none rounded-full"
+            style={{
+              left: '50%', top: isMobile ? '40%' : '38%',
+              width: 40, height: 40, marginLeft: -20, marginTop: -20,
+              background: `radial-gradient(circle, #fff, ${burstColor}88)`,
+              filter: 'blur(8px)',
+            }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: [0, 3, 0], opacity: [0, 1, 0] }}
+            transition={{ duration: 0.65, ease: 'easeOut' }}
+          />
+        </div>
+      )}
+
+      {/* ── 白光從花心擴散（pick_flower → show_card 橋接 / 主頁換場）── */}
+      {transitionFlash && (
+        <motion.div
+          className="absolute pointer-events-none rounded-full"
+          style={{
+            left: '50%', top: flashOriginTop.current,
+            width: 60, height: 60,
+            marginLeft: -30, marginTop: -30,
+            background: 'white',
+            zIndex: 60,
+          }}
+          initial={{ scale: 1, opacity: 0.95 }}
+          animate={{ scale: 45, opacity: [0.95, 1, 0] }}
+          transition={{ duration: 1.3, times: [0, 0.18, 1], ease: [0.16, 1, 0.3, 1] }}
+        />
+      )}
+
+      {/* ── 柔光粒子橋接（白光消退 → 卡牌出現，z高於白光層讓粒子可見）── */}
+      {transitionGlow && (
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 65 }}>
+          {/* 大光暈球 */}
+          {GLOW_ORBS.map(orb => {
+            const color = orb.colorIdx === 0 ? 'rgba(255,255,255,1)'
+                        : orb.colorIdx === 1 ? `${flowerColor}ee`
+                        : 'rgba(242,190,92,0.95)'
+            return (
+              <motion.div
+                key={`orb-${orb.id}`}
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  left: '50%', top: flashOriginTop.current,
+                  width: orb.size, height: orb.size,
+                  marginLeft: -orb.size / 2, marginTop: -orb.size / 2,
+                  background: `radial-gradient(circle, ${color} 0%, ${color.replace(/[\d.]+\)$/, '0.3)')} 55%, transparent 75%)`,
+                  filter: `blur(${orb.blur}px)`,
+                  mixBlendMode: 'screen',
+                }}
+                initial={{ x: 0, y: 0, opacity: 0, scale: 0.2 }}
+                animate={{
+                  x: orb.dx, y: orb.dy,
+                  opacity: [0, 1, 0.85, 0],
+                  scale:   [0.2, 1.1, 0.95, 0.6],
+                }}
+                transition={{
+                  duration: orb.dur, delay: orb.delay,
+                  ease: [0.22, 1, 0.36, 1],
+                  opacity: { times: [0, 0.15, 0.55, 1] },
+                  scale:   { times: [0, 0.15, 0.55, 1] },
+                }}
+              />
+            )
+          })}
+          {/* 細小閃爍星點 */}
+          {SPARKLE_POINTS.map(sp => {
+            const color = sp.colorIdx === 0 ? '#ffffff' : '#F2BE5C'
+            return (
+              <motion.div
+                key={`sp-${sp.id}`}
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  left: '50%', top: flashOriginTop.current,
+                  width: sp.size, height: sp.size,
+                  marginLeft: -sp.size / 2, marginTop: -sp.size / 2,
+                  background: color,
+                  filter: `blur(${sp.blur}px)`,
+                  boxShadow: `0 0 ${sp.size * 2}px ${sp.size}px ${color}`,
+                }}
+                initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
+                animate={{
+                  x: sp.dx, y: sp.dy,
+                  opacity: [0, 1, 0.7, 0],
+                  scale:   [0, 1.4, 1, 0.4],
+                }}
+                transition={{
+                  duration: sp.dur, delay: sp.delay,
+                  ease: [0.22, 1, 0.36, 1],
+                  opacity: { times: [0, 0.12, 0.5, 1] },
+                  scale:   { times: [0, 0.12, 0.5, 1] },
+                }}
+              />
+            )
+          })}
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
         {/* ── 花盆選花階段 ── */}
         {stage === 'pick_flower' && (
@@ -164,52 +340,6 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
               </div>
               <BambooBasket isMobile={isMobile} isTransforming={isFlowerTransforming} />
             </div>
-
-            {/* 點花爆發特效 */}
-            {burstActive && (
-              <>
-                {[...Array(22)].map((_, i) => {
-                  const angle = (i / 22) * Math.PI * 2
-                  const dist = 80 + Math.random() * 70
-                  return (
-                    <motion.div key={`p-${i}`} className="absolute pointer-events-none rounded-full"
-                      style={{
-                        left: '50%', top: isMobile ? '38%' : '36%',
-                        width: 5 + Math.random() * 7, height: 5 + Math.random() * 7,
-                        background: i % 3 === 0 ? burstColor : i % 3 === 1 ? '#F2BE5C' : '#fff',
-                        marginLeft: -4, marginTop: -4,
-                      }}
-                      initial={{ x: 0, y: 0, opacity: 1, scale: 0 }}
-                      animate={{ x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, opacity: 0, scale: 1.5 }}
-                      transition={{ duration: 0.7 + Math.random() * 0.4, ease: 'easeOut' }}
-                    />
-                  )
-                })}
-                {[0, 1, 2].map(i => (
-                  <motion.div key={`ring-${i}`} className="absolute pointer-events-none rounded-full"
-                    style={{
-                      left: '50%', top: isMobile ? '38%' : '36%',
-                      width: 60, height: 60, marginLeft: -30, marginTop: -30,
-                      border: i === 1 ? '1.5px solid rgba(242,190,92,0.8)' : `2px solid ${burstColor}`,
-                    }}
-                    initial={{ scale: 0.4, opacity: 0.9 }}
-                    animate={{ scale: 4 + i * 1.5, opacity: 0 }}
-                    transition={{ duration: 0.85 + i * 0.15, ease: 'easeOut', delay: i * 0.12 }}
-                  />
-                ))}
-                <motion.div className="absolute pointer-events-none rounded-full"
-                  style={{
-                    left: '50%', top: isMobile ? '38%' : '36%',
-                    width: 40, height: 40, marginLeft: -20, marginTop: -20,
-                    background: `radial-gradient(circle, #fff, ${burstColor}88)`,
-                    filter: 'blur(8px)',
-                  }}
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: [0, 3, 0], opacity: [0, 1, 0] }}
-                  transition={{ duration: 0.7, ease: 'easeOut' }}
-                />
-              </>
-            )}
           </motion.div>
         )}
 
@@ -219,11 +349,11 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
             key="card_area"
             className="flex flex-col items-center gap-5 w-full relative"
             style={{ zIndex: 2 }}
-            initial={{ opacity: 0, y: 110, scale: 0.65, rotateZ: -7 }}
-            animate={{ opacity: 1, y: 0, scale: 1, rotateZ: 0 }}
+            initial={{ opacity: 0, y: 18, scale: 0.82 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{
-              type: 'spring', stiffness: 60, damping: 11,
-              opacity: { duration: 0.5, ease: 'easeOut' },
+              type: 'spring', stiffness: 90, damping: 14,
+              opacity: { duration: 0.35, ease: 'easeOut' },
             }}
           >
             {/* 提示文字 */}
@@ -588,22 +718,23 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
             {/* reveal：光環三段加速——慢（pulse 1）→ 中（pulse 2）→ 快（pulse 3 花出現前） */}
             {stage === 'reveal' && (() => {
               // [delay, duration, borderColor, borderWidth, maxScale]
+              // 整體節奏比原版快 ~22%，配合 showFlower 提前至 2700ms
               const rings = [
                 // Pulse 1 — 慢（舒展）
-                [0.0,  2.2, flowerColor, 2, 3.8],
-                [0.35, 2.2, '#F2BE5C',  1, 4.2],
-                [0.7,  2.2, flowerColor, 1, 3.6],
-                [1.05, 2.2, '#F2BE5C',  2, 4.0],
+                [0.0,  1.7, flowerColor, 2, 3.8],
+                [0.27, 1.7, '#F2BE5C',  1, 4.2],
+                [0.54, 1.7, flowerColor, 1, 3.6],
+                [0.81, 1.7, '#F2BE5C',  2, 4.0],
                 // Pulse 2 — 中
-                [1.6,  1.2, flowerColor, 2, 3.8],
-                [1.82, 1.2, '#F2BE5C',  1, 4.2],
-                [2.04, 1.2, flowerColor, 1, 3.6],
-                [2.26, 1.2, '#F2BE5C',  2, 4.0],
+                [1.24, 0.94, flowerColor, 2, 3.8],
+                [1.41, 0.94, '#F2BE5C',  1, 4.2],
+                [1.59, 0.94, flowerColor, 1, 3.6],
+                [1.76, 0.94, '#F2BE5C',  2, 4.0],
                 // Pulse 3 — 快（花即將出現）
-                [2.8,  0.6, flowerColor, 2, 4.0],
-                [2.94, 0.6, '#fff',      1, 4.5],
-                [3.08, 0.6, flowerColor, 2, 4.2],
-                [3.22, 0.6, '#F2BE5C',  1, 4.8],
+                [2.18, 0.47, flowerColor, 2, 4.0],
+                [2.29, 0.47, '#fff',      1, 4.5],
+                [2.40, 0.47, flowerColor, 2, 4.2],
+                [2.51, 0.47, '#F2BE5C',  1, 4.8],
               ]
               return (
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center" style={{ zIndex: 1 }}>
