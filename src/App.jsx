@@ -275,6 +275,8 @@ function App() {
         {stage === 'admin' && (
           <AdminPage
             key="admin"
+            onSimulateQRScan={handleQRScanSuccess}
+            onDirectDraw={handleExhibitionDraw}
           />
         )}
       </AnimatePresence>
