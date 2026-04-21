@@ -14,7 +14,7 @@ useGLTF.setDecoderPath('/draco/')
 
 // 模型路徑對照表
 const MODEL_PATHS = {
-  sunflower: '/models/sunflower/sunflower.glb',
+  // sunflower 使用 OBJ 格式，不走 useGLTF，不在此預載入
   rose: '/models/rose/rose.glb',
   sakura: '/models/sakura/sakura.glb',
   lavender: '/models/lavender/lavender.glb',

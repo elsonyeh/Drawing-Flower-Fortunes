@@ -1,7 +1,18 @@
 /* eslint-disable react/no-unknown-property */
-import { useRef, useMemo, Suspense, useEffect } from "react";
+import { useRef, useMemo, Suspense, useEffect, Component } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, useProgress, Html } from "@react-three/drei";
+
+// ============ ErrorBoundary：攔截 3D 模型載入 / 渲染的任何錯誤 ============
+class ModelErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { hasError: false }; }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(err) { console.warn('[FlowerBloom] 3D model error:', err?.message ?? err); }
+  render() {
+    if (this.state.hasError) return this.props.fallback ?? null;
+    return this.props.children;
+  }
+}
 import * as THREE from "three";
 
 // Draco decoder 統一指向本地（與 main.jsx 一致）
@@ -53,15 +64,19 @@ const preloadAllModels = () => {
   queue.forEach((flower) => {
     const modelPath = MODEL_PATHS[flower.model];
     if (modelPath && !loadedModels.has(modelPath)) {
-      useGLTF.preload(modelPath, true);
+      const modelConfig = flower3DConfigs[flower.model];
+      const useDraco = modelConfig?.useDraco !== false;
+      useGLTF.preload(modelPath, useDraco);
       loadedModels.add(modelPath);
     }
   });
 
   // 載入其他還沒載入的模型
-  Object.values(MODEL_PATHS).forEach((path) => {
+  Object.entries(MODEL_PATHS).forEach(([modelName, path]) => {
     if (!loadedModels.has(path)) {
-      useGLTF.preload(path, true);
+      const modelConfig = flower3DConfigs[modelName];
+      const useDraco = modelConfig?.useDraco !== false;
+      useGLTF.preload(path, useDraco);
     }
   });
 };
@@ -1632,13 +1647,17 @@ const BaseLeaves = () => {
 // └─────────────────┴────────────────────────────────────────────────────────┘
 //
 const flower3DConfigs = {
-  // 向日葵 - OBJ 格式（已透過 fetch 預熱 HTTP 快取，建議日後轉 GLB）
+  // 向日葵 - OBJ 原始模型
   sunflower: {
-    type: "glb",
-    glb: "/models/sunflower/sunflower.glb",
+    type: "obj",
+    mtl: "/models/sunflower/10455_Sunflower_v1_max2010_it2.mtl",
+    obj: "/models/sunflower/10455_Sunflower_v1_max2010_it2.obj",
     scale: 0.019,
     position: [0, -2.0, 0],
-    rotation: [-Math.PI / 2, Math.PI, 0],
+    rotation: [-Math.PI / 2, 0, 0],
+    clipThreshold: 80,
+    clipAxis: "z",
+    clipDirection: ">",
   },
 
   // 玫瑰 - GLB 格式模型
@@ -1833,11 +1852,21 @@ const flower3DConfigs = {
 const FlowerGLBModel = ({ modelType }) => {
   const groupRef = useRef();
   const config = flower3DConfigs[modelType];
-  // 第二個參數 true 啟用 Draco 解碼（支援壓縮的 GLB）
-  const { scene } = useGLTF(config.glb, true);
+  // useDraco：預設 true，明確設 false 的模型（如 sunflower）跳過 Draco decoder
+  const { scene } = useGLTF(config.glb, config.useDraco !== false);
 
   const clonedScene = useMemo(() => {
-    const clone = scene.clone(true); // 深度克隆
+    const clone = scene.clone(true);
+
+    // ── 關鍵：scene.clone(true) 只做淺複製，BufferGeometry 仍是共用參考。
+    // 若後續修改 geometry（如 setIndex），會直接污染 useGLTF cache 裡的原始場景。
+    // 先把每個 mesh 的 geometry 獨立深複製，確保 cache 永遠不受影響。
+    clone.traverse((child) => {
+      if (child.isMesh && child.geometry) {
+        child.geometry = child.geometry.clone();
+      }
+    });
+
     const toRemove = [];
 
     clone.traverse((child) => {
@@ -1920,6 +1949,37 @@ const FlowerGLBModel = ({ modelType }) => {
     // 移除被過濾的 mesh
     toRemove.forEach((obj) => obj.parent?.remove(obj));
 
+    // 幾何裁切（與 FlowerOBJModel 相同邏輯，支援 GLB）
+    const { clipThreshold, clipAxis, clipDirection } = config;
+    if (clipThreshold !== undefined && clipAxis && clipDirection) {
+      clone.traverse((child) => {
+        if (!child.isMesh || !child.geometry) return;
+        const geo = child.geometry;
+        const pos = geo.attributes.position;
+        if (!pos) return;
+
+        const getVal = (i, axis) => {
+          if (axis === 'x') return pos.getX(i);
+          if (axis === 'y') return pos.getY(i);
+          return pos.getZ(i);
+        };
+        const keep = (v) => clipDirection === '>' ? v > clipThreshold : v < clipThreshold;
+
+        if (geo.index) {
+          const idx = Array.from(geo.index.array);
+          const newIdx = [];
+          for (let i = 0; i < idx.length; i += 3) {
+            if (keep(getVal(idx[i], clipAxis)) &&
+                keep(getVal(idx[i + 1], clipAxis)) &&
+                keep(getVal(idx[i + 2], clipAxis))) {
+              newIdx.push(idx[i], idx[i + 1], idx[i + 2]);
+            }
+          }
+          geo.setIndex(newIdx);
+        }
+      });
+    }
+
     return clone;
   }, [
     scene,
@@ -1928,6 +1988,9 @@ const FlowerGLBModel = ({ modelType }) => {
     config.forceOpaque,
     config.stemColor,
     config.overrideAllColors,
+    config.clipThreshold,
+    config.clipAxis,
+    config.clipDirection,
   ]);
 
   useFrame((state) => {
@@ -2419,9 +2482,11 @@ const CompleteFlower = ({ flower, config }) => {
   // 有 3D 模型的花朵
   if (flower3DConfigs[petalType]) {
     return (
-      <Suspense fallback={<FlowerSkeleton />}>
-        <Flower3DModel modelType={petalType} />
-      </Suspense>
+      <ModelErrorBoundary fallback={<FlowerSkeleton />}>
+        <Suspense fallback={<FlowerSkeleton />}>
+          <Flower3DModel modelType={petalType} />
+        </Suspense>
+      </ModelErrorBoundary>
     );
   }
 
