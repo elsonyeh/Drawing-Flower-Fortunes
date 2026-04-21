@@ -90,8 +90,8 @@ function App() {
 
     setSelectedFlower(flower)
     setEmotionData(null)
-    setGachaSkipFlowerPick(true)
-    // 在換場前立即啟動白光橋接層，覆蓋 LandingPage 消失到 GachaAnimation 出現的黑幀
+    setGachaSkipFlowerPick(false)  // 主頁改為與 QR 掃描相同體驗：進入 GachaAnimation 選花環節
+    // 啟動白光橋接層，覆蓋 LandingPage 消失到 GachaAnimation 出現的黑幀
     setGachaTransitionFlash(true)
     setStage('gacha')
 
@@ -291,7 +291,7 @@ function App() {
           style={{ position: 'fixed', inset: 0, background: 'white', zIndex: 500, pointerEvents: 'none' }}
           initial={{ opacity: 1 }}
           animate={{ opacity: 0 }}
-          transition={{ duration: 1.0 }}
+          transition={{ duration: 0.35 }}
           onAnimationComplete={() => setGachaTransitionFlash(false)}
         />
       )}

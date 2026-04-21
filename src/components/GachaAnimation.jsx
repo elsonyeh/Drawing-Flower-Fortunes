@@ -74,7 +74,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
     if (!skipFlowerPick) return
     flashOriginTop.current = '50%'   // 主頁從正中央爆發
     setTransitionFlash(true)
-    const t = setTimeout(() => setTransitionGlow(true), 270)
+    const t = setTimeout(() => setTransitionGlow(true), 580)
     return () => clearTimeout(t)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -94,8 +94,8 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
     setIsFlowerTransforming(true)
     setBurstActive(true)                                // 立即爆發（不延遲，點擊即回饋）
     setTransitionFlash(true)                           // 白光從花心立即爆發，消除黑幀
-    setTimeout(() => setTransitionGlow(true), 270)    // 白光擴散中，柔光粒子接棒
-    setTimeout(() => setStage('show_card'), 900)       // 拉長白光停留，讓粒子有時間出現
+    setTimeout(() => setTransitionGlow(true), 580)    // +0.2s：白光擴散中，柔光粒子接棒
+    setTimeout(() => setStage('show_card'), 1250)      // +0.2s：白光停留稍長再切卡牌
   }
 
   const handleCardClick = () => {
@@ -111,9 +111,9 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
         setTimeout(() => setMidFlipFlash(false), 2850),
         // 翻牌完成切 reveal（4.5s + 緩衝）
         setTimeout(() => setStage('reveal'), 4700),
-        // 光環先慢後快，花在 2.7s 後出現（縮短 800ms，光圈節奏更緊湊）
-        setTimeout(() => setPreFlowerFlash(true), 7000), // 花出現前 400ms 亮光
-        setTimeout(() => setShowFlower(true), 7400),
+        // 光環先慢後快，花在 3.1s 後出現（節奏稍放慢）
+        setTimeout(() => setPreFlowerFlash(true), 7400), // 花出現前 400ms 亮光
+        setTimeout(() => setShowFlower(true), 7800),
         setTimeout(() => onCompleteRef.current?.(), 14000),
       ]
     }, 500)
@@ -226,7 +226,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
           }}
           initial={{ scale: 1, opacity: 0.95 }}
           animate={{ scale: 45, opacity: [0.95, 1, 0] }}
-          transition={{ duration: 1.3, times: [0, 0.18, 1], ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1.8, times: [0, 0.13, 1], ease: [0.16, 1, 0.3, 1] }}
         />
       )}
 
@@ -312,20 +312,73 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
           >
             <motion.p
               initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="text-white/65 text-sm tracking-[0.25em]"
+              animate={{ opacity: [0, 0.9, 0.55, 0.9], y: 0 }}
+              transition={{ delay: 0.8, duration: 2.2, repeat: Infinity, times: [0, 0.15, 0.5, 1] }}
+              className="text-sm tracking-[0.25em]"
+              style={{ color: 'rgba(242,190,92,0.9)', textShadow: '0 0 12px rgba(242,190,92,0.6)' }}
             >
-              點擊一枝花，開啟你的花語
+              ✦ 點擊一枝花，開啟你的花語 ✦
             </motion.p>
 
             <div
               className="relative flex flex-col items-center"
               style={{ width: isMobile ? 260 : 320, height: isMobile ? 280 : 350 }}
             >
+              {/* 花束底部暖光光暈（引導用戶點擊） */}
+              {!isFlowerTransforming && (
+                <motion.div
+                  className="absolute pointer-events-none"
+                  style={{
+                    bottom: isMobile ? 30 : 40,
+                    left: '50%', transform: 'translateX(-50%)',
+                    width: isMobile ? 200 : 260, height: isMobile ? 120 : 150,
+                    background: `radial-gradient(ellipse 70% 55% at 50% 80%, rgba(242,190,92,0.45) 0%, rgba(242,126,147,0.25) 45%, transparent 75%)`,
+                    filter: 'blur(14px)',
+                    zIndex: 0,
+                  }}
+                  animate={{ opacity: [0.5, 1, 0.5], scale: [0.96, 1.04, 0.96] }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              )}
+
+              {/* 浮動星點（提示可互動） */}
+              {!isFlowerTransforming && [
+                { x: -70, y: -60, size: 6, delay: 0.0, dur: 2.8 },
+                { x:  55, y: -80, size: 4, delay: 0.7, dur: 3.2 },
+                { x: -40, y: -30, size: 5, delay: 1.4, dur: 2.6 },
+                { x:  80, y: -45, size: 4, delay: 0.3, dur: 3.5 },
+                { x:   0, y: -95, size: 6, delay: 1.0, dur: 2.9 },
+                { x: -85, y: -20, size: 3, delay: 1.8, dur: 3.1 },
+                { x:  65, y: -15, size: 5, delay: 0.5, dur: 2.7 },
+              ].map((sp, i) => (
+                <motion.div
+                  key={`hint-sp-${i}`}
+                  className="absolute pointer-events-none rounded-full"
+                  style={{
+                    left: '50%', bottom: isMobile ? 70 : 90,
+                    width: sp.size, height: sp.size,
+                    marginLeft: -sp.size / 2,
+                    background: i % 2 === 0 ? '#F2BE5C' : '#fff',
+                    boxShadow: `0 0 ${sp.size * 2}px ${sp.size}px ${i % 2 === 0 ? 'rgba(242,190,92,0.8)' : 'rgba(255,255,255,0.7)'}`,
+                    zIndex: 1,
+                  }}
+                  animate={{
+                    x: [0, sp.x * 0.3, sp.x],
+                    y: [0, sp.y * 0.5, sp.y],
+                    opacity: [0, 0.9, 0],
+                    scale: [0, 1.3, 0.5],
+                  }}
+                  transition={{
+                    duration: sp.dur, delay: sp.delay,
+                    repeat: Infinity, repeatDelay: 0.4,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                />
+              ))}
+
               <div
                 className="relative flex items-end justify-center"
-                style={{ width: '100%', height: isMobile ? 170 : 215, marginBottom: isMobile ? -25 : -35 }}
+                style={{ width: '100%', height: isMobile ? 170 : 215, marginBottom: isMobile ? -25 : -35, zIndex: 2 }}
               >
                 {BOUQUET_FLOWERS.map((f, index) => (
                   <SingleFlower
@@ -718,23 +771,23 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
             {/* reveal：光環三段加速——慢（pulse 1）→ 中（pulse 2）→ 快（pulse 3 花出現前） */}
             {stage === 'reveal' && (() => {
               // [delay, duration, borderColor, borderWidth, maxScale]
-              // 整體節奏比原版快 ~22%，配合 showFlower 提前至 2700ms
+              // 節奏介於原版（-22%）與再慢一點之間，配合 showFlower 在 3100ms
               const rings = [
                 // Pulse 1 — 慢（舒展）
-                [0.0,  1.7, flowerColor, 2, 3.8],
-                [0.27, 1.7, '#F2BE5C',  1, 4.2],
-                [0.54, 1.7, flowerColor, 1, 3.6],
-                [0.81, 1.7, '#F2BE5C',  2, 4.0],
+                [0.0,  1.85, flowerColor, 2, 3.8],
+                [0.30, 1.85, '#F2BE5C',  1, 4.2],
+                [0.60, 1.85, flowerColor, 1, 3.6],
+                [0.90, 1.85, '#F2BE5C',  2, 4.0],
                 // Pulse 2 — 中
-                [1.24, 0.94, flowerColor, 2, 3.8],
-                [1.41, 0.94, '#F2BE5C',  1, 4.2],
-                [1.59, 0.94, flowerColor, 1, 3.6],
-                [1.76, 0.94, '#F2BE5C',  2, 4.0],
+                [1.38, 1.05, flowerColor, 2, 3.8],
+                [1.57, 1.05, '#F2BE5C',  1, 4.2],
+                [1.76, 1.05, flowerColor, 1, 3.6],
+                [1.95, 1.05, '#F2BE5C',  2, 4.0],
                 // Pulse 3 — 快（花即將出現）
-                [2.18, 0.47, flowerColor, 2, 4.0],
-                [2.29, 0.47, '#fff',      1, 4.5],
-                [2.40, 0.47, flowerColor, 2, 4.2],
-                [2.51, 0.47, '#F2BE5C',  1, 4.8],
+                [2.42, 0.52, flowerColor, 2, 4.0],
+                [2.55, 0.52, '#fff',      1, 4.5],
+                [2.68, 0.52, flowerColor, 2, 4.2],
+                [2.81, 0.52, '#F2BE5C',  1, 4.8],
               ]
               return (
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center" style={{ zIndex: 1 }}>

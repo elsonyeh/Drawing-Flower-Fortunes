@@ -105,7 +105,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
     if (isTransforming || hasDrawn) return
     setSelectedIndex(index)
     setIsTransforming(true)
-    setTimeout(() => onPetalSelect(), 2800)
+    // 立即切換到 GachaAnimation 選花環節，讓 B1/B2（爆發粒子＋白光）在 GachaAnimation 內原生執行
+    onPetalSelect()
   }
 
   return (
@@ -226,25 +227,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
         </motion.p>
       </motion.div>
 
-      {/* 背景遮罩 */}
-      {isTransforming && (
-        <>
-          <motion.div
-            className="fixed inset-0 bg-black pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.7, 0.7, 0] }}
-            transition={{ duration: 2.8, times: [0, 0.2, 0.65, 1] }}
-            style={{ zIndex: 5 }}
-          />
-          <motion.div
-            className="fixed inset-0 bg-white pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0, 0, 0.5, 1] }}
-            transition={{ duration: 2.8, times: [0, 0.55, 0.65, 0.85, 1] }}
-            style={{ zIndex: 15 }}
-          />
-        </>
-      )}
+      {/* 背景遮罩已移除：換場效果交由 GachaAnimation 的 transitionFlash/transitionGlow 處理 */}
 
       {/* 花束區域 */}
       <div
