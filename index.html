@@ -35,28 +35,68 @@
         pointer-events: none;
       }
 
-      .loading-flower-icon {
-        font-size: 3.5rem;
-        animation: float 2.8s ease-in-out infinite;
-        filter: drop-shadow(0 0 16px rgba(242, 126, 147, 0.60));
+      /* 外層：光暈氛圍，不裁切 */
+      .loading-logo-glow {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .loading-logo-glow::before {
+        content: '';
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 180%; height: 180%;
+        border-radius: 50%;
+        background: radial-gradient(ellipse at center,
+          rgba(242, 190, 92, 0.48) 0%,
+          rgba(242, 126, 147, 0.18) 42%,
+          transparent 68%
+        );
+        transform: translate(-50%, -50%) scale(0.82);
+        animation: auraGlow 3s ease-in-out infinite;
+        pointer-events: none;
+      }
+
+      .loading-event-logo {
+        width: 200px;
+        max-width: 55vw;
+        height: auto;
+        display: block;
+        object-fit: contain;
         user-select: none;
+        pointer-events: none;
+        animation: fadeBreath 3.2s ease-in-out infinite;
       }
 
-      .loading-title {
-        margin-top: 1rem;
-        color: rgba(242, 217, 208, 0.92);
+      @keyframes auraGlow {
+        0%, 100% { opacity: 0.45; transform: translate(-50%, -50%) scale(0.80); }
+        50%       { opacity: 0.90; transform: translate(-50%, -50%) scale(1.08); }
+      }
+
+      @keyframes fadeBreath {
+        0%, 100% { opacity: 0.78; }
+        50%       { opacity: 1; }
+      }
+
+      .loading-event-name {
+        margin-top: 1.4rem;
+        color: rgba(242, 217, 208, 0.94);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-size: 1.75rem;
-        font-weight: 300;
+        font-size: 1.35rem;
+        font-weight: 500;
+        letter-spacing: 4px;
+        text-shadow: 0 0 20px rgba(242, 190, 92, 0.30);
+      }
+
+      .loading-site-name {
+        margin-top: 0.45rem;
+        color: rgba(242, 210, 190, 0.82);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 0.95rem;
+        font-weight: 400;
         letter-spacing: 6px;
-      }
-
-      .loading-subtitle {
-        margin-top: 0.3rem;
-        color: rgba(242, 164, 136, 0.65);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-size: 0.78rem;
-        letter-spacing: 3px;
       }
 
       .loading-bar-track {
@@ -85,10 +125,6 @@
         letter-spacing: 1px;
       }
 
-      @keyframes float {
-        0%, 100% { transform: translateY(0) rotate(-6deg); }
-        50% { transform: translateY(-10px) rotate(6deg); }
-      }
     </style>
   </head>
   <body>
@@ -168,9 +204,11 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
     -->
     <!-- 載入畫面 -->
     <div id="loading-screen">
-      <div class="loading-flower-icon">🌸</div>
-      <p class="loading-title">埕花</p>
-      <p class="loading-subtitle">花語解籤</p>
+      <div class="loading-logo-glow">
+        <img src="/assets/huabong-logo.png" alt="花轟" class="loading-event-logo" />
+      </div>
+      <p class="loading-event-name">2026 鹽夏不夜埕</p>
+      <p class="loading-site-name">埕　花</p>
       <div class="loading-bar-track">
         <div id="loading-bar" class="loading-bar-fill"></div>
       </div>

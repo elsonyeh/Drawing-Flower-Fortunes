@@ -133,8 +133,21 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2"
           style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}
         >
-          {/* 左側：空白佔位 */}
-          <div />
+          {/* 左側：logo + 活動名稱 */}
+          <div className="flex items-center gap-2">
+            <img
+              src="/assets/yanxia-logo.png"
+              alt="鹽夏不夜埕"
+              className="h-7 w-auto object-contain pointer-events-none select-none"
+              style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 4px rgba(255,255,255,0.4))' }}
+            />
+            <span
+              className="text-xs font-medium tracking-wide whitespace-nowrap"
+              style={{ color: 'rgba(255,255,255,0.85)', textShadow: '0 0 8px rgba(242,190,92,0.5)' }}
+            >
+              2026 鹽夏不夜埕-花轟
+            </span>
+          </div>
 
           {/* 右側：登入 + 圖鑑 */}
           <div className="flex items-center gap-2">
@@ -213,10 +226,6 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
             textShadow: '0 0 14px rgba(242,126,147,0.45), 0 0 32px rgba(242,190,92,0.20)',
           }}
         >埕花</h1>
-        <p
-          className={`${isSmallScreen ? 'text-base' : 'text-lg md:text-2xl'} ${isSmallScreen ? 'mb-0.5' : 'mb-1 md:mb-2'}`}
-          style={{ color: 'rgba(242,190,92,0.75)' }}
-        >鹽夏不夜埕</p>
         <motion.p
           key={isTransforming ? 't' : 's'}
           initial={{ opacity: 0, y: 10 }}

@@ -44,7 +44,7 @@ export const FlowerHead = ({ color, size, isSelected, isTransforming, isHighligh
                 ? { background: color, boxShadow: '0 0 12px rgba(251,191,36,0.7)' }
                 : { background: color, boxShadow: '0 3px 8px rgba(0,0,0,0.3)' }
             }
-            transition={{ duration: isTransforming ? 2.8 : 0.5, repeat: isSelected && !isTransforming ? Infinity : 0 }}
+            transition={{ duration: isTransforming ? 0.2 : 0.5, repeat: isSelected && !isTransforming ? Infinity : 0 }}
           />
         )
       })}
@@ -57,12 +57,12 @@ export const FlowerHead = ({ color, size, isSelected, isTransforming, isHighligh
         }}
         animate={
           isTransforming && isSelected
-            ? { background: ['#ffd700', '#fff'], scale: [1, 1.5, 2], opacity: [1, 1, 0] }
+            ? { background: ['#ffd700', '#fff'], scale: [1, 2, 3], opacity: [1, 1, 0] }
             : isSelected
             ? { background: '#ffd700', boxShadow: '0 0 12px #ffd700', scale: [1, 1.15, 1] }
             : { background: 'radial-gradient(circle, #ffd700, #f59e0b)', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }
         }
-        transition={{ duration: isTransforming ? 2.8 : 0.5, repeat: isSelected && !isTransforming ? Infinity : 0 }}
+        transition={{ duration: isTransforming ? 0.2 : 0.5, repeat: isSelected && !isTransforming ? Infinity : 0 }}
       />
     </div>
   )
@@ -87,16 +87,16 @@ export const SingleFlower = ({ flower, position, index, isSelected, isTransformi
       animate={{
         x: isMobile ? position.x * 0.7 : position.x,
         rotate: isTransforming && isSelected ? 0 : position.angle,
-        scale: 1,
+        scale: isTransforming && !isSelected ? 0.85 : 1,
         opacity: isTransforming ? (isSelected ? 1 : 0) : 1,
       }}
-      transition={{ delay: isTransforming ? 0 : index * 0.06, duration: 0.6, type: 'spring', stiffness: 150 }}
+      transition={{ delay: isTransforming ? 0 : index * 0.06, duration: isTransforming ? 0.15 : 0.6, type: 'spring', stiffness: 150 }}
     >
       <motion.div
         className="relative"
         style={{ width: 60, height: stemHeight, marginLeft: -30 }}
-        animate={{ opacity: isTransforming && isSelected ? [1, 1, 0] : 1 }}
-        transition={{ duration: 2.8, times: [0, 0.4, 0.6] }}
+        animate={{ opacity: isTransforming && isSelected ? 0 : 1, y: isTransforming && isSelected ? -10 : 0 }}
+        transition={{ duration: 0.15, ease: 'easeOut' }}
       >
         <svg width="60" height={stemHeight} viewBox={`0 0 60 ${stemHeight}`} style={{ position: 'absolute', overflow: 'visible' }}>
           <defs>
@@ -123,8 +123,8 @@ export const SingleFlower = ({ flower, position, index, isSelected, isTransformi
             borderRadius: curve1 > 0 ? '0 80% 0 80%' : '80% 0 80% 0',
             transformOrigin: curve1 > 0 ? 'left center' : 'right center',
           }}
-          animate={{ rotate: curve1 > 0 ? [5, 12, 5] : [-5, -12, -5], opacity: isTransforming && isSelected ? [1, 1, 0] : 1 }}
-          transition={{ rotate: { duration: 3, repeat: Infinity }, opacity: { duration: 2.8 } }}
+          animate={{ rotate: curve1 > 0 ? [5, 12, 5] : [-5, -12, -5], opacity: isTransforming && isSelected ? 0 : 1, y: isTransforming && isSelected ? -8 : 0 }}
+          transition={{ rotate: { duration: 3, repeat: Infinity }, opacity: { duration: 0.15 }, y: { duration: 0.15 } }}
         />
 
         {/* 葉子 2 */}
@@ -137,16 +137,16 @@ export const SingleFlower = ({ flower, position, index, isSelected, isTransformi
             borderRadius: curve1 > 0 ? '80% 0 80% 0' : '0 80% 0 80%',
             transformOrigin: curve1 > 0 ? 'right center' : 'left center',
           }}
-          animate={{ rotate: curve1 > 0 ? [-6, -14, -6] : [6, 14, 6], opacity: isTransforming && isSelected ? [1, 1, 0] : 1 }}
-          transition={{ rotate: { duration: 3.5, repeat: Infinity, delay: 0.3 }, opacity: { duration: 2.8 } }}
+          animate={{ rotate: curve1 > 0 ? [-6, -14, -6] : [6, 14, 6], opacity: isTransforming && isSelected ? 0 : 1, y: isTransforming && isSelected ? -8 : 0 }}
+          transition={{ rotate: { duration: 3.5, repeat: Infinity, delay: 0.3 }, opacity: { duration: 0.15 }, y: { duration: 0.15 } }}
         />
 
         {/* 花朵 */}
         <motion.div
           className="absolute flex items-center justify-center"
           style={{ top: -flowerSize/2+5, left: stemEndX-flowerSize/2+10, width: flowerSize, height: flowerSize }}
-          animate={isTransforming && isSelected ? { x: isMobile ? -position.x*0.7 : -position.x, y: -stemHeight*0.4, scale: [1,1.8,2.8,3.2] } : {}}
-          transition={{ duration: 2.8, times: [0, 0.3, 0.6, 1] }}
+          animate={isTransforming && isSelected ? { scale: [1, 2.2, 3.5], opacity: [1, 1, 0] } : {}}
+          transition={{ duration: 0.22, times: [0, 0.45, 1], ease: [0.16, 1, 0.3, 1] }}
         >
           <motion.button
             onClick={onClick}
@@ -199,7 +199,12 @@ export const SingleFlower = ({ flower, position, index, isSelected, isTransformi
                 style={{ boxShadow: '0 0 45px rgba(242,126,147,0.9)' }}
               />
             )}
-            <FlowerHead color={flower.color} size={flowerSize} isSelected={isSelected} isTransforming={isTransforming} isHighlighted={isHighlighted} />
+            <motion.div
+              animate={isTransforming ? { scale: 1 } : { scale: [1, 1.05, 1] }}
+              transition={{ duration: 2.4 + index * 0.35, repeat: Infinity, ease: 'easeInOut', delay: index * 0.48 }}
+            >
+              <FlowerHead color={flower.color} size={flowerSize} isSelected={isSelected} isTransforming={isTransforming} isHighlighted={isHighlighted} />
+            </motion.div>
           </motion.button>
         </motion.div>
       </motion.div>
@@ -213,8 +218,8 @@ export const BambooBasket = ({ isMobile, isTransforming }) => (
     className="relative"
     style={{ zIndex: 5 }}
     initial={{ opacity: 0, scale: 0.8 }}
-    animate={{ opacity: isTransforming ? 0.3 : 1, scale: 1 }}
-    transition={{ duration: 0.8, delay: 0.3 }}
+    animate={{ opacity: isTransforming ? 0 : 1, scale: isTransforming ? 0.92 : 1, y: isTransforming ? 10 : 0 }}
+    transition={{ duration: 0.18, ease: 'easeOut' }}
   >
     <svg width={isMobile ? 180 : 220} height={isMobile ? 100 : 125} viewBox="0 0 180 100">
       <defs>

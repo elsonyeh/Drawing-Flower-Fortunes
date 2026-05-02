@@ -30,13 +30,23 @@ export default function LoadingScreen() {
         }}
       />
 
-      {/* 中央文字 */}
+      {/* 中央內容 */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="relative flex flex-col items-center gap-4"
+        className="relative flex flex-col items-center gap-5"
       >
+        {/* 花轟活動 logo */}
+        <motion.img
+          src="/assets/huabong-logo.png"
+          alt="花轟"
+          className="w-52 h-auto object-contain select-none pointer-events-none"
+          style={{ filter: 'drop-shadow(0 0 18px rgba(242,190,92,0.55))' }}
+          animate={{ opacity: [0.85, 1, 0.85], scale: [0.98, 1.01, 0.98] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        />
+
         <motion.p
           className="text-4xl font-bold tracking-widest"
           style={{ color: 'rgba(242,210,180,0.90)' }}

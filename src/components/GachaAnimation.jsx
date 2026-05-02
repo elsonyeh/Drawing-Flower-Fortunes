@@ -47,7 +47,7 @@ const REVEAL_PARTICLES = Array.from({ length: 32 }, (_, i) => ({
 }))
 
 const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
-  const [stage, setStage] = useState(skipFlowerPick ? 'show_card' : 'pick_flower')
+  const [stage, setStage] = useState('pick_flower')
   const [selectedFlowerIdx, setSelectedFlowerIdx] = useState(null)
   const [isFlowerTransforming, setIsFlowerTransforming] = useState(false)
   const [showFlower, setShowFlower] = useState(false)
@@ -58,6 +58,8 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
   const [preFlowerFlash, setPreFlowerFlash] = useState(false) // 花出現前亮光
   const [transitionFlash, setTransitionFlash] = useState(false) // 點花後白光從花心擴散
   const [transitionGlow, setTransitionGlow] = useState(false)  // 白光消退時的柔光粒子橋接
+  const [glowIdx, setGlowIdx] = useState(0)                    // pick_flower：輪流發光的花朵 index
+  const [preHighlightIdx, setPreHighlightIdx] = useState(null) // 點擊後立即點亮，比光圈早 100ms
   const isSSR = flower?.rarity === 'ssr'
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
   const flashOriginTop = useRef(isMobile ? '40%' : '38%')      // 白光起點：選花束=花位置，主頁=正中
@@ -69,13 +71,27 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
   const timersRef = useRef([])
   useEffect(() => () => timersRef.current.forEach(clearTimeout), [])
 
-  // 主頁流程（skipFlowerPick=true）：掛載即觸發相同的 flash + glow，蓋住換場空隙
+  // pick_flower：每 1.8 秒換下一朵花發光
+  useEffect(() => {
+    if (stage !== 'pick_flower' || isFlowerTransforming) return
+    const id = setInterval(() => setGlowIdx(i => (i + 1) % BOUQUET_FLOWERS.length), 1800)
+    return () => clearInterval(id)
+  }, [stage, isFlowerTransforming])
+
+  // 主頁流程（skipFlowerPick=true）：自動點擊中間花朵，播放光圈爆發後進卡牌
   useEffect(() => {
     if (!skipFlowerPick) return
-    flashOriginTop.current = '50%'   // 主頁從正中央爆發
-    setTransitionFlash(true)
-    const t = setTimeout(() => setTransitionGlow(true), 580)
-    return () => clearTimeout(t)
+    flashOriginTop.current = '50%'
+    setSelectedFlowerIdx(2)
+    setPreHighlightIdx(2)
+    const t1 = setTimeout(() => {
+      setIsFlowerTransforming(true)
+      setBurstActive(true)
+      setTransitionFlash(true)
+    }, 80)
+    const t2 = setTimeout(() => setTransitionGlow(true), 660)
+    const t3 = setTimeout(() => setStage('show_card'), 1350)
+    return () => [t1, t2, t3].forEach(clearTimeout)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // 12 顆環繞粒子位置（依花色）
@@ -91,11 +107,14 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
   const handleFlowerClick = (index) => {
     if (isFlowerTransforming) return
     setSelectedFlowerIdx(index)
-    setIsFlowerTransforming(true)
-    setBurstActive(true)                                // 立即爆發（不延遲，點擊即回饋）
-    setTransitionFlash(true)                           // 白光從花心立即爆發，消除黑幀
-    setTimeout(() => setTransitionGlow(true), 580)    // +0.2s：白光擴散中，柔光粒子接棒
-    setTimeout(() => setStage('show_card'), 1250)      // +0.2s：白光停留稍長再切卡牌
+    setPreHighlightIdx(index)                          // t=0：花朵立即點亮（比光圈早）
+    setTimeout(() => {
+      setIsFlowerTransforming(true)
+      setBurstActive(true)                             // t=100ms：光圈才爆發
+      setTransitionFlash(true)
+    }, 100)
+    setTimeout(() => setTransitionGlow(true), 680)
+    setTimeout(() => setStage('show_card'), 1350)
   }
 
   const handleCardClick = () => {
@@ -310,71 +329,25 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.2, delay: 0 } }}
             transition={{ delay: 0.5, duration: 0.35 }}
           >
-            <motion.p
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: [0, 0.9, 0.55, 0.9], y: 0 }}
-              transition={{ delay: 0.8, duration: 2.2, repeat: Infinity, times: [0, 0.15, 0.5, 1] }}
-              className="text-sm tracking-[0.25em]"
-              style={{ color: 'rgba(242,190,92,0.9)', textShadow: '0 0 12px rgba(242,190,92,0.6)' }}
-            >
-              ✦ 點擊一枝花，開啟你的花語 ✦
-            </motion.p>
+            {!skipFlowerPick && (
+              <motion.p
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: [1, 1.06, 1] }}
+                transition={{
+                  opacity: { delay: 0.8, duration: 0.4 },
+                  scale: { delay: 1.2, duration: 2.6, repeat: Infinity, ease: 'easeInOut' },
+                }}
+                className="text-sm tracking-[0.25em]"
+                style={{ color: 'rgba(242,190,92,0.9)', textShadow: '0 0 12px rgba(242,190,92,0.6)' }}
+              >
+                ✦ 點擊一枝花，開啟你的花語 ✦
+              </motion.p>
+            )}
 
             <div
               className="relative flex flex-col items-center"
               style={{ width: isMobile ? 260 : 320, height: isMobile ? 280 : 350 }}
             >
-              {/* 花束底部暖光光暈（引導用戶點擊） */}
-              {!isFlowerTransforming && (
-                <motion.div
-                  className="absolute pointer-events-none"
-                  style={{
-                    bottom: isMobile ? 30 : 40,
-                    left: '50%', transform: 'translateX(-50%)',
-                    width: isMobile ? 200 : 260, height: isMobile ? 120 : 150,
-                    background: `radial-gradient(ellipse 70% 55% at 50% 80%, rgba(242,190,92,0.45) 0%, rgba(242,126,147,0.25) 45%, transparent 75%)`,
-                    filter: 'blur(14px)',
-                    zIndex: 0,
-                  }}
-                  animate={{ opacity: [0.5, 1, 0.5], scale: [0.96, 1.04, 0.96] }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                />
-              )}
-
-              {/* 浮動星點（提示可互動） */}
-              {!isFlowerTransforming && [
-                { x: -70, y: -60, size: 6, delay: 0.0, dur: 2.8 },
-                { x:  55, y: -80, size: 4, delay: 0.7, dur: 3.2 },
-                { x: -40, y: -30, size: 5, delay: 1.4, dur: 2.6 },
-                { x:  80, y: -45, size: 4, delay: 0.3, dur: 3.5 },
-                { x:   0, y: -95, size: 6, delay: 1.0, dur: 2.9 },
-                { x: -85, y: -20, size: 3, delay: 1.8, dur: 3.1 },
-                { x:  65, y: -15, size: 5, delay: 0.5, dur: 2.7 },
-              ].map((sp, i) => (
-                <motion.div
-                  key={`hint-sp-${i}`}
-                  className="absolute pointer-events-none rounded-full"
-                  style={{
-                    left: '50%', bottom: isMobile ? 70 : 90,
-                    width: sp.size, height: sp.size,
-                    marginLeft: -sp.size / 2,
-                    background: i % 2 === 0 ? '#F2BE5C' : '#fff',
-                    boxShadow: `0 0 ${sp.size * 2}px ${sp.size}px ${i % 2 === 0 ? 'rgba(242,190,92,0.8)' : 'rgba(255,255,255,0.7)'}`,
-                    zIndex: 1,
-                  }}
-                  animate={{
-                    x: [0, sp.x * 0.3, sp.x],
-                    y: [0, sp.y * 0.5, sp.y],
-                    opacity: [0, 0.9, 0],
-                    scale: [0, 1.3, 0.5],
-                  }}
-                  transition={{
-                    duration: sp.dur, delay: sp.delay,
-                    repeat: Infinity, repeatDelay: 0.4,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                />
-              ))}
 
               <div
                 className="relative flex items-end justify-center"
@@ -385,7 +358,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                     key={f.id} flower={f} position={FLOWER_POSITIONS[index]} index={index}
                     isSelected={selectedFlowerIdx === index}
                     isTransforming={isFlowerTransforming && selectedFlowerIdx === index}
-                    isHighlighted={false}
+                    isHighlighted={isFlowerTransforming ? selectedFlowerIdx === index : (preHighlightIdx === index || glowIdx === index)}
                     onClick={() => handleFlowerClick(index)}
                     isMobile={isMobile}
                   />

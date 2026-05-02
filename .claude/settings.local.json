@@ -42,7 +42,14 @@
       "Bash(du -sh D:花語解籤publicmodels/*)",
       "Bash(for model:*)",
       "Bash(do echo:*)",
-      "WebFetch(domain:bobtung.medium.com)"
+      "WebFetch(domain:bobtung.medium.com)",
+      "Bash(ls -lh)",
+      "Bash(dir /b)",
+      "Bash(npx obj2gltf *)",
+      "Bash(npx gltf-pipeline *)",
+      "Bash(npx vite *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(f\\) for f in d if f.get\\('id'\\)==4]\")",
+      "Bash(python -c ' *)"
     ]
   }
 }

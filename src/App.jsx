@@ -90,7 +90,7 @@ function App() {
 
     setSelectedFlower(flower)
     setEmotionData(null)
-    setGachaSkipFlowerPick(false)  // 主頁改為與 QR 掃描相同體驗：進入 GachaAnimation 選花環節
+    setGachaSkipFlowerPick(true)   // 主頁已在 LandingPage 選過花，直接進 show_card
     // 啟動白光橋接層，覆蓋 LandingPage 消失到 GachaAnimation 出現的黑幀
     setGachaTransitionFlash(true)
     setStage('gacha')
@@ -134,6 +134,7 @@ function App() {
     setEmotionData(data)
     // 相由花緣的結果不記錄到圖鑑，僅供當次欣賞
     setGachaSkipFlowerPick(true)
+    setGachaTransitionFlash(true)
     setStage('gacha')
   }
 
