@@ -50,6 +50,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gradient">花語圖鑑</h1>
             <button
+              data-tutorial="back-btn"
               onClick={onClose}
               aria-label="關閉圖鑑"
               className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
@@ -65,7 +66,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
+          <div data-tutorial="collection-progress" className="grid grid-cols-3 gap-3 mb-4">
             <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(242,126,147,0.12)', border: '1px solid rgba(242,126,147,0.22)' }}>
               <p className="text-xs" style={{ color: 'rgba(242,217,208,0.55)' }}>總收集率</p>
               <p className="text-2xl font-bold" style={{ color: '#F27E93' }}>{stats.percentage}%</p>
@@ -152,10 +153,12 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filteredFlowers.map((flower, index) => {
             const collected = isFlowerCollected(flower.id)
+            const isFirstCollected = collected && !filteredFlowers.slice(0, index).some(f => isFlowerCollected(f.id))
 
             return (
               <motion.div
                 key={flower.id}
+                data-tutorial={isFirstCollected ? 'collection-card' : undefined}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}

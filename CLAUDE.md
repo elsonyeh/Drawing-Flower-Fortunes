@@ -205,6 +205,72 @@ const flower3DConfigs = {
 2. Add config to `flower3DConfigs` in `FlowerBloom.jsx`
 3. Update `flowerConfigs.js` if needed (petalType mapping)
 
+---
+
+## Onboarding Tutorial System
+
+### 元件位置
+`src/components/TutorialOverlay.jsx`
+
+### 觸發條件
+localStorage `chenghua_tutorial_v1` 不存在時，首次進站自動顯示。完成或跳過後寫入此 key。
+
+### 14 步流程（可逐步調整）
+
+| # | type | target (`data-tutorial`) | 觸發下一步 | 說明 |
+|---|------|--------------------------|-----------|------|
+| 0 | fullscreen | — | 點擊「開始導覽」 | 歡迎畫面 |
+| 1 | spotlight | `flowers` | stage → gacha | 引導點擊花束 |
+| 2 | banner（上方）| — | stage → result | Gacha 進行中提示 |
+| 3 | spotlight | `flower-name` | 點擊「下一步」 | 介紹花名與花語 |
+| 4 | spotlight | `flower-story` | 點擊「下一步」 | 介紹花之物語 |
+| 5 | spotlight | `locations` | 點擊「下一步」 | 介紹推薦地點 |
+| 6 | spotlight | `return-btn` | stage → landing | 引導返回主頁 |
+| 7 | spotlight | `collection-btn` | stage → collection | 引導點擊圖鑑 |
+| 8 | spotlight | `collection-progress` | 點擊「下一步」 | 介紹蒐集進度 |
+| 9 | spotlight | `collection-card` | 點擊卡片（advanceOnClick）| 引導點擊第一張卡 |
+| 10 | banner（下方）| — | 點擊「下一步」 | 說明卡片詳情 |
+| 11 | spotlight | `back-btn` | stage → landing | 引導關閉圖鑑 |
+| 12 | spotlight | `auth-btn` | 點擊「知道了」 | 介紹登入/註冊 |
+| 13 | fullscreen | — | 點擊「出發探索！」| 完成導覽 |
+
+### data-tutorial 錨點位置
+
+| 屬性值 | 元件 | 位置說明 |
+|--------|------|---------|
+| `flowers` | `LandingPage.jsx` | 花束容器 div |
+| `collection-btn` | `LandingPage.jsx` | 右上角圖鑑按鈕 |
+| `auth-btn` | `LandingPage.jsx` | 右上角登入按鈕 |
+| `flower-name` | `FortuneResult.jsx` | 花名 + 花語區塊 |
+| `flower-story` | `FortuneResult.jsx` | 花之物語區塊 |
+| `locations` | `FortuneResult.jsx` | 推薦探索地點區塊 |
+| `return-btn` | `FortuneResult.jsx` | 返回/再抽按鈕 |
+| `collection-progress` | `CollectionPage.jsx` | 三格蒐集統計 |
+| `collection-card` | `CollectionPage.jsx` | 第一張已收集卡片 |
+| `back-btn` | `CollectionPage.jsx` | 關閉圖鑑按鈕（×）|
+
+### 調整方式
+- **修改文字**：直接改 `STEPS` 陣列內的 `title` / `body` / `cta`
+- **新增步驟**：在 `STEPS` 插入新物件，`type` 可為 `fullscreen` / `spotlight` / `banner`
+- **刪除步驟**：從 `STEPS` 移除，progress dots 自動更新
+- **改觸發條件**：`advanceOnStage`（等 app stage 變化）/ `advanceOnClick`（等點擊錨點）/ `cta`（手動按鈕）
+- **重置導覽**：清除 localStorage `chenghua_tutorial_v1`
+
+### Performance Optimization (Completed)
+
+#### Draco + WebP Texture Compression（已完成）
+2025-05 完成批次壓縮：96 MB → 15 MB（縮減 84%）
+```bash
+# 一次壓縮 geometry + texture
+npx @gltf-transform/cli optimize input.glb output.glb --compress draco --texture-compress webp
+```
+
+#### 展覽模式預載修正（已完成）
+`ExhibitionScanPage.jsx` mount 後即預載該 pool 可能出現的所有花模型，
+利用使用者閱讀作品介紹頁的時間完成下載，reveal 時秒速顯示。
+
+---
+
 ### Performance Optimization (Future)
 
 #### Draco Compression (Recommended)

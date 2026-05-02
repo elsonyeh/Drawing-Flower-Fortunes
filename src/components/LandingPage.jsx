@@ -153,6 +153,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           <div className="flex items-center gap-2">
             {onOpenAuth && (
               <motion.button
+                data-tutorial="auth-btn"
                 onClick={onOpenAuth}
                 className="px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-white text-sm font-medium flex items-center gap-1.5 border border-white/20 hover:bg-white/20 transition-colors min-h-[36px]"
                 whileHover={{ scale: 1.05 }}
@@ -174,6 +175,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
               </motion.button>
             )}
             <motion.button
+              data-tutorial="collection-btn"
               onClick={onOpenCollection}
               className="px-3 py-1.5 backdrop-blur-sm rounded-full text-white text-sm font-medium flex items-center gap-1.5 shadow-lg min-h-[36px]"
               style={{ background: 'linear-gradient(135deg, rgba(242,126,147,0.55), rgba(242,164,136,0.45))', border: '1px solid rgba(242,126,147,0.35)' }}
@@ -245,6 +247,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
       >
         {/* 花朵容器 - 莖底部對齊 */}
         <div
+          data-tutorial="flowers"
           className="relative flex items-end justify-center"
           style={{ width: '100%', height: isSmallScreen ? 145 : (isMobile ? 180 : 230), marginBottom: isSmallScreen ? -20 : (isMobile ? -25 : -35) }}
         >

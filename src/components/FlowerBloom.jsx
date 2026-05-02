@@ -55,6 +55,17 @@ const MODEL_PATHS = {
 };
 
 // ============ 背景預載入所有模型 ============
+
+// 供展覽模式：依 pool 預載對應花朵的模型
+export const preloadModelsForFlowers = (flowers) => {
+  flowers.forEach((flower) => {
+    const modelPath = MODEL_PATHS[flower.model];
+    if (!modelPath) return;
+    const useDraco = flower3DConfigs[flower.model]?.useDraco !== false;
+    useGLTF.preload(modelPath, useDraco);
+  });
+};
+
 // main.jsx 已載入第一個模型，這裡繼續載入剩餘的
 const preloadAllModels = () => {
   const queue = getDrawQueue();

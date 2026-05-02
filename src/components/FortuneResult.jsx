@@ -725,6 +725,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           animate={isFromCollection ? { opacity: 1, y: 0 } : undefined}
           transition={isFromCollection ? { duration: 0.6, delay: 0.2 } : undefined}
           className="text-center mb-8"
+          data-tutorial="flower-name"
         >
           <motion.h1
             className="text-5xl md:text-6xl font-bold mb-3"
@@ -762,6 +763,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
               ? 'bg-gradient-to-br from-yellow-900/30 to-orange-900/30 border-yellow-500/30'
               : 'bg-gradient-to-br from-night-800/60 to-night-900/60 border-primary-500/20'
           } backdrop-blur-md`}
+          data-tutorial="flower-story"
         >
           <h2 className={`text-xl font-semibold mb-3 flex items-center ${
             isSSR ? 'text-yellow-300' : 'text-primary-300'
@@ -802,6 +804,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           animate={isFromCollection ? { opacity: 1, y: 0 } : undefined}
           transition={isFromCollection ? { duration: 0.6, delay: 0.5 } : undefined}
           className="bg-gradient-to-br from-night-800/60 to-night-900/60 backdrop-blur-md rounded-2xl p-6 mb-8 border border-primary-500/20"
+          data-tutorial="locations"
         >
           <h2 className="text-xl font-semibold text-primary-300 mb-4 flex items-center">
             <span className="mr-2">{zoneArtworks ? '🎨' : '📍'}</span>
@@ -892,6 +895,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           className="flex flex-col sm:flex-row gap-4 justify-center mb-6"
         >
           <motion.button
+            data-tutorial="return-btn"
             onClick={onReset}
             className="px-8 py-4 rounded-full font-medium shadow-lg text-lg text-white"
             style={isSSR

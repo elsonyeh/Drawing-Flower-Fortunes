@@ -2,6 +2,8 @@ import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { recordVisit, getExhibitionState, initExhibitionWithCloud, getUnlockedPools, getZoneProgress } from '../utils/exhibitionHelper'
 import { ZONE_THEME, ARTWORKS, ZONE_ARTWORKS } from '../utils/exhibitionConstants'
+import { getAllFlowers } from '../utils/fortuneHelper'
+import { preloadModelsForFlowers } from './FlowerBloom'
 
 export default function ExhibitionScanPage({ zone, workId, workName, onDraw, onBack }) {
   const [isNewVisit, setIsNewVisit] = useState(false)
@@ -24,6 +26,12 @@ export default function ExhibitionScanPage({ zone, workId, workName, onDraw, onB
       if (!poolsBefore.includes('B') && poolsAfter.includes('B')) setNewPoolUnlocked('B')
       else if (!poolsBefore.includes('C') && poolsAfter.includes('C')) setNewPoolUnlocked('C')
       setReady(true)
+
+      // 使用者閱讀作品介紹的期間，背景預載本次可能抽到的花模型
+      const eligible = getAllFlowers().filter(
+        f => f.exhibitionZone && poolsAfter.includes(f.exhibitionZone)
+      )
+      preloadModelsForFlowers(eligible)
     }
     init()
   }, [workId])

@@ -4,6 +4,7 @@ import LandingPage from './components/LandingPage'
 import LoadingScreen from './components/LoadingScreen'
 import GachaAnimation from './components/GachaAnimation'
 import FortuneResult from './components/FortuneResult'
+import TutorialOverlay from './components/TutorialOverlay'
 const CollectionPage = lazy(() => import('./components/CollectionPage'))
 const AdminPage = lazy(() => import('./components/AdminPage'))
 const EmotionScanPage = lazy(() => import('./components/EmotionScanPage'))
@@ -203,6 +204,9 @@ function App() {
           backgroundSize: '250px 250px',
         }}
       />
+      {/* 新手引導（z-index 9998+，跨 stage 持續存在） */}
+      <TutorialOverlay appStage={stage} />
+
       <div className="relative" style={{ zIndex: 1 }}>
       <Suspense fallback={<LoadingScreen />}>
       <AnimatePresence mode="wait">
