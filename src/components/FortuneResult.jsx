@@ -808,12 +808,12 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           data-tutorial="locations"
         >
           <div className="mb-4">
-            <p className="text-white/40 text-xs tracking-widest mb-1">推薦前往的裝置藝術展覽</p>
+            <p className="text-white/40 text-xs tracking-widest mb-1">推薦前往參觀的裝置藝術作品</p>
             <h2 className="text-xl font-semibold text-primary-300 flex items-center gap-2">
               {zoneArtworks
                 ? (ZONE_THEME[exhibitionZone]?.name ?? exhibitionZone)
-                : '今夜探索'}
-              {zoneArtworks && <span className="text-white/30 text-sm font-normal">展區</span>}
+                : '今夜限定'}
+              {zoneArtworks && <span className="text-white/30 text-sm font-normal">展區作品</span>}
             </h2>
           </div>
           <div className="space-y-3">

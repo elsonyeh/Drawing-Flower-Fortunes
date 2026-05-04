@@ -57,8 +57,8 @@ const STEPS = [
   // 5: Locations / artworks (result)
   {
     type: 'spotlight', target: 'locations', placement: 'bottom',
-    title: '裝置藝術展覽',
-    body: '這裡展示本次活動的裝置藝術資訊\n走到現場感受藝術與花語的共鳴',
+    title: '推薦前往的裝置藝術作品',
+    bodyHtml: '花語為你挑選了本次展覽的作品<br/><span style="color:#F2BE5C;font-weight:600">📍 記得前往現場參觀！</span>',
     cta: '下一步',
   },
   // 6: Share button (result) ── 只介紹，不需點擊
