@@ -31,7 +31,7 @@ const FloatingPetal = ({ delay, x, duration, size, rotation }) => (
 )
 
 // 主組件
-const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAuth, onQRScan, user, exhibitionMode }) => {
+const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAuth, onQRScan, user, exhibitionMode, tutorialActive }) => {
   const [particles, setParticles] = useState([])
   const [petals, setPetals] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(null)
@@ -103,6 +103,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
 
   const handleFlowerClick = (index) => {
     if (isTransforming || hasDrawn) return
+    if (exhibitionMode && !tutorialActive) return
     setSelectedIndex(index)
     setIsTransforming(true)
     // 立即切換到 GachaAnimation 選花環節，讓 B1/B2（爆發粒子＋白光）在 GachaAnimation 內原生執行
@@ -327,6 +328,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           {onQRScan && (
             <motion.button
               onClick={onQRScan}
+              data-tutorial="qr-btn"
               className="w-full max-w-xs py-3 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 min-h-[48px]"
               style={{ background: 'linear-gradient(135deg, rgba(242,190,92,0.40), rgba(242,164,136,0.35))', border: '1px solid rgba(242,190,92,0.40)', backdropFilter: 'blur(8px)' }}
               whileHover={{ scale: 1.03, boxShadow: '0 0 20px rgba(242,190,92,0.35)' }}

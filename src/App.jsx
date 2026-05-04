@@ -58,6 +58,7 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [gachaSkipFlowerPick, setGachaSkipFlowerPick] = useState(false)
   const [gachaTransitionFlash, setGachaTransitionFlash] = useState(false)
+  const [tutorialActive, setTutorialActive] = useState(false)
 
   const { user } = useAuth()
 
@@ -88,6 +89,7 @@ function App() {
     const exMode = isExhibitionMode()
     const pools = exMode ? getUnlockedPools() : null
     const flower = exMode ? getRandomFlowerForExhibition(pools) : getRandomFlower()
+    const isTutorial = exMode && tutorialActive
 
     setSelectedFlower(flower)
     setEmotionData(null)
@@ -96,10 +98,11 @@ function App() {
     setGachaTransitionFlash(true)
     setStage('gacha')
 
-    // Save to localStorage (always)
-    saveCollectedFlower(flower)
-    // Save to cloud (if logged in)
-    if (user) saveFlowerToCloud(user.id, flower)
+    // 展覽模式引導抽籤不記錄，其餘正常儲存
+    if (!isTutorial) {
+      saveCollectedFlower(flower)
+      if (user) saveFlowerToCloud(user.id, flower)
+    }
   }
 
   const handleExhibitionDraw = () => {
@@ -205,7 +208,7 @@ function App() {
         }}
       />
       {/* 新手引導（z-index 9998+，跨 stage 持續存在） */}
-      <TutorialOverlay appStage={stage} />
+      <TutorialOverlay appStage={stage} user={user} onActiveChange={setTutorialActive} />
 
       <div className="relative" style={{ zIndex: 1 }}>
       <Suspense fallback={<LoadingScreen />}>
@@ -239,6 +242,7 @@ function App() {
             onQRScan={() => setStage('qrScan')}
             user={user}
             exhibitionMode={isExhibitionMode()}
+            tutorialActive={tutorialActive}
           />
         )}
 

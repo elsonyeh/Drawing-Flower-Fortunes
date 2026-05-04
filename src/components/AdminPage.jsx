@@ -340,6 +340,22 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
               </button>
             </div>
 
+            {/* 測試引導動畫 */}
+            <div className="bg-white/5 rounded-xl p-4">
+              <p className="text-sm font-bold mb-1">引導動畫</p>
+              <p className="text-xs text-white/40 mb-3">清除完成記錄，返回首頁重新播放引導流程</p>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('chenghua_tutorial_v1')
+                  window.location.href = '/'
+                }}
+                className="w-full py-3 rounded-xl font-semibold text-white transition-all min-h-[44px]"
+                style={{ background: 'linear-gradient(135deg, rgba(91,123,168,0.5), rgba(72,100,140,0.4))', border: '1px solid rgba(91,123,168,0.4)' }}
+              >
+                🎬 重新播放引導動畫
+              </button>
+            </div>
+
             {/* 模擬掃描特定作品 */}
             <div className="bg-white/5 rounded-xl p-4">
               <p className="text-sm font-bold mb-1">模擬 QR 掃描（完整流程）</p>

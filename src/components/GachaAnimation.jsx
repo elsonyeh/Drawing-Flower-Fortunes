@@ -153,15 +153,16 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
       <motion.div
         className="absolute inset-0 pointer-events-none"
         style={{ zIndex: 0 }}
+        initial={{ background: `radial-gradient(ellipse 70% 55% at 50% 60%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%)` }}
         animate={{
           background:
             stage === 'show_card'
-              ? `radial-gradient(ellipse 70% 55% at 50% 60%, ${flowerColor}22 0%, transparent 70%)`
+              ? `radial-gradient(ellipse 70% 55% at 50% 60%, ${flowerColor}22 0%, rgba(0,0,0,0) 70%)`
               : stage === 'flip'
-              ? `radial-gradient(ellipse 90% 65% at 50% 55%, ${flowerColor}40 0%, transparent 70%)`
+              ? `radial-gradient(ellipse 90% 65% at 50% 55%, ${flowerColor}40 0%, rgba(0,0,0,0) 70%)`
               : stage === 'reveal'
-              ? `radial-gradient(ellipse 130% 90% at 50% 50%, ${flowerColor}55 0%, ${flowerColor}22 40%, transparent 75%)`
-              : 'transparent',
+              ? `radial-gradient(ellipse 130% 90% at 50% 50%, ${flowerColor}55 0%, ${flowerColor}22 40%, rgba(0,0,0,0) 75%)`
+              : `radial-gradient(ellipse 70% 55% at 50% 60%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%)`,
         }}
         transition={{ duration: 1.6, ease: 'easeInOut' }}
       />
@@ -460,6 +461,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                 ease: 'easeInOut',
               } : {}}
               onClick={stage === 'show_card' ? handleCardClick : undefined}
+              data-tutorial="gacha-card"
             >
               {/* 等待點擊：多層脈衝光暈 */}
               {stage === 'show_card' && (

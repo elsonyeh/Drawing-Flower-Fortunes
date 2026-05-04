@@ -1658,17 +1658,16 @@ const BaseLeaves = () => {
 // └─────────────────┴────────────────────────────────────────────────────────┘
 //
 const flower3DConfigs = {
-  // 向日葵 - OBJ 原始模型
+  // 向日葵 - GLB 模型
   sunflower: {
-    type: "obj",
-    mtl: "/models/sunflower/10455_Sunflower_v1_max2010_it2.mtl",
-    obj: "/models/sunflower/10455_Sunflower_v1_max2010_it2.obj",
-    scale: 0.019,
-    position: [0, -2.0, 0],
-    rotation: [-Math.PI / 2, 0, 0],
-    clipThreshold: 80,
-    clipAxis: "z",
-    clipDirection: ">",
+    type: "glb",
+    glb: "/models/sunflower/sunflower.glb",
+    useDraco: false,
+    scale: 0.04,
+    position: [-0.1, 0.2, 0.1],
+    rotation: [0.3, 0, 0],
+    autoRotateSpeed: 0,
+    showPivotGuide: false,
   },
 
   // 玫瑰 - GLB 格式模型
@@ -1816,18 +1815,21 @@ const flower3DConfigs = {
     lightIntensity: 1, // 亮度
   },
 
+
   // 繡球花 - GLB 格式模型
+  // 模型內含兩組 mesh：
+  //   大型 (worldSpread ~3.5, scale=1.0) → 葉子/背景裝飾，× 3.7 後尺寸爆炸
+  //   小型 (worldSpread ~0.35, scale=0.02) → 實際花簇，× 3.7 ≈ 1.3 scene units
+  // filterByWorldSpread: 1.0 只保留花簇，排除大型背景 mesh
   hydrangea: {
     type: "glb",
     glb: "/models/hydrangea/hydrangea.glb",
-    scale: 3.7, // 縮放比例
-    position: [0, -0.55, 0], // 位置偏移
-    rotation: [0, 0, 0], // 旋轉角度
-    modelOffset: [0, 0, 0], // 模型中心偏移
-    autoRotateSpeed: 0, // 不自動旋轉
-    showPivotGuide: false, // 顯示輔助線方便調整
-    pivotHeight: 0, // 水平旋轉面高度
-    lightIntensity: 1, // 亮度
+    scale: 3.7,
+    position: [0, -0.55, 0],
+    rotation: [0, 0, 0],
+    modelOffset: [0, 0, 0],
+    autoRotateSpeed: 0,
+    filterByWorldSpread: 1.0,
   },
 
   // 康乃馨 - GLB 格式模型
@@ -1863,7 +1865,7 @@ const flower3DConfigs = {
 const FlowerGLBModel = ({ modelType }) => {
   const groupRef = useRef();
   const config = flower3DConfigs[modelType];
-  // useDraco：預設 true，明確設 false 的模型（如 sunflower）跳過 Draco decoder
+  // useDraco：預設 true，明確設 false 跳過 Draco decoder
   const { scene } = useGLTF(config.glb, config.useDraco !== false);
 
   const clonedScene = useMemo(() => {
@@ -1880,6 +1882,28 @@ const FlowerGLBModel = ({ modelType }) => {
 
     const toRemove = [];
 
+    // 診斷用：列出 hydrangea 所有 mesh 的節點尺寸（含 scale）
+    if (process.env.NODE_ENV === 'development' && modelType === 'hydrangea') {
+      clone.updateWorldMatrix(true, true);
+      clone.traverse((child) => {
+        if (child.isMesh && child.geometry) {
+          child.geometry.computeBoundingBox();
+          // 用 matrixWorld 取得包含所有父節點的真實世界座標
+          const box = child.geometry.boundingBox.clone().applyMatrix4(child.matrixWorld);
+          const dx = (box.max.x - box.min.x).toFixed(3);
+          const dy = (box.max.y - box.min.y).toFixed(3);
+          const dz = (box.max.z - box.min.z).toFixed(3);
+          const cx = ((box.min.x + box.max.x) / 2).toFixed(3);
+          const cy = ((box.min.y + box.max.y) / 2).toFixed(3);
+          const cz = ((box.min.z + box.max.z) / 2).toFixed(3);
+          console.log(`[hydrangea mesh] name="${child.name}" worldBbox=${dx}x${dy}x${dz} worldCenter=(${cx},${cy},${cz})`);
+        }
+      });
+    }
+
+    // filterByWorldSpread / filterFlatPlane 都需要 world matrix
+    clone.updateWorldMatrix(true, true);
+
     clone.traverse((child) => {
       if (child.isMesh) {
         // 過濾指定的 mesh（如正方體）
@@ -1888,7 +1912,34 @@ const FlowerGLBModel = ({ modelType }) => {
           child.name.toLowerCase().includes(name.toLowerCase())
         );
 
-        if (shouldFilter) {
+        // 過濾 world space 中超過閾值的巨型 mesh
+        // 用途：模型內有些 mesh 在 GLB 座標系中就是巨大的（如葉子底座、環境裝飾），
+        // 套用場景 scale 後尺寸爆炸，filterByWorldSpread 可精準排除它們
+        let isTooLarge = false;
+        if (config.filterByWorldSpread !== undefined) {
+          child.geometry.computeBoundingBox();
+          const box = child.geometry.boundingBox.clone().applyMatrix4(child.matrixWorld);
+          const spread = Math.max(box.max.x - box.min.x, box.max.z - box.min.z);
+          isTooLarge = spread > config.filterByWorldSpread;
+        }
+
+        // 自動過濾超扁平巨型 mesh（地面平面 / 陰影平面）
+        let isFlatPlane = false;
+        if (config.filterFlatPlane) {
+          child.geometry.computeBoundingBox();
+          const rawBox = child.geometry.boundingBox;
+          if (rawBox) {
+            const box = rawBox.clone().applyMatrix4(child.matrixWorld);
+            const dx = box.max.x - box.min.x;
+            const dy = box.max.y - box.min.y;
+            const dz = box.max.z - box.min.z;
+            const spread = Math.max(dx, dz);
+            const ratio = config.filterFlatPlaneRatio ?? 0.05;
+            isFlatPlane = spread > 1.0 && dy < spread * ratio;
+          }
+        }
+
+        if (shouldFilter || isTooLarge || isFlatPlane) {
           toRemove.push(child);
         } else {
           child.castShadow = true;
@@ -1899,7 +1950,15 @@ const FlowerGLBModel = ({ modelType }) => {
           const processedMats = materials.map((mat) => {
             if (!mat) return mat;
             const clonedMat = mat.clone();
-            clonedMat.side = THREE.DoubleSide;
+            // 透明材質不套用 DoubleSide：
+            // 雙面渲染讓背面與正面 z-fighting，導致透明 mesh 顯示放大的反轉輪廓
+            const isTransparent =
+              (clonedMat.transparent && clonedMat.opacity < 1.0) ||
+              clonedMat.alphaTest > 0 ||
+              !!clonedMat.alphaMap;
+            if (!isTransparent && !config.skipDoubleSide) {
+              clonedMat.side = THREE.DoubleSide;
+            }
             clonedMat.needsUpdate = true;
 
             // 強制不透明（解決透明度過高問題）

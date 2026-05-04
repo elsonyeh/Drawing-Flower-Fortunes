@@ -571,6 +571,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
       animate={isFromCollection ? { opacity: 1, y: 0 } : "visible"}
       exit={{ opacity: 0 }}
       variants={!isFromCollection ? containerVariants : undefined}
+      data-scroll-lock
       className="min-h-screen flex flex-col items-center justify-start px-4 py-8 overflow-y-auto overflow-x-hidden relative"
     >
       {/* SSR Background effects */}

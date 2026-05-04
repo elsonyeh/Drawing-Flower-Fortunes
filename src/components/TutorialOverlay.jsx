@@ -17,15 +17,16 @@ const STEPS = [
   {
     type: 'spotlight', target: 'flowers', placement: 'bottom',
     title: '選一枝花',
-    body: '點擊任意一枝花\n開啟你的花語抽籤',
+    bodyHtml: '<span style="color:#F2BE5C;font-weight:700">點擊</span>任意一枝花，開啟你的花語抽籤',
+    note: '此次抽籤不會收錄到圖鑑內',
     advanceOnStage: 'gacha',
   },
   // 2: Watch gacha (gacha)
   {
-    type: 'banner', placement: 'top',
-    title: '🃏 翻牌揭曉',
-    body: '靜候花語顯現，點擊卡牌可加速翻面',
-    advanceOnStage: 'result',
+    type: 'spotlight', target: 'gacha-card', placement: 'bottom',
+    title: '翻牌揭曉',
+    bodyHtml: '<span style="color:#F2BE5C;font-weight:700">點擊</span>卡牌，揭開屬於你的花語',
+    advanceOnClick: 'gacha-card',
   },
   // 3: Flower name (result)
   {
@@ -36,14 +37,14 @@ const STEPS = [
   },
   // 4: Story (result)
   {
-    type: 'spotlight', target: 'flower-story', placement: 'top',
+    type: 'spotlight', target: 'flower-story', placement: 'bottom',
     title: '花之物語',
     body: '花語與鹽夏不夜埕的在地故事交織\n感受城市的溫度',
     cta: '下一步',
   },
   // 5: Locations (result)
   {
-    type: 'spotlight', target: 'locations', placement: 'top',
+    type: 'spotlight', target: 'locations', placement: 'bottom',
     title: '今夜推薦',
     body: '花語指引你探索三個特別的地點\n出發去看看吧！',
     cta: '下一步',
@@ -97,7 +98,14 @@ const STEPS = [
     body: '建立帳號，跨裝置同步花語收藏\n不怕換手機也遺失！',
     cta: '知道了',
   },
-  // 13: Complete
+  // 13: QR scan
+  {
+    type: 'spotlight', target: 'qr-btn', placement: 'top',
+    title: '📷 掃描 QR Code',
+    body: '走到展覽現場，掃描作品旁的 QR Code\n解鎖專屬花卡，開始你的花語旅程',
+    cta: '知道了',
+  },
+  // 14: Complete
   {
     type: 'fullscreen', emoji: '✨',
     title: '準備好了！',
@@ -176,7 +184,13 @@ function TooltipCard({ step, cur, onNext, onSkip, showAbove }) {
       </div>
 
       <h3 className="text-white font-semibold text-sm mb-1.5">{cur.title}</h3>
-      <p className="text-white/58 text-xs leading-relaxed whitespace-pre-line mb-3">{cur.body}</p>
+      {cur.bodyHtml
+        ? <p className="text-white/58 text-xs leading-relaxed whitespace-pre-line mb-2" dangerouslySetInnerHTML={{ __html: cur.bodyHtml }} />
+        : <p className="text-white/58 text-xs leading-relaxed whitespace-pre-line mb-2">{cur.body}</p>
+      }
+      {cur.note && (
+        <p className="text-xs leading-relaxed mb-3" style={{ color: 'rgba(242,100,80,0.90)' }}>{cur.note}</p>
+      )}
 
       {cur.cta ? (
         <motion.button
@@ -195,14 +209,82 @@ function TooltipCard({ step, cur, onNext, onSkip, showAbove }) {
   )
 }
 
+const DEV_LINE_IDS = ['U82cbfec05fb2bdcf9d5430f38dacc417']
+
+function isDevUser(user) {
+  if (!user) return false
+  return DEV_LINE_IDS.some(id =>
+    user.user_metadata?.sub === id ||
+    user.user_metadata?.provider_id === id ||
+    user.identities?.some(i => i.identity_data?.sub === id)
+  )
+}
+
+const FS_BG = [
+  'radial-gradient(ellipse 100% 55% at 50% -5%, rgba(91,123,168,0.28) 0%, transparent 65%)',
+  'radial-gradient(ellipse 85% 50% at 48% 32%, rgba(242,210,190,0.22) 0%, transparent 58%)',
+  'radial-gradient(ellipse 160% 60% at 50% 108%, rgba(224,88,72,0.42) 0%, rgba(242,126,147,0.28) 38%, transparent 62%)',
+  'linear-gradient(175deg, #0e1428 0%, #1a2645 52%, #131e38 100%)',
+].join(', ')
+
+// ── Skip confirm dialog ───────────────────────────────────────────────────────
+function SkipConfirm({ onConfirm, onCancel }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-[10001] flex items-center justify-center px-8"
+      style={{ background: 'rgba(8,14,32,0.60)', backdropFilter: 'blur(8px)', pointerEvents: 'auto' }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="w-full max-w-xs rounded-2xl p-6 text-center"
+        style={{
+          background: 'rgba(14,20,42,0.97)',
+          border: '1px solid rgba(242,190,92,0.22)',
+          boxShadow: '0 12px 48px rgba(0,0,0,0.55)',
+        }}
+        initial={{ scale: 0.88, opacity: 0, y: 12 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+      >
+        <p className="text-white font-semibold text-base mb-2">確定跳過導覽？</p>
+        <p className="text-sm leading-relaxed mb-6" style={{ color: 'rgba(242,100,80,0.90)' }}>
+          跳過後將不再顯示引導
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.65)' }}
+          >
+            繼續導覽
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
+            style={{ background: 'linear-gradient(135deg, rgba(242,126,147,0.85), rgba(242,190,92,0.85))' }}
+          >
+            確定跳過
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
-export default function TutorialOverlay({ appStage }) {
+export default function TutorialOverlay({ appStage, user, onActiveChange }) {
   const [step, setStep] = useState(0)
   const [active, setActive] = useState(false)
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false)
 
   useEffect(() => {
-    if (!localStorage.getItem(TUTORIAL_KEY)) setActive(true)
-  }, [])
+    if (isDevUser(user) || !localStorage.getItem(TUTORIAL_KEY)) {
+      setStep(0)
+      setActive(true)
+    }
+  }, [user])
+
+  useEffect(() => { onActiveChange?.(active) }, [active, onActiveChange])
 
   const cur = STEPS[step] ?? STEPS[0]
   const targetKey = cur.type === 'spotlight' ? cur.target : null
@@ -213,6 +295,37 @@ export default function TutorialOverlay({ appStage }) {
     width: rawRect.width + PAD * 2,
     height: rawRect.height + PAD * 2,
   } : null
+
+  // Scroll lock + auto-scroll for result page steps
+  const SCROLL_LOCK_STEPS = [3, 4, 5, 6]
+  useEffect(() => {
+    if (!active || !SCROLL_LOCK_STEPS.includes(step)) {
+      document.body.style.overflow = ''
+      const c = document.querySelector('[data-scroll-lock]')
+      if (c) c.style.overflow = ''
+      return
+    }
+
+    // Scroll to target first, then lock after animation settles
+    const target = STEPS[step]?.target
+    if (target) {
+      const el = document.querySelector(`[data-tutorial="${target}"]`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+
+    const t = setTimeout(() => {
+      document.body.style.overflow = 'hidden'
+      const c = document.querySelector('[data-scroll-lock]')
+      if (c) c.style.overflow = 'hidden'
+    }, 500)
+
+    return () => {
+      clearTimeout(t)
+      document.body.style.overflow = ''
+      const c = document.querySelector('[data-scroll-lock]')
+      if (c) c.style.overflow = ''
+    }
+  }, [active, step]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-advance when app stage matches
   useEffect(() => {
@@ -244,17 +357,20 @@ export default function TutorialOverlay({ appStage }) {
       setStep(s => s + 1)
     }
   }
-  const handleSkip = () => { localStorage.setItem(TUTORIAL_KEY, '1'); setActive(false) }
+  const handleSkip = () => setShowSkipConfirm(true)
+  const handleSkipConfirm = () => { localStorage.setItem(TUTORIAL_KEY, '1'); setActive(false); setShowSkipConfirm(false) }
+  const handleSkipCancel = () => setShowSkipConfirm(false)
 
   if (!active) return null
 
   // ── Fullscreen ────────────────────────────────────────────────────────────
   if (cur.type === 'fullscreen') {
     return (
+      <>
       <motion.div
         key={`fs-${step}`}
         className="fixed inset-0 z-[9999] flex flex-col items-center justify-center px-8"
-        style={{ background: 'rgba(8,12,28,0.97)', backdropFilter: 'blur(18px)' }}
+        style={{ background: FS_BG, backdropFilter: 'blur(12px)' }}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       >
         {step < STEPS.length - 1 && (
@@ -290,6 +406,10 @@ export default function TutorialOverlay({ appStage }) {
           </motion.button>
         </motion.div>
       </motion.div>
+      <AnimatePresence>
+        {showSkipConfirm && <SkipConfirm onConfirm={handleSkipConfirm} onCancel={handleSkipCancel} />}
+      </AnimatePresence>
+      </>
     )
   }
 
@@ -297,17 +417,19 @@ export default function TutorialOverlay({ appStage }) {
   const isLowerHalf = spotRect
     ? (spotRect.top + spotRect.height / 2) > window.innerHeight * 0.55
     : false
-  const showAbove = cur.placement === 'top' || isLowerHalf
+  const showAbove = cur.placement === 'top' || (cur.placement !== 'bottom' && isLowerHalf)
 
   const tooltipStyle = (() => {
     if (cur.type === 'banner') {
       return cur.placement === 'top' ? { top: 64 } : { bottom: 52 }
     }
     if (!spotRect) return { top: '50%', transform: 'translateY(-50%)' }
+    if (cur.placement === 'bottom') return { bottom: 'max(16px, env(safe-area-inset-bottom, 16px))' }
     if (showAbove) {
       return { bottom: Math.max(12, window.innerHeight - spotRect.top + 14) }
     }
-    return { top: Math.min(window.innerHeight - 180, spotRect.top + spotRect.height + 14) }
+    const rawTop = spotRect.top + spotRect.height + 14
+    return { top: Math.min(rawTop, window.innerHeight - 150) }
   })()
 
   // ── Spotlight + Banner ───────────────────────────────────────────────────
@@ -323,7 +445,7 @@ export default function TutorialOverlay({ appStage }) {
               top: spotRect.top, left: spotRect.left,
               width: spotRect.width, height: spotRect.height,
               borderRadius: 14,
-              boxShadow: '0 0 0 9999px rgba(0,0,0,0.68)',
+              boxShadow: '0 0 0 9999px rgba(14,20,40,0.74)',
               zIndex: 9998,
               pointerEvents: 'none',
             }}
@@ -345,7 +467,8 @@ export default function TutorialOverlay({ appStage }) {
         </>
       )}
 
-      {/* Tooltip */}
+      {/* Tooltip — spotlight 步驟等到目標出現後才顯示 */}
+      {(cur.type !== 'spotlight' || spotRect) && (
       <div
         className="fixed left-3 right-3 pointer-events-auto"
         style={{ zIndex: 10000, ...tooltipStyle }}
@@ -358,6 +481,11 @@ export default function TutorialOverlay({ appStage }) {
           showAbove={showAbove}
         />
       </div>
+      )}
+
+      <AnimatePresence>
+        {showSkipConfirm && <SkipConfirm onConfirm={handleSkipConfirm} onCancel={handleSkipCancel} />}
+      </AnimatePresence>
     </div>
   )
 }
