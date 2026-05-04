@@ -808,7 +808,6 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           data-tutorial="locations"
         >
           <h2 className="text-xl font-semibold text-primary-300 mb-4 flex items-center gap-2">
-            <span>🖼️</span>
             <span className="text-white/40 text-xs font-normal tracking-widest">裝置藝術展覽</span>
             {zoneArtworks && (
               <span className="text-primary-300 font-semibold text-xl">
