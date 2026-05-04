@@ -1882,25 +1882,6 @@ const FlowerGLBModel = ({ modelType }) => {
 
     const toRemove = [];
 
-    // 診斷用：列出 hydrangea 所有 mesh 的節點尺寸（含 scale）
-    if (process.env.NODE_ENV === 'development' && modelType === 'hydrangea') {
-      clone.updateWorldMatrix(true, true);
-      clone.traverse((child) => {
-        if (child.isMesh && child.geometry) {
-          child.geometry.computeBoundingBox();
-          // 用 matrixWorld 取得包含所有父節點的真實世界座標
-          const box = child.geometry.boundingBox.clone().applyMatrix4(child.matrixWorld);
-          const dx = (box.max.x - box.min.x).toFixed(3);
-          const dy = (box.max.y - box.min.y).toFixed(3);
-          const dz = (box.max.z - box.min.z).toFixed(3);
-          const cx = ((box.min.x + box.max.x) / 2).toFixed(3);
-          const cy = ((box.min.y + box.max.y) / 2).toFixed(3);
-          const cz = ((box.min.z + box.max.z) / 2).toFixed(3);
-          console.log(`[hydrangea mesh] name="${child.name}" worldBbox=${dx}x${dy}x${dz} worldCenter=(${cx},${cy},${cz})`);
-        }
-      });
-    }
-
     // filterByWorldSpread / filterFlatPlane 都需要 world matrix
     clone.updateWorldMatrix(true, true);
 

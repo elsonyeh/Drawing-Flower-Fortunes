@@ -2,7 +2,19 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const TUTORIAL_KEY = 'chenghua_tutorial_v1'
+const SESSION_STEP_KEY = 'chenghua_tutorial_step'
 const PAD = 10
+
+// 步驟與 app stage 的對應關係（用於中斷防呆）
+// fullscreen 步驟（0, 15）不限 stage
+const STEP_STAGE_MAP = {
+  1: 'landing',
+  2: 'gacha',
+  3: 'result', 4: 'result', 5: 'result', 6: 'result', 7: 'result',
+  8: 'landing',
+  9: 'collection', 10: 'collection', 11: 'collection', 12: 'collection',
+  13: 'landing', 14: 'landing',
+}
 
 // ── Step definitions ─────────────────────────────────────────────────────────
 const STEPS = [
@@ -39,73 +51,80 @@ const STEPS = [
   {
     type: 'spotlight', target: 'flower-story', placement: 'bottom',
     title: '花之物語',
-    body: '花語與鹽夏不夜埕的在地故事交織\n感受城市的溫度',
+    body: '每朵花都有專屬的鹽埕在地故事\n在巷弄間悄悄生長的城市記憶',
     cta: '下一步',
   },
-  // 5: Locations (result)
+  // 5: Locations / artworks (result)
   {
     type: 'spotlight', target: 'locations', placement: 'bottom',
-    title: '今夜推薦',
-    body: '花語指引你探索三個特別的地點\n出發去看看吧！',
+    title: '裝置藝術展覽',
+    body: '這裡展示本次活動的裝置藝術資訊\n走到現場感受藝術與花語的共鳴',
     cta: '下一步',
   },
-  // 6: Return button (result)
+  // 6: Share button (result) ── 只介紹，不需點擊
+  {
+    type: 'spotlight', target: 'share-btn', placement: 'top',
+    title: '分享花語',
+    body: '將今夜的花語製成卡片\n分享給重要的人',
+    cta: '知道了',
+  },
+  // 7: Return button (result)
   {
     type: 'spotlight', target: 'return-btn', placement: 'top',
     title: '收下花語',
     body: '點擊按鈕，回到主頁繼續探索',
     advanceOnStage: 'landing',
   },
-  // 7: Collection button (landing)
+  // 8: Collection button (landing)
   {
     type: 'spotlight', target: 'collection-btn', placement: 'bottom',
     title: '📖 我的圖鑑',
     body: '點擊右上角的圖鑑\n查看你收集的所有花語',
     advanceOnStage: 'collection',
   },
-  // 8: Collection progress
+  // 9: Collection progress
   {
     type: 'spotlight', target: 'collection-progress', placement: 'bottom',
     title: '蒐集進度',
     body: '追蹤你的蒐集進度\n20 種花語等你一一解鎖',
     cta: '下一步',
   },
-  // 9: Click a card
+  // 10: Click a card
   {
     type: 'spotlight', target: 'collection-card', placement: 'top',
     title: '花語卡片',
     body: '點擊卡片查看完整的花語故事',
     advanceOnClick: 'collection-card',
   },
-  // 10: Card detail info
+  // 11: Card detail info
   {
     type: 'banner', placement: 'bottom',
     title: '卡片詳情',
-    body: '每張卡片都有花語故事、個人訊息\n與在地景點推薦',
+    body: '每張卡片都有花語故事、個人訊息\n與裝置藝術展覽資訊',
     cta: '下一步',
   },
-  // 11: Close collection → back to landing
+  // 12: Close collection → back to landing
   {
     type: 'spotlight', target: 'back-btn', placement: 'bottom',
     title: '返回主頁',
     body: '點擊關閉圖鑑，回到主頁繼續探索',
     advanceOnStage: 'landing',
   },
-  // 12: Auth button
+  // 13: Auth button
   {
     type: 'spotlight', target: 'auth-btn', placement: 'bottom',
     title: '📲 登入 / 註冊',
     body: '建立帳號，跨裝置同步花語收藏\n不怕換手機也遺失！',
     cta: '知道了',
   },
-  // 13: QR scan
+  // 14: QR scan
   {
     type: 'spotlight', target: 'qr-btn', placement: 'top',
     title: '📷 掃描 QR Code',
     body: '走到展覽現場，掃描作品旁的 QR Code\n解鎖專屬花卡，開始你的花語旅程',
     cta: '知道了',
   },
-  // 14: Complete
+  // 15: Complete
   {
     type: 'fullscreen', emoji: '✨',
     title: '準備好了！',
@@ -126,7 +145,6 @@ function useTargetRect(key) {
       const el = document.querySelector(`[data-tutorial="${key}"]`)
       if (!el) { setRect(null); return }
       const r = el.getBoundingClientRect()
-      // scroll into view if outside viewport
       if (r.bottom < 0 || r.top > window.innerHeight) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
@@ -277,14 +295,39 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
   const [active, setActive] = useState(false)
   const [showSkipConfirm, setShowSkipConfirm] = useState(false)
 
+  // 初始化：恢復 sessionStorage 中的進度（同一 session 中斷後繼續）
   useEffect(() => {
     if (isDevUser(user) || !localStorage.getItem(TUTORIAL_KEY)) {
-      setStep(0)
+      const saved = parseInt(sessionStorage.getItem(SESSION_STEP_KEY) || '0', 10)
+      setStep(Number.isFinite(saved) && saved > 0 && saved < STEPS.length ? saved : 0)
       setActive(true)
     }
   }, [user])
 
+  // 每次 step 變化時存入 sessionStorage
+  useEffect(() => {
+    if (active && step > 0) sessionStorage.setItem(SESSION_STEP_KEY, String(step))
+  }, [step, active])
+
   useEffect(() => { onActiveChange?.(active) }, [active, onActiveChange])
+
+  // Stage 一致性防呆：若 appStage 與當前步驟的預期 stage 不符，自動跳回對應步驟
+  // 避免使用者中途返回主頁時引導卡在錯誤狀態
+  useEffect(() => {
+    if (!active) return
+    const expected = STEP_STAGE_MAP[step]
+    if (!expected || appStage === expected) return
+
+    if (appStage === 'landing') {
+      if (step >= 2 && step <= 7) {
+        // 從 gacha/result 返回 landing → 重回選花步驟
+        setStep(1)
+      } else if (step >= 9 && step <= 12) {
+        // 從 collection 返回 landing → 重回圖鑑入口步驟
+        setStep(8)
+      }
+    }
+  }, [appStage, step, active])
 
   const cur = STEPS[step] ?? STEPS[0]
   const targetKey = cur.type === 'spotlight' ? cur.target : null
@@ -296,8 +339,8 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
     height: rawRect.height + PAD * 2,
   } : null
 
-  // Scroll lock + auto-scroll for result page steps
-  const SCROLL_LOCK_STEPS = [3, 4, 5, 6]
+  // Result 頁面步驟（3–7）滾動鎖定
+  const SCROLL_LOCK_STEPS = [3, 4, 5, 6, 7]
   useEffect(() => {
     if (!active || !SCROLL_LOCK_STEPS.includes(step)) {
       document.body.style.overflow = ''
@@ -306,7 +349,6 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
       return
     }
 
-    // Scroll to target first, then lock after animation settles
     const target = STEPS[step]?.target
     if (target) {
       const el = document.querySelector(`[data-tutorial="${target}"]`)
@@ -351,6 +393,7 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
 
   const handleNext = () => {
     if (step >= STEPS.length - 1) {
+      sessionStorage.removeItem(SESSION_STEP_KEY)
       localStorage.setItem(TUTORIAL_KEY, '1')
       setActive(false)
     } else {
@@ -358,7 +401,12 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
     }
   }
   const handleSkip = () => setShowSkipConfirm(true)
-  const handleSkipConfirm = () => { localStorage.setItem(TUTORIAL_KEY, '1'); setActive(false); setShowSkipConfirm(false) }
+  const handleSkipConfirm = () => {
+    sessionStorage.removeItem(SESSION_STEP_KEY)
+    localStorage.setItem(TUTORIAL_KEY, '1')
+    setActive(false)
+    setShowSkipConfirm(false)
+  }
   const handleSkipCancel = () => setShowSkipConfirm(false)
 
   if (!active) return null

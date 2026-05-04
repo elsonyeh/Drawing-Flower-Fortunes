@@ -807,11 +807,14 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           className="bg-gradient-to-br from-night-800/60 to-night-900/60 backdrop-blur-md rounded-2xl p-6 mb-8 border border-primary-500/20"
           data-tutorial="locations"
         >
-          <h2 className="text-xl font-semibold text-primary-300 mb-4 flex items-center">
-            <span className="mr-2">{zoneArtworks ? '🎨' : '📍'}</span>
-            {zoneArtworks
-              ? (ZONE_THEME[exhibitionZone]?.name ?? exhibitionZone)
-              : '推薦探索地點'}
+          <h2 className="text-xl font-semibold text-primary-300 mb-4 flex items-center gap-2">
+            <span>🖼️</span>
+            <span className="text-white/40 text-xs font-normal tracking-widest">裝置藝術展覽</span>
+            {zoneArtworks && (
+              <span className="text-primary-300 font-semibold text-xl">
+                · {ZONE_THEME[exhibitionZone]?.name ?? exhibitionZone}
+              </span>
+            )}
           </h2>
           <div className="space-y-3">
             {zoneArtworks
@@ -909,6 +912,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           </motion.button>
 
           <motion.button
+            data-tutorial="share-btn"
             onClick={handleOpenShare}
             className="px-8 py-4 bg-night-700/80 rounded-full font-medium transition-colors text-lg flex items-center justify-center gap-2"
             style={{ color: '#F2A488', border: '1px solid rgba(242,126,147,0.30)' }}
