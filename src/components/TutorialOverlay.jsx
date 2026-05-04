@@ -58,7 +58,7 @@ const STEPS = [
   {
     type: 'spotlight', target: 'locations', placement: 'bottom',
     title: '推薦前往的裝置藝術作品',
-    body: '前往現場掃描作品旁的 QR Code\n就能解鎖專屬花卡、蒐集更多花朵！',
+    bodyHtml: '前往現場<span style="color:#F2BE5C;font-weight:700">掃描作品旁的 QR Code</span><br/>就能解鎖專屬花卡、<span style="color:#F2BE5C;font-weight:700">蒐集更多花朵</span>！',
     cta: '下一步',
   },
   // 6: Share button (result) ── 只介紹，不需點擊
