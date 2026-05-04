@@ -807,14 +807,15 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           className="bg-gradient-to-br from-night-800/60 to-night-900/60 backdrop-blur-md rounded-2xl p-6 mb-8 border border-primary-500/20"
           data-tutorial="locations"
         >
-          <h2 className="text-xl font-semibold text-primary-300 mb-4 flex items-center gap-2">
-            <span className="text-white/40 text-xs font-normal tracking-widest">裝置藝術展覽</span>
-            {zoneArtworks && (
-              <span className="text-primary-300 font-semibold text-xl">
-                · {ZONE_THEME[exhibitionZone]?.name ?? exhibitionZone}
-              </span>
-            )}
-          </h2>
+          <div className="mb-4">
+            <p className="text-white/40 text-xs tracking-widest mb-1">推薦前往的裝置藝術展覽</p>
+            <h2 className="text-xl font-semibold text-primary-300 flex items-center gap-2">
+              {zoneArtworks
+                ? (ZONE_THEME[exhibitionZone]?.name ?? exhibitionZone)
+                : '今夜探索'}
+              {zoneArtworks && <span className="text-white/30 text-sm font-normal">展區</span>}
+            </h2>
+          </div>
           <div className="space-y-3">
             {zoneArtworks
               ? zoneArtworks.length > 0
