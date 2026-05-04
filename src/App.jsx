@@ -11,11 +11,14 @@ const EmotionScanPage = lazy(() => import('./components/EmotionScanPage'))
 const ExhibitionScanPage = lazy(() => import('./components/ExhibitionScanPage'))
 const QRScanPage = lazy(() => import('./components/QRScanPage'))
 const AuthModal = lazy(() => import('./components/AuthModal'))
+const CollectionComplete = lazy(() => import('./components/CollectionComplete'))
 import { getRandomFlower, saveCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
 import { isExhibitionMode, getUnlockedPools, initAppMode, enterExhibitionMode } from './utils/exhibitionHelper'
 import { fetchGlobalMode, subscribeGlobalMode } from './utils/exhibitionSync'
 import { useAuth } from './hooks/useAuth'
-import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile } from './utils/collectionSync'
+import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile, checkAndNotifyCompletion } from './utils/collectionSync'
+
+import { logEvent } from './utils/analytics'
 
 // 引入 FlowerBloom 觸發背景預載入其他模型
 import './components/FlowerBloom'
@@ -59,6 +62,7 @@ function App() {
   const [gachaSkipFlowerPick, setGachaSkipFlowerPick] = useState(false)
   const [gachaTransitionFlash, setGachaTransitionFlash] = useState(false)
   const [tutorialActive, setTutorialActive] = useState(false)
+  const [completionData, setCompletionData] = useState(null) // null | { needsEmail: boolean }
 
   const { user } = useAuth()
 
@@ -89,7 +93,7 @@ function App() {
     const exMode = isExhibitionMode()
     const pools = exMode ? getUnlockedPools() : null
     const flower = exMode ? getRandomFlowerForExhibition(pools) : getRandomFlower()
-    const isTutorial = exMode && tutorialActive
+    const isTutorial = tutorialActive  // 引導模式下不論是否展覽，都不存圖鑑
 
     setSelectedFlower(flower)
     setEmotionData(null)
@@ -98,10 +102,22 @@ function App() {
     setGachaTransitionFlash(true)
     setStage('gacha')
 
-    // 展覽模式引導抽籤不記錄，其餘正常儲存
-    if (!isTutorial) {
+    if (isTutorial) {
+      // 引導抽籤：不存 localStorage / 圖鑑，但記錄到 DB 追蹤使用次數
+      logEvent(user?.id, 'draw', { source: 'tutorial', flower_id: flower.id, rarity: flower.rarity })
+    } else {
       saveCollectedFlower(flower)
-      if (user) saveFlowerToCloud(user.id, flower)
+      if (user) {
+        saveFlowerToCloud(user.id, flower)
+        checkAndNotifyCompletion(user).then(r => {
+          if (r?.showAnimation) setCompletionData({ needsEmail: r.needsEmail })
+        })
+      }
+      logEvent(user?.id, 'draw', {
+        source: exMode ? 'exhibition' : 'normal',
+        flower_id: flower.id,
+        rarity: flower.rarity,
+      })
     }
   }
 
@@ -111,7 +127,12 @@ function App() {
     setSelectedFlower(flower)
     setEmotionData(null)
     saveCollectedFlower(flower)
-    if (user) saveFlowerToCloud(user.id, flower)
+    if (user) {
+      saveFlowerToCloud(user.id, flower)
+      checkAndNotifyCompletion(user).then(r => {
+        if (r?.showAnimation) setCompletionData({ needsEmail: r.needsEmail })
+      })
+    }
     setScanParams(null)
     setGachaSkipFlowerPick(false) // 展覽模式需要選花環節
     setStage('gacha')
@@ -122,6 +143,8 @@ function App() {
     if (!isExhibitionMode()) {
       enterExhibitionMode()
     }
+
+    logEvent(user?.id, 'qr_scan', { zone, work_id: workId })
 
     // 顯示作品資訊頁（ExhibitionScanPage 會記錄拜訪並讓用戶點擊抽卡）
     setScanParams({ zone, workId, workName })
@@ -140,6 +163,12 @@ function App() {
     setGachaSkipFlowerPick(true)
     setGachaTransitionFlash(true)
     setStage('gacha')
+    // 記錄到 DB 追蹤使用次數與面相原型分布
+    logEvent(user?.id, 'face_scan_complete', {
+      archetype: data?.archetype,
+      flower_id: flower.id,
+      rarity: flower.rarity,
+    })
   }
 
   const handleGachaComplete = () => {
@@ -286,6 +315,7 @@ function App() {
             key="admin"
             onSimulateQRScan={handleQRScanSuccess}
             onDirectDraw={handleExhibitionDraw}
+            onTestCompletion={(needsEmail) => setCompletionData({ needsEmail, isTest: true })}
           />
         )}
       </AnimatePresence>
@@ -293,6 +323,18 @@ function App() {
 
       <Suspense fallback={null}>
         <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      </Suspense>
+
+      {/* 集滿成就動畫 */}
+      <Suspense fallback={null}>
+        {completionData && (
+          <CollectionComplete
+            user={user}
+            needsEmail={completionData.needsEmail}
+            isTest={completionData.isTest ?? false}
+            onClose={() => setCompletionData(null)}
+          />
+        )}
       </Suspense>
       </div>
 

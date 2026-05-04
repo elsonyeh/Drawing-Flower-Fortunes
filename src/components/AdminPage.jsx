@@ -1,26 +1,88 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react'
 import { unlockAllFlowers, clearAllFlowers, getCollectionStats } from '../utils/fortuneHelper'
-import { getExhibitionState, clearWorkVisit } from '../utils/exhibitionHelper'
+import { getExhibitionState, clearWorkVisit, resetExhibitionState } from '../utils/exhibitionHelper'
 import { fetchGlobalMode, pushGlobalMode } from '../utils/exhibitionSync'
 import { ZONE_THEME, ARTWORKS } from '../utils/exhibitionConstants'
+import { supabase, isSupabaseEnabled } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
+const KPIDashboard = lazy(() => import('./KPIDashboard'))
+const AuthModal = lazy(() => import('./AuthModal'))
 
 const ZONE_COLOR = Object.fromEntries(Object.entries(ZONE_THEME).map(([k, v]) => [k, v.color]))
 
-function AdminPage({ onSimulateQRScan, onDirectDraw }) {
+function AdminPage({ onSimulateQRScan, onDirectDraw, onTestCompletion }) {
+  const { user } = useAuth()
+  const [isAdmin, setIsAdmin] = useState(null) // null=checking, true/false
+  const [showAdminAuth, setShowAdminAuth] = useState(false)
+
   const [stats, setStats] = useState(getCollectionStats())
   const [message, setMessage] = useState('')
-  const [activeTab, setActiveTab] = useState('stats') // 'stats', 'qrcodes', 'exhibition', 'test'
+  const [activeTab, setActiveTab] = useState('kpi')
   const [baseUrl, setBaseUrl] = useState(window.location.origin)
-  const [globalMode, setGlobalMode] = useState(null)   // null = 讀取中
+  const [globalMode, setGlobalMode] = useState(null)
   const [modeLoading, setModeLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
   const qrCanvasRefs = useRef({})
 
+  const [allUsers, setAllUsers] = useState([])
+  const [adminIds, setAdminIds] = useState(new Set())
+  const [usersLoading, setUsersLoading] = useState(false)
+  const [userMsg, setUserMsg] = useState('')
+
+  // 驗證管理員身份
   useEffect(() => {
+    if (!isSupabaseEnabled || !user) { setIsAdmin(false); return }
+    supabase.from('admins').select('user_id').eq('user_id', user.id).maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data))
+  }, [user])
+
+  useEffect(() => {
+    if (!isAdmin) return
     fetchGlobalMode().then(setGlobalMode)
-  }, [])
+  }, [isAdmin])
+
+  // 切換到用戶管理 tab 時載入資料
+  useEffect(() => {
+    if (activeTab !== 'users' || !isAdmin) return
+    loadUsers()
+  }, [activeTab, isAdmin])
+
+  const loadUsers = async () => {
+    setUsersLoading(true)
+    const [{ data: profiles }, { data: admins }] = await Promise.all([
+      supabase.from('profiles').select('id, email, display_name, created_at')
+        .order('created_at', { ascending: false }).limit(200),
+      supabase.from('admins').select('user_id'),
+    ])
+    setAllUsers(profiles || [])
+    setAdminIds(new Set((admins || []).map(a => a.user_id)))
+    setUsersLoading(false)
+  }
+
+  const handleToggleAdmin = async (targetUser) => {
+    const name = targetUser.display_name || targetUser.email || targetUser.id.slice(0, 8) + '…'
+    if (adminIds.has(targetUser.id)) {
+      if (targetUser.id === user.id) {
+        setUserMsg('無法移除自己的管理員權限')
+        setTimeout(() => setUserMsg(''), 2500)
+        return
+      }
+      const { error } = await supabase.from('admins').delete().eq('user_id', targetUser.id)
+      if (!error) {
+        setAdminIds(prev => { const s = new Set(prev); s.delete(targetUser.id); return s })
+        setUserMsg(`已移除 ${name} 的管理員權限`)
+      }
+    } else {
+      const { error } = await supabase.from('admins').insert({ user_id: targetUser.id })
+      if (!error) {
+        setAdminIds(prev => new Set([...prev, targetUser.id]))
+        setUserMsg(`已設 ${name} 為管理員`)
+      }
+    }
+    setTimeout(() => setUserMsg(''), 3000)
+  }
 
   const handleUnlockAll = () => {
     unlockAllFlowers()
@@ -56,10 +118,6 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
     setTimeout(() => setMessage(''), 3000)
   }
 
-  const handleGoToMain = () => {
-    window.location.href = '/'
-  }
-
   const handleExportAll = async () => {
     setExporting(true)
     for (const art of ARTWORKS) {
@@ -79,6 +137,51 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
 
   const exState = getExhibitionState()
 
+  // ── 驗證中 ──
+  if (isAdmin === null) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="min-h-screen flex items-center justify-center">
+        <p className="text-white/40 text-sm animate-pulse">驗證身份中…</p>
+      </motion.div>
+    )
+  }
+
+  // ── 未登入 / 無權限 ──
+  if (!user || !isAdmin) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="min-h-screen flex items-center justify-center px-8">
+        <div className="text-center space-y-5 max-w-xs w-full">
+          <div>
+            <h1 className="text-xl font-bold mb-1">Admin Panel</h1>
+            <p className="text-xs text-white/25">elsontest</p>
+          </div>
+          {!user ? (
+            <>
+              <p className="text-white/50 text-sm">請以管理員帳號登入</p>
+              <button
+                onClick={() => setShowAdminAuth(true)}
+                className="w-full py-3 rounded-xl font-semibold text-white transition-all"
+                style={{ background: 'linear-gradient(135deg, #F27E93, #F2BE5C)' }}
+              >
+                登入
+              </button>
+            </>
+          ) : (
+            <p className="text-sm" style={{ color: 'rgba(252,165,165,0.75)' }}>
+              此帳號（{user.email}）無管理員權限
+            </p>
+          )}
+        </div>
+        <Suspense fallback={null}>
+          <AuthModal isOpen={showAdminAuth} onClose={() => setShowAdminAuth(false)} />
+        </Suspense>
+      </motion.div>
+    )
+  }
+
+  // ── 管理員主界面 ──
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -87,21 +190,26 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
       className="min-h-screen bg-gradient-to-b from-night-900 via-night-800 to-night-700 text-white"
     >
       <div className="max-w-4xl mx-auto px-4 pt-8 pb-16">
-        <h1 className="text-2xl font-bold text-center mb-1">Admin Panel</h1>
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-2xl font-bold">Admin Panel</h1>
+          <span className="text-xs text-white/30 truncate max-w-[160px]">{user.email}</span>
+        </div>
         <p className="text-gray-400 text-center text-sm mb-6">elsontest</p>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 flex-wrap">
           {[
-            { id: 'stats', label: '蒐集數據' },
-            { id: 'qrcodes', label: 'QR Code 列表' },
+            { id: 'kpi',        label: '📊 KPI' },
+            { id: 'users',      label: '👥 管理員' },
+            { id: 'stats',      label: '蒐集數據' },
+            { id: 'qrcodes',    label: 'QR Code' },
             { id: 'exhibition', label: '展覽狀態' },
-            { id: 'test', label: '🧪 測試流程' },
+            { id: 'test',       label: '🧪 測試' },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
+              className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
                 activeTab === tab.id
                   ? 'bg-white/20 text-white'
                   : 'bg-white/5 text-white/50 hover:bg-white/10'
@@ -111,6 +219,98 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
             </button>
           ))}
         </div>
+
+        {/* ── KPI Tab ── */}
+        {activeTab === 'kpi' && (
+          <Suspense fallback={<p className="text-center py-8 text-white/40 text-sm animate-pulse">載入中…</p>}>
+            <KPIDashboard />
+          </Suspense>
+        )}
+
+        {/* ── Users Management Tab ── */}
+        {activeTab === 'users' && (
+          <div className="space-y-4">
+            <div className="bg-white/5 rounded-xl p-4">
+              <p className="text-sm font-bold mb-1">管理員設定</p>
+              <p className="text-xs text-white/40">從已註冊用戶中選擇並授予管理員權限</p>
+            </div>
+
+            {userMsg && (
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                className="rounded-lg p-3 text-center text-sm"
+                style={{ background: 'rgba(110,231,183,0.12)', color: '#6ee7b7', border: '1px solid rgba(110,231,183,0.2)' }}>
+                {userMsg}
+              </motion.div>
+            )}
+
+            {usersLoading ? (
+              <p className="text-center py-8 text-white/40 text-sm animate-pulse">載入用戶中…</p>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  {allUsers.map(u => {
+                    const thisIsAdmin = adminIds.has(u.id)
+                    const isSelf = u.id === user.id
+                    const label = u.display_name || u.email || u.id.slice(0, 8) + '…'
+                    return (
+                      <div
+                        key={u.id}
+                        className="flex items-center gap-3 rounded-xl px-4 py-3"
+                        style={{
+                          background: 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${thisIsAdmin ? 'rgba(242,190,92,0.28)' : 'rgba(255,255,255,0.07)'}`,
+                        }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-white truncate">
+                            {label}
+                            {isSelf && <span className="ml-1.5 text-xs text-white/25">（你）</span>}
+                          </p>
+                          {u.email && u.display_name && (
+                            <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                              {u.email}
+                            </p>
+                          )}
+                        </div>
+
+                        {thisIsAdmin && (
+                          <span
+                            className="shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold"
+                            style={{ background: 'rgba(242,190,92,0.13)', color: '#F2BE5C', border: '1px solid rgba(242,190,92,0.35)' }}
+                          >
+                            管理員
+                          </span>
+                        )}
+
+                        <button
+                          onClick={() => handleToggleAdmin(u)}
+                          disabled={isSelf && thisIsAdmin}
+                          className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all min-h-[32px] disabled:opacity-30"
+                          style={thisIsAdmin
+                            ? { background: 'rgba(239,68,68,0.12)', color: 'rgba(252,165,165,0.8)', border: '1px solid rgba(239,68,68,0.28)' }
+                            : { background: 'rgba(110,231,183,0.10)', color: '#6ee7b7', border: '1px solid rgba(110,231,183,0.28)' }
+                          }
+                        >
+                          {thisIsAdmin ? '移除' : '設為管理員'}
+                        </button>
+                      </div>
+                    )
+                  })}
+
+                  {allUsers.length === 0 && (
+                    <p className="text-center py-8 text-white/30 text-sm">尚無用戶資料</p>
+                  )}
+                </div>
+
+                <div className="text-right">
+                  <button onClick={loadUsers} className="text-xs text-white/25 hover:text-white/50 transition-colors">
+                    ↻ 重新整理
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* ── Stats Tab ── */}
         {activeTab === 'stats' && (
@@ -141,7 +341,7 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
                 className="w-full py-3 px-4 bg-red-500/20 border border-red-500/50 rounded-xl font-semibold text-red-300 hover:bg-red-500/30 transition-all">
                 Clear Collection
               </button>
-              <button onClick={handleGoToMain}
+              <button onClick={() => window.location.href = '/'}
                 className="w-full py-3 px-4 bg-white/10 rounded-xl font-semibold text-white hover:bg-white/20 transition-all">
                 Go to Main Page
               </button>
@@ -152,7 +352,6 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
         {/* ── QR Codes Tab ── */}
         {activeTab === 'qrcodes' && (
           <div>
-            {/* Base URL setting */}
             <div className="bg-white/5 rounded-xl p-4 mb-5">
               <label htmlFor="base-url-input" className="text-white/60 text-xs mb-1 block">App 網址（用於生成 QR Code）</label>
               <input
@@ -165,7 +364,6 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
               />
             </div>
 
-            {/* Hidden canvases for export */}
             <div className="sr-only" aria-hidden="true">
               {ARTWORKS.map(art => (
                 <QRCodeCanvas
@@ -188,7 +386,6 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
               {exporting ? '匯出中…' : '匯出所有 QR Code（獨立圖片）'}
             </button>
 
-            {/* QR Code Grid by Zone */}
             {['A', 'B', 'C'].map(zone => (
               <div key={zone} className="mb-8">
                 <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
@@ -229,7 +426,6 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
         {/* ── Exhibition State Tab ── */}
         {activeTab === 'exhibition' && (
           <div className="space-y-4">
-            {/* 全域模式切換 */}
             <div className={`rounded-xl p-4 border ${
               globalMode === 'exhibition'
                 ? 'bg-green-500/10 border-green-500/30'
@@ -269,16 +465,10 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
             </div>
 
             {!exState ? (
-              <div className="text-center py-8 text-white/40 text-sm">
-                尚未進入展覽模式
-              </div>
+              <div className="text-center py-8 text-white/40 text-sm">尚未進入展覽模式</div>
             ) : (
               <>
                 <div className="bg-white/5 rounded-xl p-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-semibold">抽卡次數</h3>
-                    <span className="text-2xl font-bold text-yellow-300">{exState.tickets}</span>
-                  </div>
                   <div className="text-white/40 text-xs">已訪作品：{exState.visited.length} / 15</div>
                 </div>
 
@@ -310,11 +500,10 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
                 })}
 
                 <button
-                  onClick={() => {
-                    if (window.confirm('清除展覽進度？')) {
-                      localStorage.removeItem('exhibitionState')
-                      window.location.reload()
-                    }
+                  onClick={async () => {
+                    if (!window.confirm('清除展覽進度？')) return
+                    await resetExhibitionState()
+                    window.location.reload()
                   }}
                   className="w-full py-2.5 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-sm hover:bg-red-500/25 transition-all"
                 >
@@ -324,10 +513,10 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
             )}
           </div>
         )}
+
         {/* ── Test Flow Tab ── */}
         {activeTab === 'test' && (
           <div className="space-y-5">
-            {/* 直接抽卡（跳過作品頁） */}
             <div className="bg-white/5 rounded-xl p-4">
               <p className="text-sm font-bold mb-1">直接抽卡</p>
               <p className="text-xs text-white/40 mb-3">跳過作品介紹頁，直接進入選花 → 翻牌流程</p>
@@ -340,7 +529,27 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
               </button>
             </div>
 
-            {/* 測試引導動畫 */}
+            <div className="bg-white/5 rounded-xl p-4">
+              <p className="text-sm font-bold mb-1">集滿成就動畫</p>
+              <p className="text-xs text-white/40 mb-3">測試集滿任務的全螢幕動畫效果（不實際寄信、不寫資料庫）</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onTestCompletion?.(false)}
+                  className="flex-1 py-3 rounded-xl font-semibold text-white transition-all min-h-[44px] text-sm"
+                  style={{ background: 'linear-gradient(135deg, rgba(242,126,147,0.5), rgba(196,181,253,0.4))', border: '1px solid rgba(242,126,147,0.4)' }}
+                >
+                  🌸 有 Email
+                </button>
+                <button
+                  onClick={() => onTestCompletion?.(true)}
+                  className="flex-1 py-3 rounded-xl font-semibold text-white transition-all min-h-[44px] text-sm"
+                  style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.5), rgba(196,181,253,0.4))', border: '1px solid rgba(99,102,241,0.4)' }}
+                >
+                  🔗 LINE 無 Email
+                </button>
+              </div>
+            </div>
+
             <div className="bg-white/5 rounded-xl p-4">
               <p className="text-sm font-bold mb-1">引導動畫</p>
               <p className="text-xs text-white/40 mb-3">清除完成記錄，返回首頁重新播放引導流程</p>
@@ -356,7 +565,6 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
               </button>
             </div>
 
-            {/* 模擬掃描特定作品 */}
             <div className="bg-white/5 rounded-xl p-4">
               <p className="text-sm font-bold mb-1">模擬 QR 掃描（完整流程）</p>
               <p className="text-xs text-white/40 mb-4">作品介紹頁 → 點擊抽卡 → 選花 → 翻牌</p>
@@ -368,7 +576,7 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
                       <button
                         key={art.id}
                         onClick={() => {
-                          clearWorkVisit(art.id)  // 每次測試都視為新拜訪，確保顯示抽卡按鈕
+                          clearWorkVisit(art.id)
                           onSimulateQRScan({ zone: art.zone, workId: art.id, workName: art.name })
                         }}
                         className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all min-h-[44px] hover:bg-white/10"
@@ -385,8 +593,6 @@ function AdminPage({ onSimulateQRScan, onDirectDraw }) {
           </div>
         )}
       </div>
-
-
     </motion.div>
   )
 }

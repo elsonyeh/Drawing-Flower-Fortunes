@@ -3,7 +3,20 @@
  * 將 localStorage 的蒐集資料同步到 Supabase
  */
 import { supabase, isSupabaseEnabled } from '../lib/supabase'
-import { getCollectedMap } from './fortuneHelper'
+import { getCollectedMap, getCollectionStats } from './fortuneHelper'
+import { getExhibitionState } from './exhibitionHelper'
+import { ARTWORKS } from './exhibitionConstants'
+
+// 集滿條件：≥15 種花 + 全部 15 件裝置藝術掃過
+const COMPLETION_FLOWER_MIN = 15
+const ALL_ARTWORK_IDS = ARTWORKS.map(a => a.id) // ['A1'…'C5']
+
+export const isCompletionMet = () => {
+  const stats = getCollectionStats()
+  if (stats.total < COMPLETION_FLOWER_MIN) return false
+  const visited = getExhibitionState()?.visited ?? []
+  return ALL_ARTWORK_IDS.every(id => visited.includes(id))
+}
 
 /**
  * 確保用戶的 profile 存在（trigger 失敗時的備援）
@@ -22,6 +35,7 @@ export const ensureProfile = async (user) => {
   // 不存在則建立
   await supabase.from('profiles').upsert({
     id: user.id,
+    email: user.email,
     display_name:
       user.user_metadata?.full_name ||
       user.user_metadata?.name ||
@@ -129,4 +143,79 @@ export const loadCloudToLocal = async (userId) => {
   const localMap = getCollectedMap()
   const merged = { ...cloudMap, ...localMap }
   localStorage.setItem('collectedFlowers', JSON.stringify(merged))
+}
+
+/**
+ * 判斷是否需要顯示完成動畫
+ * 回傳 { showAnimation: true, needsEmail: boolean } 或 null
+ * - showAnimation: true 代表本裝置尚未看過動畫，應觸發
+ * - needsEmail: true 代表用戶無 email（僅 LINE 登入），需在動畫後補填
+ */
+export const checkAndNotifyCompletion = async (user) => {
+  if (!isSupabaseEnabled || !user) return null
+
+  if (!isCompletionMet()) return null
+
+  // 本裝置已看過動畫，不重複觸發
+  if (localStorage.getItem('chenghua_completion_seen')) return null
+
+  // 雲端已標記通知（其他裝置觸發過），直接同步本地旗標
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('completion_notified')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (profile?.completion_notified) {
+    localStorage.setItem('chenghua_completion_seen', '1')
+    return null
+  }
+
+  return { showAnimation: true, needsEmail: !user.email }
+}
+
+/**
+ * 實際發送恭賀郵件並標記完成
+ * 由 CollectionComplete 元件在動畫結束後呼叫
+ * - emailOverride: LINE 用戶手動填寫的 email
+ * 回傳 { prizeClaimed: boolean, rank: number }
+ */
+export const sendCompletionEmail = async (user, emailOverride = null) => {
+  if (!isSupabaseEnabled || !user) return { prizeClaimed: false, rank: 0 }
+
+  const email = emailOverride || user.email
+  const displayName =
+    user.user_metadata?.full_name ||
+    user.user_metadata?.name ||
+    (email ? email.split('@')[0] : '花語旅人')
+
+  // 計算已獲獎人數，超過 10 人不寄信
+  const { count } = await supabase
+    .from('profiles')
+    .select('*', { count: 'exact', head: true })
+    .eq('completion_notified', true)
+
+  const currentCount = count ?? 0
+  const prizeClaimed = currentCount < 10
+  const rank = currentCount + 1
+
+  if (email && prizeClaimed) {
+    try {
+      const res = await supabase.functions.invoke('send-completion-email', {
+        body: { email, displayName, prizeRank: rank },
+      })
+      if (res.error) throw res.error
+    } catch (e) {
+      console.error('[sendCompletionEmail] 寄信失敗:', e)
+    }
+  }
+
+  // 標記完成（無論是否有獎）
+  await supabase
+    .from('profiles')
+    .update({ completion_notified: true })
+    .eq('id', user.id)
+
+  localStorage.setItem('chenghua_completion_seen', '1')
+  return { prizeClaimed, rank }
 }

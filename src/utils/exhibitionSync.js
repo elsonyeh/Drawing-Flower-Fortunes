@@ -61,7 +61,6 @@ export const syncExhibitionToCloud = async (state) => {
     .upsert({
       visitor_id: visitorId,
       visited: state.visited,
-      tickets: state.tickets,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'visitor_id' })
 
@@ -132,7 +131,7 @@ export const loadExhibitionFromCloud = async () => {
 
   const { data, error } = await supabase
     .from('exhibition_sessions')
-    .select('visited, tickets')
+    .select('visited')
     .eq('visitor_id', visitorId)
     .maybeSingle()
 
@@ -144,7 +143,6 @@ export const loadExhibitionFromCloud = async () => {
 
   return {
     visited: data.visited || [],
-    tickets: data.tickets ?? 1,
     initialized: true,
   }
 }

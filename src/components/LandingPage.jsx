@@ -241,6 +241,33 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
 
       {/* 背景遮罩已移除：換場效果交由 GachaAnimation 的 transitionFlash/transitionGlow 處理 */}
 
+      {/* 未登入警示 */}
+      {!user && !tutorialActive && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="relative z-10 text-center"
+          style={{ marginBottom: isSmallScreen ? 4 : 8 }}
+        >
+          <button
+            onClick={onOpenAuth}
+            className="inline-flex items-center gap-1.5 rounded-full transition-all active:scale-95"
+            style={{
+              fontSize: 11,
+              padding: '5px 12px',
+              color: '#f87171',
+              background: 'rgba(239,68,68,0.10)',
+              border: '1px solid rgba(239,68,68,0.28)',
+            }}
+          >
+            <span>⚠</span>
+            <span>尚未登入，花語記錄可能遺失</span>
+            <span style={{ textDecoration: 'underline', opacity: 0.75 }}>立即登入</span>
+          </button>
+        </motion.div>
+      )}
+
       {/* 花束區域 */}
       <div
         className="relative flex flex-col items-center"
@@ -330,7 +357,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
               onClick={onQRScan}
               data-tutorial="qr-btn"
               className="w-full max-w-xs py-3 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 min-h-[48px]"
-              style={{ background: 'linear-gradient(135deg, rgba(242,190,92,0.40), rgba(242,164,136,0.35))', border: '1px solid rgba(242,190,92,0.40)', backdropFilter: 'blur(8px)' }}
+              style={{ background: 'linear-gradient(135deg, rgba(242,190,92,0.40), rgba(242,164,136,0.35))', border: '1px solid rgba(242,190,92,0.40)' }}
               whileHover={{ scale: 1.03, boxShadow: '0 0 20px rgba(242,190,92,0.35)' }}
               whileTap={{ scale: 0.97 }}
             >
@@ -345,9 +372,10 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           {/* 次要：相由花緣 */}
           {onEmotionScan && (
             <motion.button
+              data-tutorial="emotion-btn"
               onClick={onEmotionScan}
-              className="w-full max-w-xs py-2.5 rounded-2xl text-sm font-medium text-white/75 flex items-center justify-center gap-2 min-h-[44px]"
-              style={{ background: 'linear-gradient(135deg, rgba(91,123,168,0.35), rgba(72,100,140,0.28))', border: '1px solid rgba(91,123,168,0.40)', backdropFilter: 'blur(8px)' }}
+              className="w-full max-w-xs py-2.5 rounded-2xl text-sm font-medium text-white flex items-center justify-center gap-2 min-h-[44px]"
+              style={{ background: 'linear-gradient(135deg, #4B6FA5, #2D4A80)', border: '1px solid rgba(120,160,220,0.55)' }}
               whileHover={{ scale: 1.03, boxShadow: '0 0 16px rgba(91,123,168,0.35)' }}
               whileTap={{ scale: 0.97 }}
             >

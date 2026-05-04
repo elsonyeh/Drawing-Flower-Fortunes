@@ -88,20 +88,19 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
           {exMode && exProgress && (
             <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
               <div className="px-4 py-3" style={{ background: 'rgba(91,123,168,0.08)' }}>
-                <span className="text-xs text-white/50 tracking-widest font-medium">展覽進度</span>
+                <span className="text-xs text-white/50 tracking-widest font-medium">裝置藝術展覽解鎖進度</span>
               </div>
               <div className="grid grid-cols-3 divide-x divide-white/8">
                 {['A', 'B', 'C'].map(zone => {
                   const theme = ZONE_THEME[zone]
                   const visited = exProgress[zone] || []
                   const total = ZONE_ARTWORKS[zone].length
-                  const unlocked = unlockedPools.includes(zone)
                   const pct = Math.round((visited.length / total) * 100)
                   return (
                     <div key={zone} className="px-3 py-3 text-center">
                       <div className="flex items-center justify-center gap-1 mb-1.5">
-                        <span className="text-sm font-bold" style={{ color: unlocked ? theme.color : 'rgba(255,255,255,0.2)' }}>
-                          {unlocked ? theme.name : '🔒'}
+                        <span className="text-sm font-bold" style={{ color: theme.color }}>
+                          {theme.name}
                         </span>
                       </div>
                       <div className="h-1 rounded-full bg-white/10 overflow-hidden mb-1">
@@ -110,16 +109,34 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                           animate={{ width: `${pct}%` }}
                           transition={{ duration: 0.8, ease: 'easeOut' }}
                           className="h-full rounded-full"
-                          style={{ background: unlocked ? theme.color : 'rgba(255,255,255,0.15)' }}
+                          style={{ background: theme.color, filter: visited.length >= 2 ? 'brightness(1.3)' : 'none' }}
                         />
                       </div>
-                      <span className="text-xs" style={{ color: unlocked ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)' }}>
-                        {visited.length}/{total}
-                      </span>
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="text-xs" style={{ color: visited.length >= 2 ? '#86efac' : 'rgba(255,255,255,0.6)' }}>
+                          {visited.length}/{total}
+                        </span>
+                        {visited.length >= 2 && (
+                          <span style={{ color: '#86efac', fontSize: '10px', fontWeight: 700 }}>✓</span>
+                        )}
+                      </div>
                     </div>
                   )
                 })}
               </div>
+            </div>
+          )}
+
+          {/* Sticker redemption hint */}
+          {exMode && exProgress && (
+            <div className="mb-3 rounded-xl px-4 py-3" style={{ background: 'rgba(242,190,92,0.06)', border: '1px solid rgba(242,190,92,0.14)' }}>
+              <p className="text-xs leading-relaxed" style={{ color: 'rgba(242,217,208,0.7)' }}>
+                <span style={{ color: '#F2BE5C', fontWeight: 600 }}>✦ 兌換任務</span>
+                {'　'}每展區解鎖達 2 件以上，至服務台出示此頁面即可兌換集章活動限定角色貼紙！
+              </p>
+              <p className="text-xs mt-1.5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.32)' }}>
+                ✧ 傳聞走完全部裝置藝術並蒐集 15 種以上花語，將解鎖一段隱藏任務⋯⋯敢挑戰嗎？
+              </p>
             </div>
           )}
 
@@ -231,9 +248,15 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
 
       {/* Tips */}
       <div className="max-w-6xl mx-auto px-4 pb-8">
-        <div className="rounded-lg p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(242,126,147,0.12)' }}>
-          <p className="text-sm text-center" style={{ color: 'rgba(242,217,208,0.45)' }}>
-            💡 點擊卡片翻轉查看花朵 · SSR 卡片機率各 1% · 持續抽取收集完整圖鑑！
+        <div className="rounded-lg p-4 space-y-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(242,126,147,0.12)' }}>
+          <p className="text-xs text-center" style={{ color: 'rgba(242,217,208,0.45)' }}>
+            💡 點擊已收集的卡片即可翻轉查看花語詳情
+          </p>
+          <p className="text-xs text-center" style={{ color: '#F2BE5C', opacity: 0.75 }}>
+            ✦ 傳說中藏有五種極稀有的 SSR 花語，每種抽中機率僅 1%
+          </p>
+          <p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.28)' }}>
+            那朵屬於你的花，或許正在等待有緣人⋯⋯
           </p>
         </div>
       </div>
@@ -468,6 +491,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                     </div>
 
                     <button
+                      data-tutorial="view-detail-btn"
                       onClick={() => {
                         setFlippedCard(null)
                         onSelectFlower?.(flippedCard)

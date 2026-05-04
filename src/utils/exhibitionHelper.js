@@ -5,7 +5,6 @@ const STORAGE_KEY = 'exhibitionState'
 
 const defaultState = () => ({
   visited: [],       // e.g. ['A3', 'B1']
-  tickets: 1,        // start with 1 free draw
   initialized: true,
 })
 
@@ -56,11 +55,6 @@ export const getUnlockedPools = () => {
   return pools
 }
 
-export const getDrawTickets = () => {
-  const state = getExhibitionState()
-  return state ? state.tickets : Infinity
-}
-
 // 測試用：從已拜訪清單移除某件作品，讓下次掃描視為新拜訪
 export const clearWorkVisit = (workId) => {
   const state = getExhibitionState()
@@ -74,18 +68,9 @@ export const recordVisit = (workId) => {
   if (!state) return
   if (!state.visited.includes(workId)) {
     state.visited.push(workId)
-    state.tickets += 1  // +1 ticket per new scan
   }
   saveState(state)
   return state
-}
-
-export const consumeTicket = () => {
-  const state = getExhibitionState()
-  if (!state || state.tickets <= 0) return false
-  state.tickets -= 1
-  saveState(state)
-  return true
 }
 
 export const getZoneProgress = () => {
@@ -111,6 +96,15 @@ export const enterExhibitionMode = () => {
 }
 
 export const exitExhibitionMode = () => {
+  localStorage.removeItem(STORAGE_KEY)
+}
+
+/**
+ * 重置展覽進度：先清雲端再清 localStorage
+ * 若只清 localStorage，重新載入時 initAppMode 會從雲端把舊資料還原回來
+ */
+export const resetExhibitionState = async () => {
+  await syncExhibitionToCloud({ visited: [] })
   localStorage.removeItem(STORAGE_KEY)
 }
 
