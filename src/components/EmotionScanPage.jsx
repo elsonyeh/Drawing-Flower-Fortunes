@@ -310,12 +310,6 @@ export default function EmotionScanPage({ onComplete, onBack }) {
             >
               開始觀臉
             </motion.button>
-            <button
-              className="text-white/30 text-xs hover:text-white/60 transition-colors"
-              onClick={() => { stopCamera(); onBack() }}
-            >
-              改用隨機抽卡
-            </button>
           </motion.div>
         )}
 

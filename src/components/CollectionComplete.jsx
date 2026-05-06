@@ -181,7 +181,7 @@ function EmailForm({ inputRef, email, setEmail, submitting, onSubmit, onSkip }) 
   return (
     <>
       <p style={{ fontSize: 13, color: 'rgba(242,217,208,0.7)', textAlign: 'center', lineHeight: 1.85, marginBottom: 14 }}>
-        填寫 Email 以接收<br />隱藏任務恭賀通知
+        填寫 Email 以接收<br />隱藏成就恭賀通知
       </p>
       <input
         ref={inputRef}

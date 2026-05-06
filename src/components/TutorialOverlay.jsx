@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { logEvent } from '../utils/analytics'
 
 const TUTORIAL_KEY = 'chenghua_tutorial_v1'
 const SESSION_STEP_KEY = 'chenghua_tutorial_step'
@@ -12,8 +13,8 @@ const STEP_STAGE_MAP = {
   2: 'gacha',
   3: 'result', 4: 'result', 5: 'result', 6: 'result', 7: 'result',
   8: 'landing',
-  9: 'collection', 10: 'collection', 11: 'collection', 12: 'collection',
-  13: 'landing', 14: 'landing',
+  9: 'collection', 10: 'collection', 11: 'collection',
+  12: 'landing', 13: 'landing', 14: 'landing', 15: 'landing',
 }
 
 // ── Step definitions ─────────────────────────────────────────────────────────
@@ -72,14 +73,14 @@ const STEPS = [
   {
     type: 'spotlight', target: 'return-btn', placement: 'top',
     title: '收下花語',
-    body: '點擊按鈕，回到主頁繼續探索',
+    bodyHtml: '<span style="color:#F2BE5C;font-weight:700">點擊</span>按鈕，回到主頁繼續探索',
     advanceOnStage: 'landing',
   },
   // 8: Collection button (landing)
   {
     type: 'spotlight', target: 'collection-btn', placement: 'bottom',
     title: '📖 我的圖鑑',
-    body: '點擊右上角的圖鑑\n查看你收集的所有花語',
+    bodyHtml: '<span style="color:#F2BE5C;font-weight:700">點擊</span>右上角的圖鑑<br/>查看你收集的所有花語',
     advanceOnStage: 'collection',
   },
   // 9: Collection progress
@@ -89,42 +90,49 @@ const STEPS = [
     body: '追蹤你的蒐集進度\n20 種花語等你一一解鎖',
     cta: '下一步',
   },
-  // 10: Click a card
+  // 10: Card detail intro (no click required)
   {
-    type: 'spotlight', target: 'collection-card', placement: 'top',
-    title: '花語卡片',
-    body: '點擊卡片查看完整的花語故事',
-    advanceOnClick: 'collection-card',
-  },
-  // 11: Card detail info
-  {
-    type: 'banner', placement: 'bottom',
+    type: 'spotlight', target: 'collection-card', placement: 'bottom',
     title: '卡片詳情',
-    body: '每張卡片都有花語故事、個人訊息\n與裝置藝術展覽資訊',
+    bodyHtml: '<span style="color:#F2BE5C;font-weight:700">點擊</span>卡片可翻轉查看完整花語故事<br/>每張卡底都有花語故事、個人訊息與展覽資訊',
     cta: '下一步',
   },
-  // 12: Close collection → back to landing
+  // 11: Close collection → back to landing
   {
     type: 'spotlight', target: 'back-btn', placement: 'bottom',
     title: '返回主頁',
-    body: '點擊關閉圖鑑，回到主頁繼續探索',
+    bodyHtml: '<span style="color:#F2BE5C;font-weight:700">點擊</span>關閉圖鑑，回到主頁繼續探索',
     advanceOnStage: 'landing',
   },
-  // 13: Auth button
+  // 12: Auth button — guide click
   {
     type: 'spotlight', target: 'auth-btn', placement: 'bottom',
-    title: '📲 登入 / 註冊',
-    body: '建立帳號，跨裝置同步花語收藏\n不怕換手機也遺失！',
+    title: '登入 / 註冊',
+    bodyHtml: '<span style="color:#F2BE5C;font-weight:700">點擊</span>建立帳號，跨裝置同步你的花語收藏',
+    advanceOnClick: 'auth-btn',
+  },
+  // 13: Wait for login — banner while auth modal is open
+  {
+    type: 'banner', placement: 'bottom',
+    title: '選擇登入方式',
+    body: '選擇 LINE 或 Gmail 登入\n完成註冊後自動繼續導覽',
+    advanceOnUser: true,
+  },
+  // 14: Emotion scan introduction
+  {
+    type: 'spotlight', target: 'emotion-btn', placement: 'top',
+    title: '相由花緣',
+    body: '透過鏡頭掃描你的面相\n由花語為你解讀今夜的緣分',
     cta: '知道了',
   },
-  // 14: QR scan
+  // 15: QR Code scan introduction
   {
     type: 'spotlight', target: 'qr-btn', placement: 'top',
-    title: '📷 掃描 QR Code',
-    body: '走到展覽現場，掃描作品旁的 QR Code\n解鎖專屬花卡，開始你的花語旅程',
+    title: '掃描 QR Code',
+    bodyHtml: '走到展覽現場，<span style="color:#F2BE5C;font-weight:700">掃描作品旁的 QR Code</span><br/>解鎖專屬花卡，蒐集更多花語',
     cta: '知道了',
   },
-  // 15: Complete
+  // 16: Complete
   {
     type: 'fullscreen', emoji: '✨',
     title: '準備好了！',
@@ -214,7 +222,7 @@ function TooltipCard({ step, cur, onNext, onSkip, showAbove }) {
         <motion.button
           onClick={onNext}
           className="w-full py-2 rounded-xl text-white font-medium text-xs"
-          style={{ background: 'linear-gradient(135deg, rgba(242,126,147,0.85), rgba(242,190,92,0.85))' }}
+          style={{ background: 'linear-gradient(135deg, #F27E93, #F2BE5C)' }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
         >
@@ -279,7 +287,7 @@ function SkipConfirm({ onConfirm, onCancel }) {
           <button
             onClick={onConfirm}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, rgba(242,126,147,0.85), rgba(242,190,92,0.85))' }}
+            style={{ background: 'linear-gradient(135deg, #F27E93, #F2BE5C)' }}
           >
             確定跳過
           </button>
@@ -294,6 +302,7 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
   const [step, setStep] = useState(0)
   const [active, setActive] = useState(false)
   const [showSkipConfirm, setShowSkipConfirm] = useState(false)
+  const prevUserRef = useRef(user) // 用來區分「已登入抵達」vs「在此步驟登入」
 
   // 初始化：恢復 sessionStorage 中的進度（同一 session 中斷後繼續）
   useEffect(() => {
@@ -313,16 +322,19 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
 
   // Stage 一致性防呆：若 appStage 與當前步驟的預期 stage 不符，自動跳回對應步驟
   // 避免使用者中途返回主頁時引導卡在錯誤狀態
+  // 注意：若當前步驟正在等待此 stage 轉換（advanceOnStage），不應干預
   useEffect(() => {
     if (!active) return
     const expected = STEP_STAGE_MAP[step]
     if (!expected || appStage === expected) return
+    // 此步驟本身就在等待這個 stage 變化，讓 advanceOnStage effect 接手
+    if (STEPS[step]?.advanceOnStage === appStage) return
 
     if (appStage === 'landing') {
       if (step >= 2 && step <= 7) {
         // 從 gacha/result 返回 landing → 重回選花步驟
         setStep(1)
-      } else if (step >= 9 && step <= 12) {
+      } else if (step >= 9 && step <= 11) {
         // 從 collection 返回 landing → 重回圖鑑入口步驟
         setStep(8)
       }
@@ -378,6 +390,19 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
     }
   }, [appStage, cur.advanceOnStage, active])
 
+  // 每次 render 後同步 prevUserRef，以便下一次 effect 比對
+  useEffect(() => { prevUserRef.current = user })
+
+  // Advance on advanceOnUser steps：
+  // – 抵達此步驟時已登入 → 立即跳過（delay 0，不閃現）
+  // – 在此步驟期間才登入 → 480ms 後前進（讓用戶感受到轉換）
+  useEffect(() => {
+    if (!active || !cur.advanceOnUser || !user) return
+    const alreadyLoggedIn = prevUserRef.current === user
+    const t = setTimeout(() => setStep(s => s + 1), alreadyLoggedIn ? 0 : 480)
+    return () => clearTimeout(t)
+  }, [user, cur.advanceOnUser, active]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Advance on click of annotated element
   useEffect(() => {
     if (!active || !cur.advanceOnClick) return
@@ -395,6 +420,7 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
     if (step >= STEPS.length - 1) {
       sessionStorage.removeItem(SESSION_STEP_KEY)
       localStorage.setItem(TUTORIAL_KEY, '1')
+      logEvent(user?.id, 'tutorial_complete')
       setActive(false)
     } else {
       setStep(s => s + 1)
@@ -469,7 +495,7 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
 
   const tooltipStyle = (() => {
     if (cur.type === 'banner') {
-      return cur.placement === 'top' ? { top: 64 } : { bottom: 52 }
+      return cur.placement === 'top' ? { top: 64 } : { bottom: 'max(16px, env(safe-area-inset-bottom, 16px))' }
     }
     if (!spotRect) return { top: '50%', transform: 'translateY(-50%)' }
     if (cur.placement === 'bottom') return { bottom: 'max(16px, env(safe-area-inset-bottom, 16px))' }

@@ -78,7 +78,10 @@ serve(async (req) => {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="background:rgba(242,126,147,0.07);border:1px solid rgba(242,126,147,0.18);border-radius:12px;padding:18px 20px;">
-                    <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#f27e93;letter-spacing:0.5px;">🎁 隱藏任務限定好禮 — 領獎說明</p>
+                    <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#f27e93;letter-spacing:0.5px;">🎁 隱藏成就限定好禮 — 領獎說明</p>
+                    <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#F2BE5C;letter-spacing:0.5px;">
+                      鹽夏不夜埕限定杯套＋環保杯 乙組
+                    </p>
                     <p style="margin:0 0 12px;font-size:13px;line-height:1.85;color:rgba(242,217,208,0.78);">
                       領獎時間：<strong style="color:#F2BE5C;">2026/5/16（六）、5/17（日）、5/23（六）17:00–21:00</strong><br />
                       請於活動期間內<strong style="color:#f2d9d0;">直接回覆本封郵件</strong>，填寫以下資訊預約領獎：

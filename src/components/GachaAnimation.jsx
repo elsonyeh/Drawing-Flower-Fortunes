@@ -319,8 +319,8 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
       )}
 
       <AnimatePresence mode="wait">
-        {/* ── 花盆選花階段 ── */}
-        {stage === 'pick_flower' && (
+        {/* ── 花盆選花階段（從主頁入場時不顯示，避免花盆在白光消退後短暫現身）── */}
+        {stage === 'pick_flower' && !skipFlowerPick && (
           <motion.div
             key="pick_flower"
             className="flex flex-col items-center gap-6 relative"

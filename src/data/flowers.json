@@ -113,7 +113,7 @@
     "model": "magnolia",
     "rarity": "common",
     "exhibitionZone": "C",
-    "artwork": {"id": "C4", "name": "聲綻", "location": "瑞士大飯店"}
+    "artwork": {"id": "C4", "name": "聲綻", "location": "福容飯店門口"}
   },
   {
     "id": 10,
@@ -231,7 +231,7 @@
     "model": "phoenix_flower",
     "rarity": "ssr",
     "exhibitionZone": "B",
-    "artwork": {"id": "B4", "name": "著花", "location": "巴黎花紙行"}
+    "artwork": {"id": "B4", "name": "Overblowm盛放失序—花花失控中！", "location": "巴黎花紙行"}
   },
   {
     "id": 104,
@@ -259,6 +259,6 @@
     "model": "corn_poppy",
     "rarity": "ssr",
     "exhibitionZone": "B",
-    "artwork": {"id": "B4", "name": "著花", "location": "巴黎花紙行"}
+    "artwork": {"id": "B4", "name": "Overblowm盛放失序—花花失控中！", "location": "巴黎花紙行"}
   }
 ]

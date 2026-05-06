@@ -6,10 +6,13 @@ import { ZONE_THEME, ZONE_ARTWORKS } from '../utils/exhibitionConstants'
 import CardBack from './CardBack'
 import FlowerBloom from './FlowerBloom'
 
+const ZONE_UNLOCK_KEY = 'chenghua_zone_unlock_seen'
+
 const CollectionPage = ({ onClose, onSelectFlower }) => {
   const [selectedTab, setSelectedTab] = useState('all') // 'all', 'ssr', 'common'
   const [flippedCard, setFlippedCard] = useState(null) // Track which card is flipped
   const [showFlower, setShowFlower] = useState(false) // Delay flower rendering
+  const [showZoneModal, setShowZoneModal] = useState(false)
   const allFlowers = getAllFlowers()
   const stats = getCollectionStats()
   const collectedIds = getCollectedFlowers().map(f => f.id)
@@ -17,6 +20,15 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
   const exMode = isExhibitionMode()
   const exProgress = exMode ? getZoneProgress() : null
   const unlockedPools = exMode ? getUnlockedPools() : []
+
+  // 達成各區 ≥ 2 件時，顯示一次恭喜動畫
+  useEffect(() => {
+    if (!exMode || !exProgress) return
+    const allZonesUnlocked = ['A', 'B', 'C'].every(z => (exProgress[z] || []).length >= 2)
+    if (allZonesUnlocked && !localStorage.getItem(ZONE_UNLOCK_KEY)) {
+      setShowZoneModal(true)
+    }
+  }, [exMode, exProgress])
 
   const filteredFlowers = allFlowers.filter(flower => {
     if (selectedTab === 'ssr') return flower.rarity === 'ssr'
@@ -36,6 +48,11 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
       setShowFlower(false)
     }
   }, [flippedCard])
+
+  const closeZoneModal = () => {
+    localStorage.setItem(ZONE_UNLOCK_KEY, '1')
+    setShowZoneModal(false)
+  }
 
   return (
     <motion.div
@@ -96,10 +113,14 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                   const visited = exProgress[zone] || []
                   const total = ZONE_ARTWORKS[zone].length
                   const pct = Math.round((visited.length / total) * 100)
+                  const isComplete = visited.length === total
+                  const isUnlocked = visited.length >= 2
+                  const barColor = isComplete ? '#4ade80' : isUnlocked ? '#F2BE5C' : theme.color
+                  const countColor = isComplete ? '#4ade80' : isUnlocked ? '#F2BE5C' : 'rgba(255,255,255,0.6)'
                   return (
                     <div key={zone} className="px-3 py-3 text-center">
                       <div className="flex items-center justify-center gap-1 mb-1.5">
-                        <span className="text-sm font-bold" style={{ color: theme.color }}>
+                        <span className="text-sm font-bold" style={{ color: isComplete ? '#4ade80' : isUnlocked ? '#F2BE5C' : theme.color }}>
                           {theme.name}
                         </span>
                       </div>
@@ -109,16 +130,15 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                           animate={{ width: `${pct}%` }}
                           transition={{ duration: 0.8, ease: 'easeOut' }}
                           className="h-full rounded-full"
-                          style={{ background: theme.color, filter: visited.length >= 2 ? 'brightness(1.3)' : 'none' }}
+                          style={{ background: barColor }}
                         />
                       </div>
                       <div className="flex items-center justify-center gap-1">
-                        <span className="text-xs" style={{ color: visited.length >= 2 ? '#86efac' : 'rgba(255,255,255,0.6)' }}>
+                        <span className="text-xs" style={{ color: countColor }}>
                           {visited.length}/{total}
                         </span>
-                        {visited.length >= 2 && (
-                          <span style={{ color: '#86efac', fontSize: '10px', fontWeight: 700 }}>✓</span>
-                        )}
+                        {isComplete && <span style={{ color: '#4ade80', fontSize: '10px', fontWeight: 700 }}>★</span>}
+                        {!isComplete && isUnlocked && <span style={{ color: '#F2BE5C', fontSize: '10px', fontWeight: 700 }}>✓</span>}
                       </div>
                     </div>
                   )
@@ -135,7 +155,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                 {'　'}每展區解鎖達 2 件以上，至服務台出示此頁面即可兌換集章活動限定角色貼紙！
               </p>
               <p className="text-xs mt-1.5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.32)' }}>
-                ✧ 傳聞走完全部裝置藝術並蒐集 15 種以上花語，將解鎖一段隱藏任務⋯⋯敢挑戰嗎？
+                ✧ 傳聞走完全部裝置藝術並蒐集 15 種以上花語，將獲得鹽夏不夜埕限定杯套＋環保杯⋯⋯敢挑戰嗎？
               </p>
             </div>
           )}
@@ -534,6 +554,57 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
           -webkit-backface-visibility: hidden;
         }
       `}</style>
+
+      {/* Zone unlock modal */}
+      <AnimatePresence>
+        {showZoneModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.78)' }}
+            onClick={closeZoneModal}
+          >
+            <motion.div
+              initial={{ scale: 0.82, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', damping: 18, stiffness: 260 }}
+              className="mx-6 rounded-2xl px-6 py-7 text-center"
+              style={{ background: 'linear-gradient(160deg,#1a1030,#0e1a30)', border: '1px solid rgba(242,190,92,0.35)', maxWidth: 340 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
+              <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#F2BE5C', letterSpacing: 1 }}>
+                任務達成！
+              </h2>
+              <p style={{ margin: '0 0 6px', fontSize: 13, lineHeight: 1.85, color: 'rgba(242,217,208,0.85)' }}>
+                你已在每個展區探訪 2 件以上裝置藝術！
+              </p>
+              <div
+                style={{ margin: '12px 0', padding: '12px 16px', borderRadius: 12,
+                  background: 'rgba(242,190,92,0.08)', border: '1px solid rgba(242,190,92,0.2)' }}
+              >
+                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.9, color: 'rgba(242,217,208,0.8)' }}>
+                  前往服務台出示此頁面<br />
+                  即可兌換 <strong style={{ color: '#F2BE5C' }}>活動限定角色集章貼紙</strong> 🌸
+                </p>
+              </div>
+              <button
+                onClick={closeZoneModal}
+                style={{
+                  width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+                  background: 'linear-gradient(135deg,#F2BE5C,#f27e93)',
+                  color: '#0e142a', fontWeight: 700, fontSize: 14, cursor: 'pointer', letterSpacing: 0.5,
+                }}
+              >
+                知道了！
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
