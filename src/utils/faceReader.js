@@ -98,7 +98,7 @@ export const ARCHETYPES = {
     color: '#E8A0BF',
     desc: '你的臉龐透著豐富的感情與細膩的感知，對美好事物有著天生的敏銳，靈魂裡住著詩人。',
     traits: ['感情豐富', '想像力強', '心思細膩'],
-    flowerIds: [101, 105, 3],  // 曇花、虞美人、薰衣草
+    flowerIds: [101, 105, 3],  // 百合花、虞美人、薰衣草
   },
   mysterious: {
     zh: '神秘型',

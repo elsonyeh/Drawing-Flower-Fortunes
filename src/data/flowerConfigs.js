@@ -282,42 +282,18 @@ export const flowerConfigs = {
 
   // ============ SSR 稀有花 ============
 
-  // 101. 曇花 - 大型夜間白花，朝前
+  // 101. 百合花 SSR - 吉祥物 GLB 模型
   epiphyllum: {
-    name: '曇花',
+    name: '百合花',
     petalType: 'epiphyllum',
-    petalCount: 14,
-    layers: 3,
-    petalSize: 0.65,
-    petalWidth: 0.3,
-    petalLength: 1.6,
-    centerSize: 0.25,
-    centerColor: '#FFD700',
-    spread: 0.9,
-    curvature: 0.35,
-    rotation: 12,
-    animation: 'glow',
-    faceForward: true,
     special: 'ssr',
     glowColor: '#FFD700',
   },
 
-  // 102. 藍色妖姬 - 藍玫瑰，朝上
+  // 102. 藍色妖姬 SSR - 吉祥物藍玫瑰 GLB 模型
   blue_rose: {
     name: '藍色妖姬',
-    petalType: 'rose',
-    petalCount: 10,
-    layers: 5,
-    petalSize: 0.48,
-    petalWidth: 0.75,
-    petalLength: 0.9,
-    centerSize: 0.08,
-    centerColor: '#1E3A5F',
-    spread: 0.5,
-    curvature: 0.7,
-    rotation: 18,
-    animation: 'mystic',
-    faceForward: false,
+    petalType: 'blue_rose',
     special: 'ssr',
     glowColor: '#5B9BD8',
   },
@@ -325,7 +301,7 @@ export const flowerConfigs = {
   // 103. 鳳凰花 - 火焰般的花瓣，朝前
   phoenix_flower: {
     name: '鳳凰花',
-    petalType: 'phoenix',
+    petalType: 'phoenix_flower',
     petalCount: 10,
     layers: 2,
     petalSize: 0.7,
@@ -342,42 +318,18 @@ export const flowerConfigs = {
     glowColor: '#FF4500',
   },
 
-  // 104. 彼岸花 - 蜘蛛狀彎曲花瓣，朝前
+  // 104. 彼岸花 SSR - 吉祥物紅花 GLB 模型
   red_spider_lily: {
     name: '彼岸花',
-    petalType: 'spider',
-    petalCount: 6,
-    layers: 1,
-    petalSize: 0.95,
-    petalWidth: 0.15,
-    petalLength: 1.8,
-    centerSize: 0.12,
-    centerColor: '#8B0000',
-    spread: 1.2,
-    curvature: 0.8,
-    rotation: 0,
-    animation: 'mystical',
-    faceForward: true,
+    petalType: 'red_spider_lily',
     special: 'ssr',
     glowColor: '#DC143C',
   },
 
-  // 105. 虞美人 - 薄紗般的花瓣，朝前
+  // 105. 虞美人 SSR - 吉祥物薰衣草 GLB 模型
   corn_poppy: {
     name: '虞美人',
-    petalType: 'poppy',
-    petalCount: 4,
-    layers: 2,
-    petalSize: 0.85,
-    petalWidth: 1.1,
-    petalLength: 1.0,
-    centerSize: 0.25,
-    centerColor: '#2F4F4F',
-    spread: 0.95,
-    curvature: 0.15,
-    rotation: 45,
-    animation: 'flutter',
-    faceForward: true,
+    petalType: 'corn_poppy',
     special: 'ssr',
     glowColor: '#9370DB',
   },
