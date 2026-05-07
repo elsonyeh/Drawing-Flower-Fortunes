@@ -12,7 +12,7 @@ const ExhibitionScanPage = lazy(() => import('./components/ExhibitionScanPage'))
 const QRScanPage = lazy(() => import('./components/QRScanPage'))
 const AuthModal = lazy(() => import('./components/AuthModal'))
 const CollectionComplete = lazy(() => import('./components/CollectionComplete'))
-import { getRandomFlower, saveCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
+import { getRandomFlower, saveCollectedFlower, removeCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
 import { isExhibitionMode, getUnlockedPools, initAppMode, enterExhibitionMode } from './utils/exhibitionHelper'
 import { fetchGlobalMode, subscribeGlobalMode } from './utils/exhibitionSync'
 import { useAuth } from './hooks/useAuth'
@@ -68,6 +68,17 @@ function App() {
 
   const { user } = useAuth()
 
+  // 引導結束或跳過後，清除 tutorial 暫存花
+  useEffect(() => {
+    if (!tutorialActive) {
+      const id = sessionStorage.getItem('chenghua_tutorial_flower')
+      if (id) {
+        removeCollectedFlower(Number(id))
+        sessionStorage.removeItem('chenghua_tutorial_flower')
+      }
+    }
+  }, [tutorialActive])
+
   // 登入後：同步本地資料到雲端，並載入雲端資料合併
   useEffect(() => {
     if (user) {
@@ -105,7 +116,10 @@ function App() {
     setStage('gacha')
 
     if (isTutorial) {
-      // 引導抽籤：不存 localStorage / 圖鑑，但記錄到 DB 追蹤使用次數
+      // 引導抽籤：存 localStorage（step 10 需要有卡片），但不上傳雲端
+      // 記錄 flower.id，導覽結束後自動清除
+      saveCollectedFlower(flower)
+      sessionStorage.setItem('chenghua_tutorial_flower', String(flower.id))
       logEvent(user?.id, 'draw', { source: 'tutorial', flower_id: flower.id, rarity: flower.rarity })
     } else {
       saveCollectedFlower(flower)

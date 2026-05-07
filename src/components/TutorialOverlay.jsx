@@ -97,6 +97,7 @@ const STEPS = [
     body: '每張收集到的花語卡可翻轉查看\n花語故事、個人訊息與展覽資訊',
     cta: '下一步',
     blockClicks: true,
+    scrollBlock: 'start',
   },
   // 11: Close collection → back to landing
   {
@@ -143,7 +144,7 @@ const STEPS = [
 ]
 
 // ── Hook: poll target element rect ───────────────────────────────────────────
-function useTargetRect(key) {
+function useTargetRect(key, scrollBlock = 'center') {
   const [rect, setRect] = useState(null)
   const timerRef = useRef(null)
 
@@ -155,7 +156,7 @@ function useTargetRect(key) {
       if (!el) { setRect(null); return }
       const r = el.getBoundingClientRect()
       if (r.bottom < 0 || r.top > window.innerHeight) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.scrollIntoView({ behavior: 'smooth', block: scrollBlock })
       }
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height })
     }
@@ -164,7 +165,7 @@ function useTargetRect(key) {
     timerRef.current = setInterval(update, 160)
     window.addEventListener('resize', update)
     return () => { clearInterval(timerRef.current); window.removeEventListener('resize', update) }
-  }, [key])
+  }, [key, scrollBlock])
 
   return rect
 }
@@ -345,7 +346,7 @@ export default function TutorialOverlay({ appStage, user, onActiveChange, onStep
 
   const cur = STEPS[step] ?? STEPS[0]
   const targetKey = cur.type === 'spotlight' ? cur.target : null
-  const rawRect = useTargetRect(targetKey)
+  const rawRect = useTargetRect(targetKey, cur.scrollBlock ?? 'center')
   const spotRect = rawRect ? {
     top: rawRect.top - PAD,
     left: rawRect.left - PAD,
@@ -363,10 +364,10 @@ export default function TutorialOverlay({ appStage, user, onActiveChange, onStep
       return
     }
 
-    const target = STEPS[step]?.target
-    if (target) {
-      const el = document.querySelector(`[data-tutorial="${target}"]`)
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const curStep = STEPS[step]
+    if (curStep?.target) {
+      const el = document.querySelector(`[data-tutorial="${curStep.target}"]`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: curStep.scrollBlock ?? 'center' })
     }
 
     const t = setTimeout(() => {

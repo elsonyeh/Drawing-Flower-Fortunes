@@ -232,6 +232,17 @@ export const unlockAllFlowers = () => {
 }
 
 /**
+ * Remove a single flower from the collection map
+ */
+export const removeCollectedFlower = (flowerId) => {
+  const map = getCollectedMap()
+  if (flowerId in map) {
+    delete map[flowerId]
+    localStorage.setItem('collectedFlowers', JSON.stringify(map))
+  }
+}
+
+/**
  * Clear all collected flowers (Admin function)
  * Resets the collection to empty
  */
