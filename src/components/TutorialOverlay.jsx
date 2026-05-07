@@ -90,12 +90,13 @@ const STEPS = [
     body: '追蹤你的蒐集進度\n20 種花語等你一一解鎖',
     cta: '下一步',
   },
-  // 10: Card detail intro (no click required)
+  // 10: Card detail intro (no click required, clicks blocked)
   {
     type: 'spotlight', target: 'collection-card', placement: 'bottom',
     title: '卡片詳情',
-    bodyHtml: '<span style="color:#F2BE5C;font-weight:700">點擊</span>卡片可翻轉查看完整花語故事<br/>每張卡底都有花語故事、個人訊息與展覽資訊',
+    body: '每張收集到的花語卡可翻轉查看\n花語故事、個人訊息與展覽資訊',
     cta: '下一步',
+    blockClicks: true,
   },
   // 11: Close collection → back to landing
   {
@@ -111,11 +112,11 @@ const STEPS = [
     bodyHtml: '<span style="color:#F2BE5C;font-weight:700">點擊</span>建立帳號，跨裝置同步你的花語收藏',
     advanceOnClick: 'auth-btn',
   },
-  // 13: Wait for login — banner while auth modal is open
+  // 13: Wait for login — spotlight on login buttons, modal locked
   {
-    type: 'banner', placement: 'bottom',
+    type: 'spotlight', target: 'login-buttons', placement: 'top',
     title: '選擇登入方式',
-    body: '選擇 LINE 或 Gmail 登入\n完成註冊後自動繼續導覽',
+    body: '點擊下方任一按鈕完成登入\n登入後導覽自動繼續',
     advanceOnUser: true,
   },
   // 14: Emotion scan introduction
@@ -298,7 +299,7 @@ function SkipConfirm({ onConfirm, onCancel }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function TutorialOverlay({ appStage, user, onActiveChange }) {
+export default function TutorialOverlay({ appStage, user, onActiveChange, onStepChange }) {
   const [step, setStep] = useState(0)
   const [active, setActive] = useState(false)
   const [showSkipConfirm, setShowSkipConfirm] = useState(false)
@@ -319,6 +320,7 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
   }, [step, active])
 
   useEffect(() => { onActiveChange?.(active) }, [active, onActiveChange])
+  useEffect(() => { onStepChange?.(step) }, [step, onStepChange])
 
   // Stage 一致性防呆：若 appStage 與當前步驟的預期 stage 不符，自動跳回對應步驟
   // 避免使用者中途返回主頁時引導卡在錯誤狀態
@@ -508,7 +510,7 @@ export default function TutorialOverlay({ appStage, user, onActiveChange }) {
 
   // ── Spotlight + Banner ───────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-[9998] pointer-events-none">
+    <div className="fixed inset-0 z-[9998]" style={{ pointerEvents: cur.blockClicks ? 'auto' : 'none' }}>
 
       {/* Dark mask with spotlight hole */}
       {spotRect && (

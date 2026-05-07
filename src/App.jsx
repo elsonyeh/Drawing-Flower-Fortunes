@@ -62,6 +62,7 @@ function App() {
   const [gachaSkipFlowerPick, setGachaSkipFlowerPick] = useState(false)
   const [gachaTransitionFlash, setGachaTransitionFlash] = useState(false)
   const [tutorialActive, setTutorialActive] = useState(false)
+  const [tutorialStep, setTutorialStep] = useState(0)
   const [completionData, setCompletionData] = useState(null) // null | { needsEmail: boolean }
   const [testZoneModal, setTestZoneModal] = useState(false)
 
@@ -238,7 +239,7 @@ function App() {
         }}
       />
       {/* 新手引導（z-index 9998+，跨 stage 持續存在） */}
-      <TutorialOverlay appStage={stage} user={user} onActiveChange={setTutorialActive} />
+      <TutorialOverlay appStage={stage} user={user} onActiveChange={setTutorialActive} onStepChange={setTutorialStep} />
 
       <div className="relative" style={{ zIndex: 1 }}>
       <Suspense fallback={<LoadingScreen />}>
@@ -324,7 +325,7 @@ function App() {
       </Suspense>
 
       <Suspense fallback={null}>
-        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} tutorialLock={tutorialActive && tutorialStep === 13} />
       </Suspense>
 
       {/* 集滿成就動畫 */}

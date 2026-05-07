@@ -273,6 +273,54 @@ localStorage `chenghua_tutorial_v1` 不存在時，首次進站自動顯示。�
 
 ---
 
+## SSR 吉祥物 GLB 模型
+
+### 五隻 SSR 花與對應模型
+
+| SSR ID | 花名 | 模型檔案 | 壓縮後大小 |
+|--------|------|---------|-----------|
+| 101 | 百合花 | `public/models/epiphyllum/epiphyllum.glb` | 0.8 MB |
+| 102 | 藍色妖姬 | `public/models/blue_rose/blue_rose.glb` | 0.8 MB |
+| 103 | 鳳凰花 | `public/models/phoenix_flower/phoenix_flower.glb` | 0.7 MB |
+| 104 | 彼岸花 | `public/models/red_spider_lily/red_spider_lily.glb` | 0.8 MB |
+| 105 | 虞美人 | `public/models/corn_poppy/corn_poppy.glb` | 1.0 MB |
+
+原始吉祥物檔案共 51.6 MB，經 Draco geometry + WebP texture 壓縮後合計 4.1 MB（-92%）。
+
+### 架構說明
+`FlowerBloom.jsx` 所有花朵現在全部使用 GLB 流程，程式碼從約 2,700 行精簡至 ~850 行：
+- 移除：程式生成的花瓣 / 花莖 / 葉片 mesh code（petalProfiles、createPetalShape 等）
+- 移除：`OBJLoader`、`MTLLoader`、`FBXLoader` 及相關 import
+- 保留：`FlowerGLBModel`（useGLTF）、`ModelErrorBoundary`、`FlowerSkeleton`
+
+---
+
+## 展區進度條 & 區域解鎖動畫
+
+### 三段式進度條（CollectionPage.jsx）
+圖鑑中每個展區（A / B / C）的掃描進度條依解鎖狀態顯示不同顏色：
+
+| 狀態 | 條件 | 顏色 |
+|------|------|------|
+| 預設 | 尚未解鎖 | 展區主題色 |
+| 解鎖中 | 已掃 ≥ 2 件 | 金色 `#F2BE5C`，顯示 ✓ |
+| 完成 | 全 5 件掃完 | 綠色 `#4ade80`，顯示 ★ |
+
+### 區域解鎖動畫
+當 A、B、C 三個展區各自 ≥ 2 件掃描後，第一次觸發全螢幕恭喜彈窗，提醒用戶前往服務台出示圖鑑頁面兌換集章活動限定角色貼紙。
+
+- localStorage key：`chenghua_zone_unlock_seen`（寫入後不再重複觸發）
+- 彈窗位置：`CollectionPage.jsx`（`showZoneModal` state）
+- 兌換說明文字：每展區 ≥ 2 件 → 服務台出示圖鑑頁面換貼紙；走遍全部 + 集 15 種花語 → 隱藏好禮
+
+### Admin 測試：區域解鎖動畫
+`/elsontest` → 🧪 測試 tab → **🎉 區域解鎖動畫** 按鈕：
+- 在 App 層級渲染 modal（`testZoneModal` state），不依賴 CollectionPage 是否開啟
+- **不寫 localStorage**，可反覆測試
+- 觸發方式：`onTestZoneUnlock()` → App `setTestZoneModal(true)`
+
+---
+
 ## 集滿成就系統 (Completion Achievement)
 
 ### 觸發條件

@@ -4,7 +4,7 @@ import { isSupabaseEnabled } from '../lib/supabase'
 
 const PROVIDER_LABEL = { google: 'Google', line: 'LINE' }
 
-export default function AuthModal({ isOpen, onClose }) {
+export default function AuthModal({ isOpen, onClose, tutorialLock = false }) {
   const { user, isNewUser, linkedLineId, signInWithGoogle, signInWithLine, signOut } = useAuth()
   const lastProvider = localStorage.getItem('last_login_provider')
 
@@ -27,7 +27,7 @@ export default function AuthModal({ isOpen, onClose }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={onClose}
+            onClick={tutorialLock ? undefined : onClose}
           />
 
           {/* Modal */}
@@ -113,7 +113,7 @@ export default function AuthModal({ isOpen, onClose }) {
                   </div>
 
                   {/* 登入按鈕 */}
-                  <div className="space-y-3">
+                  <div className="space-y-3" data-tutorial="login-buttons">
                     <button
                       onClick={() => { signInWithGoogle(); onClose() }}
                       className="w-full flex items-center justify-center gap-2 bg-white text-gray-800 font-medium py-3 px-6 rounded-2xl hover:bg-gray-100 active:scale-95 transition-all"
@@ -135,13 +135,15 @@ export default function AuthModal({ isOpen, onClose }) {
                     </button>
                   </div>
 
-                  {/* 取消 */}
-                  <button
-                    onClick={onClose}
-                    className="w-full mt-4 text-white/40 text-sm py-2 hover:text-white/70 transition-colors"
-                  >
-                    稍後再說
-                  </button>
+                  {/* 取消（導覽鎖定期間隱藏） */}
+                  {!tutorialLock && (
+                    <button
+                      onClick={onClose}
+                      className="w-full mt-4 text-white/40 text-sm py-2 hover:text-white/70 transition-colors"
+                    >
+                      稍後再說
+                    </button>
+                  )}
                 </>
               )}
             </div>
