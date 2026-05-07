@@ -63,6 +63,7 @@ function App() {
   const [gachaTransitionFlash, setGachaTransitionFlash] = useState(false)
   const [tutorialActive, setTutorialActive] = useState(false)
   const [completionData, setCompletionData] = useState(null) // null | { needsEmail: boolean }
+  const [testZoneModal, setTestZoneModal] = useState(false)
 
   const { user } = useAuth()
 
@@ -316,6 +317,7 @@ function App() {
             onSimulateQRScan={handleQRScanSuccess}
             onDirectDraw={handleExhibitionDraw}
             onTestCompletion={(needsEmail) => setCompletionData({ needsEmail, isTest: true })}
+            onTestZoneUnlock={() => setTestZoneModal(true)}
           />
         )}
       </AnimatePresence>
@@ -336,6 +338,51 @@ function App() {
           />
         )}
       </Suspense>
+
+      {/* 區域解鎖動畫（管理員測試用） */}
+      {testZoneModal && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.78)' }}
+          onClick={() => setTestZoneModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.82, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: 'spring', damping: 18, stiffness: 260 }}
+            className="mx-6 rounded-2xl px-6 py-7 text-center"
+            style={{ background: 'linear-gradient(160deg,#1a1030,#0e1a30)', border: '1px solid rgba(242,190,92,0.35)', maxWidth: 340 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
+            <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#F2BE5C', letterSpacing: 1 }}>
+              任務達成！
+            </h2>
+            <p style={{ margin: '0 0 6px', fontSize: 13, lineHeight: 1.85, color: 'rgba(242,217,208,0.85)' }}>
+              你已在每個展區探訪 2 件以上裝置藝術！
+            </p>
+            <div style={{ margin: '12px 0', padding: '12px 16px', borderRadius: 12,
+              background: 'rgba(242,190,92,0.08)', border: '1px solid rgba(242,190,92,0.2)' }}>
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.9, color: 'rgba(242,217,208,0.8)' }}>
+                前往服務台出示圖鑑頁面<br />
+                即可兌換 <strong style={{ color: '#F2BE5C' }}>活動限定角色集章貼紙</strong> 🌸
+              </p>
+            </div>
+            <button
+              onClick={() => setTestZoneModal(false)}
+              style={{
+                width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+                background: 'linear-gradient(135deg,#F2BE5C,#f27e93)',
+                color: '#0e142a', fontWeight: 700, fontSize: 14, cursor: 'pointer', letterSpacing: 0.5,
+              }}
+            >
+              知道了！
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
       </div>
 
       {/* 換場白光橋接層：覆蓋 LandingPage 瞬間消失到 GachaAnimation 白光接手之間的黑幀 */}

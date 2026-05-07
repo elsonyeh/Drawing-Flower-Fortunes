@@ -66,7 +66,9 @@ serve(async (req) => {
                     <p style="margin:0;font-size:13px;line-height:1.95;color:rgba(242,217,208,0.72);">
                       恭喜你踏遍鹽埕，探訪全部 15 件裝置藝術，並在圖鑑中蒐集了 15 種以上的花語。<br />
                       你是本次活動第 <strong style="color:#f27e93;font-size:15px;">${prizeRank}</strong> 位完成隱藏任務的旅人。<br />
-                      這是屬於你的成就——每一件作品都是一段對話，你沒有錯過任何一句。
+                      這是屬於你的成就——每一件作品都是一段對話，你沒有錯過任何一句。<br /><br />
+                      作為隱藏成就的見證，我們為你準備了一份限定好禮：<br />
+                      <strong style="color:#F2BE5C;font-size:14px;">鹽夏不夜埕限定杯套＋環保杯 乙組</strong>
                     </p>
                   </td>
                 </tr>

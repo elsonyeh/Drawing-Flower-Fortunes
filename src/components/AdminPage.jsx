@@ -12,7 +12,7 @@ const AuthModal = lazy(() => import('./AuthModal'))
 
 const ZONE_COLOR = Object.fromEntries(Object.entries(ZONE_THEME).map(([k, v]) => [k, v.color]))
 
-function AdminPage({ onSimulateQRScan, onDirectDraw, onTestCompletion }) {
+function AdminPage({ onSimulateQRScan, onDirectDraw, onTestCompletion, onTestZoneUnlock }) {
   const { user } = useAuth()
   const [isAdmin, setIsAdmin] = useState(null) // null=checking, true/false
   const [showAdminAuth, setShowAdminAuth] = useState(false)
@@ -548,6 +548,18 @@ function AdminPage({ onSimulateQRScan, onDirectDraw, onTestCompletion }) {
                   🔗 LINE 無 Email
                 </button>
               </div>
+            </div>
+
+            <div className="bg-white/5 rounded-xl p-4">
+              <p className="text-sm font-bold mb-1">區域解鎖動畫</p>
+              <p className="text-xs text-white/40 mb-3">測試各展區達成 ≥2 件時的恭喜彈窗（不寫 localStorage）</p>
+              <button
+                onClick={() => onTestZoneUnlock?.()}
+                className="w-full py-3 rounded-xl font-semibold text-white transition-all min-h-[44px] text-sm"
+                style={{ background: 'linear-gradient(135deg, rgba(242,190,92,0.5), rgba(74,222,128,0.4))', border: '1px solid rgba(242,190,92,0.4)' }}
+              >
+                🎉 區域解鎖動畫
+              </button>
             </div>
 
             <div className="bg-white/5 rounded-xl p-4">

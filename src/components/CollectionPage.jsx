@@ -152,10 +152,10 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
             <div className="mb-3 rounded-xl px-4 py-3" style={{ background: 'rgba(242,190,92,0.06)', border: '1px solid rgba(242,190,92,0.14)' }}>
               <p className="text-xs leading-relaxed" style={{ color: 'rgba(242,217,208,0.7)' }}>
                 <span style={{ color: '#F2BE5C', fontWeight: 600 }}>✦ 兌換任務</span>
-                {'　'}每展區解鎖達 2 件以上，至服務台出示此頁面即可兌換集章活動限定角色貼紙！
+                {'　'}每展區解鎖達 2 件以上，至服務台出示圖鑑頁面即可兌換集章活動限定角色貼紙！
               </p>
               <p className="text-xs mt-1.5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.32)' }}>
-                ✧ 傳聞走完全部裝置藝術並蒐集 15 種以上花語，將獲得鹽夏不夜埕限定杯套＋環保杯⋯⋯敢挑戰嗎？
+                ✧ 走遍鹽埕、集齊 15 種以上花語——據說完成者將解鎖一份隱藏好禮。你，敢挑戰嗎？
               </p>
             </div>
           )}
@@ -587,7 +587,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                   background: 'rgba(242,190,92,0.08)', border: '1px solid rgba(242,190,92,0.2)' }}
               >
                 <p style={{ margin: 0, fontSize: 13, lineHeight: 1.9, color: 'rgba(242,217,208,0.8)' }}>
-                  前往服務台出示此頁面<br />
+                  前往服務台出示圖鑑頁面<br />
                   即可兌換 <strong style={{ color: '#F2BE5C' }}>活動限定角色集章貼紙</strong> 🌸
                 </p>
               </div>
