@@ -128,7 +128,7 @@ export default function CollectionComplete({ user, needsEmail, onClose, isTest =
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.9 }}
-            style={{ fontSize: 11, color: 'rgba(242,217,208,0.38)', letterSpacing: 3.5, marginBottom: 28 }}
+            style={{ fontSize: 11, color: 'rgba(242,217,208,0.82)', letterSpacing: 3.5, marginBottom: 28 }}
           >
             ✨ 隱 藏 成 就 解 鎖 ✨
           </motion.p>
@@ -154,7 +154,7 @@ export default function CollectionComplete({ user, needsEmail, onClose, isTest =
             ) : result ? (
               <PrizeResult result={result} onClose={onClose} />
             ) : (
-              <div style={{ textAlign: 'center', padding: '14px 0', color: 'rgba(242,217,208,0.4)', fontSize: 13 }}>
+              <div style={{ textAlign: 'center', padding: '14px 0', color: 'rgba(242,217,208,0.88)', fontSize: 13 }}>
                 傳送恭賀信件中⋯⋯
               </div>
             )}
@@ -180,7 +180,7 @@ export default function CollectionComplete({ user, needsEmail, onClose, isTest =
 function EmailForm({ inputRef, email, setEmail, submitting, onSubmit, onSkip }) {
   return (
     <>
-      <p style={{ fontSize: 13, color: 'rgba(242,217,208,0.7)', textAlign: 'center', lineHeight: 1.85, marginBottom: 14 }}>
+      <p style={{ fontSize: 13, color: 'rgba(242,217,208,0.92)', textAlign: 'center', lineHeight: 1.85, marginBottom: 14 }}>
         填寫 Email 以接收<br />隱藏成就恭賀通知
       </p>
       <input
@@ -210,7 +210,7 @@ function EmailForm({ inputRef, email, setEmail, submitting, onSubmit, onSkip }) 
       <button
         onClick={onSkip}
         style={{ width: '100%', marginTop: 8, padding: 8, background: 'transparent', border: 'none',
-          color: 'rgba(242,217,208,0.28)', fontSize: 12, cursor: 'pointer' }}
+          color: 'rgba(242,217,208,0.70)', fontSize: 12, cursor: 'pointer' }}
       >
         跳過
       </button>
@@ -231,7 +231,7 @@ function PrizeResult({ result, onClose }) {
       <p style={{ fontSize: 15, fontWeight: 600, color: '#f2d9d0', textAlign: 'center', marginBottom: 8 }}>
         🌸 恭喜集滿花語！
       </p>
-      <p style={{ fontSize: 12, color: 'rgba(242,217,208,0.5)', textAlign: 'center', lineHeight: 1.9 }}>
+      <p style={{ fontSize: 12, color: 'rgba(242,217,208,0.88)', textAlign: 'center', lineHeight: 1.9 }}>
         很遺憾，本次活動獎品（共 10 份）<br />已全數兌換完畢。<br />感謝你的熱情參與！
       </p>
       <button onClick={onClose} style={btn}>關閉</button>
@@ -243,7 +243,7 @@ function PrizeResult({ result, onClose }) {
       <p style={{ fontSize: 13, color: '#F2BE5C', fontWeight: 700, marginBottom: 8, letterSpacing: 0.5 }}>
         🎁 恭賀郵件已寄出！
       </p>
-      <p style={{ fontSize: 12, color: 'rgba(242,217,208,0.65)', lineHeight: 1.9, marginBottom: 0 }}>
+      <p style={{ fontSize: 12, color: 'rgba(242,217,208,0.92)', lineHeight: 1.9, marginBottom: 0 }}>
         你是第 <strong style={{ color: '#f27e93', fontSize: 14 }}>{rank}</strong> 位蒐齊花語的旅人。<br />
         請至信箱查看領獎說明，<br />
         依信中指示回覆預約時間即可。

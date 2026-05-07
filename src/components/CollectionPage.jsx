@@ -21,14 +21,15 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
   const exProgress = exMode ? getZoneProgress() : null
   const unlockedPools = exMode ? getUnlockedPools() : []
 
-  // 達成各區 ≥ 2 件時，顯示一次恭喜動畫
+  // 任意掃描 1 件裝置藝術且擁有 1 朵花時，顯示一次恭喜動畫
   useEffect(() => {
     if (!exMode || !exProgress) return
-    const allZonesUnlocked = ['A', 'B', 'C'].every(z => (exProgress[z] || []).length >= 2)
-    if (allZonesUnlocked && !localStorage.getItem(ZONE_UNLOCK_KEY)) {
+    const anyArtworkScanned = ['A', 'B', 'C'].some(z => (exProgress[z] || []).length >= 1)
+    const hasFlower = collectedIds.length >= 1
+    if (anyArtworkScanned && hasFlower && !localStorage.getItem(ZONE_UNLOCK_KEY)) {
       setShowZoneModal(true)
     }
-  }, [exMode, exProgress])
+  }, [exMode, exProgress, collectedIds])
 
   const filteredFlowers = allFlowers.filter(flower => {
     if (selectedTab === 'ssr') return flower.rarity === 'ssr'
@@ -114,13 +115,12 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                   const total = ZONE_ARTWORKS[zone].length
                   const pct = Math.round((visited.length / total) * 100)
                   const isComplete = visited.length === total
-                  const isUnlocked = visited.length >= 2
-                  const barColor = isComplete ? '#F2BE5C' : isUnlocked ? '#4ade80' : theme.color
-                  const countColor = isComplete ? '#F2BE5C' : isUnlocked ? '#4ade80' : 'rgba(255,255,255,0.6)'
+                  const barColor = isComplete ? '#F2BE5C' : theme.color
+                  const countColor = isComplete ? '#F2BE5C' : 'rgba(255,255,255,0.6)'
                   return (
                     <div key={zone} className="px-3 py-3 text-center">
                       <div className="flex items-center justify-center gap-1 mb-1.5">
-                        <span className="text-sm font-bold" style={{ color: isComplete ? '#F2BE5C' : isUnlocked ? '#4ade80' : theme.color }}>
+                        <span className="text-sm font-bold" style={{ color: isComplete ? '#F2BE5C' : theme.color }}>
                           {theme.name}
                         </span>
                       </div>
@@ -138,7 +138,6 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                           {visited.length}/{total}
                         </span>
                         {isComplete && <span style={{ color: '#F2BE5C', fontSize: '10px', fontWeight: 700 }}>★</span>}
-                        {!isComplete && isUnlocked && <span style={{ color: '#4ade80', fontSize: '10px', fontWeight: 700 }}>✓</span>}
                       </div>
                     </div>
                   )
@@ -152,7 +151,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
             <div className="mb-3 rounded-xl px-4 py-3" style={{ background: 'rgba(242,190,92,0.06)', border: '1px solid rgba(242,190,92,0.14)' }}>
               <p className="text-xs leading-relaxed" style={{ color: 'rgba(242,217,208,0.7)' }}>
                 <span style={{ color: '#F2BE5C', fontWeight: 600 }}>✦ 兌換任務</span>
-                {'　'}每展區解鎖達 2 件以上，至服務台出示圖鑑頁面即可兌換集章活動限定角色貼紙！
+                {'　'}掃描任一裝置藝術並抽到花語，至服務台出示圖鑑頁面即可兌換集章活動限定角色貼紙！
               </p>
               <p className="text-xs mt-1.5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.32)' }}>
                 ✧ 走遍鹽埕、集齊 15 種以上花語——據說完成者將解鎖一份隱藏好禮。你，敢挑戰嗎？
@@ -579,14 +578,14 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
               <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#F2BE5C', letterSpacing: 1 }}>
                 任務達成！
               </h2>
-              <p style={{ margin: '0 0 6px', fontSize: 13, lineHeight: 1.85, color: 'rgba(242,217,208,0.85)' }}>
-                你已在每個展區探訪 2 件以上裝置藝術！
+              <p style={{ margin: '0 0 6px', fontSize: 13, lineHeight: 1.85, color: 'rgba(242,217,208,0.95)' }}>
+                你已掃描裝置藝術並解鎖花語，任務完成！
               </p>
               <div
                 style={{ margin: '12px 0', padding: '12px 16px', borderRadius: 12,
                   background: 'rgba(242,190,92,0.08)', border: '1px solid rgba(242,190,92,0.2)' }}
               >
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.9, color: 'rgba(242,217,208,0.8)' }}>
+                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.9, color: 'rgba(242,217,208,0.92)' }}>
                   前往服務台出示圖鑑頁面<br />
                   即可兌換 <strong style={{ color: '#F2BE5C' }}>活動限定角色集章貼紙</strong> 🌸
                 </p>

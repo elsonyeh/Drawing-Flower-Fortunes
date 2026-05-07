@@ -230,10 +230,10 @@ localStorage `chenghua_tutorial_v1` 不存在時，首次進站自動顯示。�
 | 7 | spotlight | `return-btn` | stage → landing | 引導返回主頁 |
 | 8 | spotlight | `collection-btn` | stage → collection | 引導點擊圖鑑 |
 | 9 | spotlight | `collection-progress` | 點擊「下一步」 | 介紹蒐集進度 |
-| 10 | spotlight | `collection-card` | 點擊「下一步」 | 介紹卡片詳情（不需點擊卡片）|
+| 10 | spotlight | `collection-card` | 點擊「下一步」 | 介紹卡片詳情（`blockClicks: true`，不可點開卡片）|
 | 11 | spotlight | `back-btn` | stage → landing | 引導關閉圖鑑 |
 | 12 | spotlight | `auth-btn` | 點擊按鈕（advanceOnClick）| 引導點擊登入/註冊 |
-| 13 | banner | — | 用戶完成登入（advanceOnUser）| 等待選擇 LINE 或 Gmail |
+| 13 | spotlight | `login-buttons` | 用戶完成登入（advanceOnUser）| 等待選擇 LINE 或 Google 登入（`blockClicks: true`）|
 | 14 | spotlight | `emotion-btn` | 點擊「知道了」 | 介紹相由花緣（面相掃描）|
 | 15 | fullscreen | — | 點擊「出發探索！」| 完成導覽 |
 
@@ -251,6 +251,7 @@ localStorage `chenghua_tutorial_v1` 不存在時，首次進站自動顯示。�
 | `share-btn` | `FortuneResult.jsx` | 分享花語按鈕 |
 | `return-btn` | `FortuneResult.jsx` | 返回/再抽按鈕 |
 | `gacha-card` | `GachaAnimation.jsx` | 翻牌容器（show_card 階段）|
+| `login-buttons` | `AuthModal.jsx` | LINE / Google 登入按鈕組 |
 | `collection-progress` | `CollectionPage.jsx` | 三格蒐集統計 |
 | `collection-card` | `CollectionPage.jsx` | 第一張已收集卡片 |
 | `view-detail-btn` | `CollectionPage.jsx` | 查看完整內容按鈕（flip modal 內）|
@@ -265,8 +266,24 @@ localStorage `chenghua_tutorial_v1` 不存在時，首次進站自動顯示。�
   - `advanceOnClick`：等點擊指定 data-tutorial 錨點
   - `advanceOnUser`：等用戶登入完成（user prop 從 null 變為非 null；已登入則立即跳過）
   - `cta`：顯示手動推進按鈕
+- **`blockClicks`（步驟旗標）**：設為 `true` 時，overlay 的 `pointer-events:none` 改為 `auto`，攔截所有背景點擊，只有 spotlight 框內（`data-tutorial` 錨點）的元素可操作。步驟 10（卡片不可開）與步驟 13（只能點登入按鈕）使用此旗標。
+- **`scrollBlock`（步驟旗標）**：控制 `scrollIntoView({ block })` 參數，預設 `'center'`。步驟 10 設為 `'start'`，使目標卡片滾至畫面頂部，避免被底部 tooltip 遮住。
+- **`onStepChange` prop**：`TutorialOverlay` 每次換步驟時呼叫 `onStepChange(step)`，讓 `App.jsx` 保有 `tutorialStep` state，用於驅動其他元件的 tutorial 連動行為（如 `AuthModal` 的 `tutorialLock`）。
 - **中斷防呆**：`STEP_STAGE_MAP` 定義每步驟預期的 app stage；中途返回主頁時自動跳回對應步驟（steps 2–7 → step 1，steps 9–11 → step 8）
 - **重置導覽**：清除 localStorage `chenghua_tutorial_v1`
+
+### 引導抽籤暫存花朵
+步驟 1 引導用戶點花進入抽卡時，抽到的花會：
+1. 透過 `saveCollectedFlower(flower)` 正常寫入 localStorage（讓步驟 10 的圖鑑有卡片可 spotlight）
+2. 花 ID 同步存入 sessionStorage `chenghua_tutorial_flower`
+
+導覽結束或跳過（`tutorialActive` 變為 `false`）時，`App.jsx` 的 cleanup effect 會呼叫 `removeCollectedFlower(id)` 移除該筆暫存花，不污染真實圖鑑。
+
+### AuthModal tutorialLock
+`AuthModal` 的 `tutorialLock={tutorialActive && tutorialStep === 13}` prop 啟用時：
+- 背景點擊（backdrop）不關閉 modal
+- 「稍後再說」按鈕隱藏
+- 強制用戶選擇 LINE 或 Google 登入後，tutorial 才推進
 
 ### GachaAnimation 注意事項
 從主頁點花進入抽卡（`skipFlowerPick=true`）時，`pick_flower` 階段不渲染，避免花盆在白光消退時短暫顯現。展覽掃碼流程（`skipFlowerPick=false`）仍正常顯示選花階段。
@@ -297,21 +314,20 @@ localStorage `chenghua_tutorial_v1` 不存在時，首次進站自動顯示。�
 
 ## 展區進度條 & 區域解鎖動畫
 
-### 三段式進度條（CollectionPage.jsx）
+### 兩段式進度條（CollectionPage.jsx）
 圖鑑中每個展區（A / B / C）的掃描進度條依解鎖狀態顯示不同顏色：
 
 | 狀態 | 條件 | 顏色 |
 |------|------|------|
-| 預設 | 尚未解鎖 | 展區主題色 |
-| 解鎖中 | 已掃 ≥ 2 件 | 金色 `#F2BE5C`，顯示 ✓ |
-| 完成 | 全 5 件掃完 | 綠色 `#4ade80`，顯示 ★ |
+| 預設 | 尚未完成 | 展區主題色 |
+| 完成 | 全 5 件掃完 | 金色 `#F2BE5C`，顯示 ★ |
 
 ### 區域解鎖動畫
-當 A、B、C 三個展區各自 ≥ 2 件掃描後，第一次觸發全螢幕恭喜彈窗，提醒用戶前往服務台出示圖鑑頁面兌換集章活動限定角色貼紙。
+**觸發條件**：任意一件裝置藝術已掃描（A / B / C 任一展區 ≥ 1 件）且已抽到至少一朵花語，第一次同時滿足時觸發全螢幕恭喜彈窗。
 
 - localStorage key：`chenghua_zone_unlock_seen`（寫入後不再重複觸發）
-- 彈窗位置：`CollectionPage.jsx`（`showZoneModal` state）
-- 兌換說明文字：每展區 ≥ 2 件 → 服務台出示圖鑑頁面換貼紙；走遍全部 + 集 15 種花語 → 隱藏好禮
+- 彈窗位置：`CollectionPage.jsx`（`showZoneModal` state）；App 層級亦可透過 `testZoneModal` 獨立觸發
+- 兌換說明文字：已掃描裝置藝術並解鎖花語 → 服務台出示圖鑑頁面換貼紙；走遍全部 + 集 15 種花語 → 隱藏好禮
 
 ### Admin 測試：區域解鎖動畫
 `/elsontest` → 🧪 測試 tab → **🎉 區域解鎖動畫** 按鈕：

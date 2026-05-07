@@ -375,12 +375,12 @@ function App() {
             <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#F2BE5C', letterSpacing: 1 }}>
               任務達成！
             </h2>
-            <p style={{ margin: '0 0 6px', fontSize: 13, lineHeight: 1.85, color: 'rgba(242,217,208,0.85)' }}>
-              你已在每個展區探訪 2 件以上裝置藝術！
+            <p style={{ margin: '0 0 6px', fontSize: 13, lineHeight: 1.85, color: 'rgba(242,217,208,0.95)' }}>
+              你已掃描裝置藝術並解鎖花語，任務完成！
             </p>
             <div style={{ margin: '12px 0', padding: '12px 16px', borderRadius: 12,
               background: 'rgba(242,190,92,0.08)', border: '1px solid rgba(242,190,92,0.2)' }}>
-              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.9, color: 'rgba(242,217,208,0.8)' }}>
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.9, color: 'rgba(242,217,208,0.92)' }}>
                 前往服務台出示圖鑑頁面<br />
                 即可兌換 <strong style={{ color: '#F2BE5C' }}>活動限定角色集章貼紙</strong> 🌸
               </p>
