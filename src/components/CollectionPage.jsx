@@ -115,12 +115,12 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                   const pct = Math.round((visited.length / total) * 100)
                   const isComplete = visited.length === total
                   const isUnlocked = visited.length >= 2
-                  const barColor = isComplete ? '#4ade80' : isUnlocked ? '#F2BE5C' : theme.color
-                  const countColor = isComplete ? '#4ade80' : isUnlocked ? '#F2BE5C' : 'rgba(255,255,255,0.6)'
+                  const barColor = isComplete ? '#F2BE5C' : isUnlocked ? '#4ade80' : theme.color
+                  const countColor = isComplete ? '#F2BE5C' : isUnlocked ? '#4ade80' : 'rgba(255,255,255,0.6)'
                   return (
                     <div key={zone} className="px-3 py-3 text-center">
                       <div className="flex items-center justify-center gap-1 mb-1.5">
-                        <span className="text-sm font-bold" style={{ color: isComplete ? '#4ade80' : isUnlocked ? '#F2BE5C' : theme.color }}>
+                        <span className="text-sm font-bold" style={{ color: isComplete ? '#F2BE5C' : isUnlocked ? '#4ade80' : theme.color }}>
                           {theme.name}
                         </span>
                       </div>
@@ -137,8 +137,8 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                         <span className="text-xs" style={{ color: countColor }}>
                           {visited.length}/{total}
                         </span>
-                        {isComplete && <span style={{ color: '#4ade80', fontSize: '10px', fontWeight: 700 }}>★</span>}
-                        {!isComplete && isUnlocked && <span style={{ color: '#F2BE5C', fontSize: '10px', fontWeight: 700 }}>✓</span>}
+                        {isComplete && <span style={{ color: '#F2BE5C', fontSize: '10px', fontWeight: 700 }}>★</span>}
+                        {!isComplete && isUnlocked && <span style={{ color: '#4ade80', fontSize: '10px', fontWeight: 700 }}>✓</span>}
                       </div>
                     </div>
                   )
