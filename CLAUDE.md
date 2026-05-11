@@ -433,6 +433,16 @@ ALTER TABLE public.profiles
 npx @gltf-transform/cli optimize input.glb output.glb --compress draco --texture-compress webp
 ```
 
+#### 牡丹模型減面（已完成）
+2025-05-11 對頂點數過高的牡丹模型額外做 mesh simplification：4.06 MB → 1.73 MB（縮減 57%）
+```bash
+# 1. 減面（ratio=0.1 = 保留 10% 頂點）
+npx @gltf-transform/cli simplify --ratio 0.1 --error 0.001 input.glb simplified.glb
+# 2. 重新套 Draco + WebP（simplify 會先解壓 Draco）
+npx @gltf-transform/cli optimize simplified.glb output.glb --compress draco --texture-compress webp
+```
+其他偏大模型若未來視覺品質可接受，可比照處理（荷花 2.4 MB、繡球花 2.2 MB、向日葵 1.8 MB）。
+
 #### 展覽模式預載修正（已完成）
 `ExhibitionScanPage.jsx` mount 後即預載該 pool 可能出現的所有花模型，
 利用使用者閱讀作品介紹頁的時間完成下載，reveal 時秒速顯示。
@@ -477,3 +487,83 @@ manager.onProgress = (url, loaded, total) => {
   setProgress(loaded / total * 100)
 }
 ```
+
+---
+
+## Vercel 免費額度容量評估（2025-05-11）
+
+### 免費方案（Hobby）硬上限
+
+| 項目 | 月限制 | 換算每日 |
+|------|--------|---------|
+| **頻寬（Bandwidth）** | 100 GB | ~3.33 GB |
+| **Edge Requests** | 1,000,000 次 | ~33,333 次 |
+| Serverless Functions | 1,000,000 次 | 本專案不適用（純 SPA） |
+| Build 時間 | 6,000 分鐘 | 不是瓶頸 |
+
+### 目前資產大小（2025-05-11 實測）
+
+**JS / CSS Bundle（gzip 後）**
+
+| 資源 | gzip 大小 | 說明 |
+|------|----------|------|
+| HTML | 4.4 kB | |
+| CSS | 6.7 kB | |
+| 主 JS（index chunk） | 426 kB | Three.js / Framer Motion / Supabase SDK |
+| QRScanPage | 102 kB | 僅 QR 掃碼路徑載入 |
+| EmotionScanPage | 344 kB | 面相掃描路徑，face-api 大 chunk |
+| 其餘 lazy chunks | ~26 kB | CollectionPage、AuthModal 等 |
+
+**3D 模型（GLB，不再 gzip）**
+
+| 花朵 | 大小 |
+|------|------|
+| 荷花 | 2.4 MB |
+| 繡球花 | 2.2 MB |
+| 向日葵 | 1.8 MB |
+| 百合花 | 1.7 MB |
+| 牡丹（減面後） | 1.7 MB |
+| 桜花 | 1.4 MB |
+| 薰衣草 | 1.2 MB |
+| 虞美人 | 1.0 MB |
+| 其餘花朵 | 72 kB – 880 kB |
+| **全部合計** | **~20 MB** |
+| **平均每朵** | **~1.0 MB** |
+
+### 每位用戶頻寬消耗估算
+
+**首次訪問（瀏覽器無快取）**
+- JS/CSS 核心：~438 kB（gzip）
+- Lazy chunks：~120 kB
+- 一個 3D 模型（均值）：~1,000 kB
+- **合計：~1.6 MB / 人**
+
+**回訪用戶（JS/CSS 已快取）**
+- 僅模型：~1,000 kB（若瀏覽器未快取）
+
+**面相掃描用戶**
+- 額外 +344 kB（EmotionScanPage chunk）
+
+### 每日可承受人數
+
+| 瓶頸 | 計算 | 每日安全上限 |
+|------|------|------------|
+| 頻寬 3.33 GB/天 | ÷ 1.6 MB/人 | **~2,000 人/天** |
+| Edge Requests 33,333 次/天 | ~15 req/人 | **~2,200 人/天** |
+
+**瓶頸在頻寬，安全上限約 1,500–2,000 位新用戶/天。**
+
+### Supabase 免費額度（另計）
+
+| 項目 | 免費額度 | 預估使用量 |
+|------|---------|----------|
+| MAU | 50,000 人/月 | 遠低於上限 |
+| DB 頻寬 | 2 GB/月 | 輕量 JSON，無壓力 |
+| Edge Functions | 500,000 次/月 | 僅 `send-completion-email` / `line-auth` |
+| DB 大小 | 500 MB | 數千筆 profiles 無問題 |
+
+### 鹽夏不夜埕活動評估（2026/5/16、5/17、5/23）
+
+- 預估單日掃碼人數 500–800 人 → 頻寬消耗 ~1.3 GB（月額度 1.3%）
+- 即使爆滿達 1,500 人/天，三天合計 ~7 GB，月底前仍有 93 GB 餘量
+- **結論：Vercel 免費方案對本活動規模完全足夠**，不需升級付費方案
