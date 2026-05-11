@@ -3,6 +3,18 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import CollectionIcon from './CollectionIcon'
 import { BOUQUET_FLOWERS, FLOWER_POSITIONS, SingleFlower, BambooBasket } from './FlowerBouquet'
 
+const EVENT_START = new Date('2026-05-16T17:00:00+08:00')
+
+function useCountdown() {
+  const [msLeft, setMsLeft] = useState(() => EVENT_START - Date.now())
+  useEffect(() => {
+    if (msLeft <= 0) return
+    const id = setInterval(() => setMsLeft(EVENT_START - Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [msLeft <= 0]) // eslint-disable-line react-hooks/exhaustive-deps
+  return Math.max(0, msLeft)
+}
+
 // 背景飄落花瓣
 const FloatingPetal = ({ delay, x, duration, size, rotation }) => (
   <motion.div
@@ -50,6 +62,9 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
       return Object.keys(JSON.parse(stored)).length > 0
     } catch { return false }
   })()
+
+  const msLeft = useCountdown()
+  const showCountdown = !exhibitionMode && msLeft > 0
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
   // 螢幕高度 < 700px（iPhone SE、小型 Android）需要更緊湊的佈局
@@ -240,6 +255,46 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
       </motion.div>
 
       {/* 背景遮罩已移除：換場效果交由 GachaAnimation 的 transitionFlash/transitionGlow 處理 */}
+
+      {/* 倒數計時（普通模式，活動開始前） */}
+      {showCountdown && !isTransforming && (() => {
+        const d = Math.floor(msLeft / 86400000)
+        const h = Math.floor((msLeft % 86400000) / 3600000)
+        const m = Math.floor((msLeft % 3600000) / 60000)
+        const s = Math.floor((msLeft % 60000) / 1000)
+        const pad = n => String(n).padStart(2, '0')
+        const Unit = ({ value, label }) => (
+          <div className="flex flex-col items-center">
+            <span className="tabular-nums font-bold leading-none"
+              style={{ fontSize: isSmallScreen ? 22 : 26, color: '#F2BE5C', textShadow: '0 0 12px rgba(242,190,92,0.6)' }}>
+              {pad(value)}
+            </span>
+            <span className="text-white/40 mt-0.5" style={{ fontSize: 9 }}>{label}</span>
+          </div>
+        )
+        const Sep = () => <span className="font-bold pb-3" style={{ color: 'rgba(242,190,92,0.5)', fontSize: 18 }}>:</span>
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="relative z-10 flex flex-col items-center"
+            style={{ marginBottom: isSmallScreen ? 6 : 10 }}
+          >
+            <p className="text-white/45 mb-2" style={{ fontSize: 11, letterSpacing: '0.08em' }}>距活動開始</p>
+            <div
+              className="flex items-end gap-2 px-5 py-2.5 rounded-2xl"
+              style={{ background: 'rgba(242,190,92,0.07)', border: '1px solid rgba(242,190,92,0.22)' }}
+            >
+              <Unit value={d} label="天" />
+              <Sep /><Unit value={h} label="時" />
+              <Sep /><Unit value={m} label="分" />
+              <Sep /><Unit value={s} label="秒" />
+            </div>
+            <p className="text-white/30 mt-1.5" style={{ fontSize: 10 }}>2026 / 5 / 16（六）17:00 開幕</p>
+          </motion.div>
+        )
+      })()}
 
       {/* 未登入警示 */}
       {!user && !tutorialActive && (
