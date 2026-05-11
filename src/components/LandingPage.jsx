@@ -337,7 +337,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
             }}
             className="text-sm md:text-base text-amber-200/90 text-center tracking-widest font-medium"
           >
-            ✦ 點擊任意一枝花開始抽籤 ✦
+            ✦ 掃描裝置藝術，蒐集專屬花語 ✦
           </motion.p>
         </div>
       )}
