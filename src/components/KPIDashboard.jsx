@@ -131,7 +131,7 @@ function KPIDashboard() {
         { data: timeEvents },
       ] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('events').select('user_id').eq('event_type', 'draw').limit(10000),
+        supabase.from('events').select('user_id, payload').eq('event_type', 'draw').limit(10000),
         supabase.from('events').select('user_id').eq('event_type', 'face_scan_complete').limit(5000),
         supabase.from('events').select('payload').eq('event_type', 'qr_scan').limit(10000),
         supabase.from('events').select('*', { count: 'exact', head: true }).eq('event_type', 'tutorial_complete'),
@@ -145,9 +145,11 @@ function KPIDashboard() {
       ])
 
       // ── 抽卡統計 ──
-      const drawLogin = drawEvents?.filter(e => e.user_id) || []
-      const drawAnon  = drawEvents?.filter(e => !e.user_id) || []
+      const drawLogin  = drawEvents?.filter(e => e.user_id) || []
+      const drawAnon   = drawEvents?.filter(e => !e.user_id) || []
       const totalDraws = (drawEvents?.length) || 0
+      const normalDraws     = drawEvents?.filter(e => e.payload?.source === 'normal').length || 0
+      const exhibitionDraws = drawEvents?.filter(e => e.payload?.source === 'exhibition').length || 0
 
       const perUser = {}
       drawLogin.forEach(e => { perUser[e.user_id] = (perUser[e.user_id] || 0) + 1 })
@@ -215,6 +217,8 @@ function KPIDashboard() {
         faceTotal,
         faceLogin,
         faceAnon,
+        normalDraws,
+        exhibitionDraws,
         zoneData,
         maxZone,
         tutorialCount: tutorialCount || 0,
@@ -255,6 +259,7 @@ function KPIDashboard() {
     userCount, totalDraws, loginDraws, anonDraws, loggedInUserCount, avgDraws,
     drawBuckets, maxBucket,
     faceTotal, faceLogin, faceAnon,
+    normalDraws, exhibitionDraws,
     zoneData, maxZone,
     tutorialCount, tutorialRate,
     dailyData,
@@ -266,6 +271,7 @@ function KPIDashboard() {
       <div className="grid grid-cols-2 gap-3">
         <StatCard label="累計用戶數"   value={userCount}     color="#a8c4e0" />
         <StatCard label="累計抽卡次數" value={totalDraws}    sub={`登入 ${loginDraws} ／ 匿名 ${anonDraws}`} color="#F27E93" />
+        <StatCard label="普通模式抽卡" value={normalDraws}   sub={`展覽模式 ${exhibitionDraws} 次`}           color="#F2BE5C" />
         <StatCard label="面相掃描次數" value={faceTotal}     sub={`登入 ${faceLogin} ／ 匿名 ${faceAnon}`}   color="#c4b5fd" />
         <StatCard label="引導完成次數" value={tutorialCount} sub={`${tutorialRate}% 完成率`}                  color="#6ee7b7" />
       </div>
@@ -306,6 +312,10 @@ function KPIDashboard() {
           ))}
         </div>
         <SplitBar loggedIn={loginDraws} anon={anonDraws} color="#F27E93" />
+        <div className="mt-4 pt-3 border-t border-white/5 space-y-2">
+          <BarRow label="普通模式" value={normalDraws}     max={totalDraws || 1} color="#F2BE5C" />
+          <BarRow label="展覽模式" value={exhibitionDraws} max={totalDraws || 1} color="#a78bfa" />
+        </div>
       </div>
 
       {/* 面相 登入/匿名 */}
