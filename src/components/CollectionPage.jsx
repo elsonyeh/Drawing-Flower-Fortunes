@@ -147,6 +147,16 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
             </div>
           )}
 
+          {/* 普通模式：展覽即將開始提示 */}
+          {!exMode && (
+            <div className="mb-3 rounded-xl px-4 py-3" style={{ background: 'rgba(242,190,92,0.06)', border: '1px solid rgba(242,190,92,0.14)' }}>
+              <p className="text-xs leading-relaxed" style={{ color: 'rgba(242,217,208,0.7)' }}>
+                <span style={{ color: '#F2BE5C', fontWeight: 600 }}>✦ 花語封印中</span>
+                {'　'}5/16 踏入現場掃描第一件裝置藝術，此圖鑑將封印沉眠，靜待旅程終了後再度甦醒。
+              </p>
+            </div>
+          )}
+
           {/* Sticker redemption hint */}
           {exMode && exProgress && (
             <div className="mb-3 rounded-xl px-4 py-3" style={{ background: 'rgba(242,190,92,0.06)', border: '1px solid rgba(242,190,92,0.14)' }}>
