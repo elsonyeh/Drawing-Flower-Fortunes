@@ -406,8 +406,8 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-center gap-2 px-6"
           style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}
         >
-          {/* 主要：掃描 QR（展覽核心動作，全寬顯眼） */}
-          {onQRScan && (
+          {/* 主要：掃描 QR（展覽模式才顯示） */}
+          {onQRScan && exhibitionMode && (
             <motion.button
               onClick={onQRScan}
               data-tutorial="qr-btn"
