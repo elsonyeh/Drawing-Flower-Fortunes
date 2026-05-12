@@ -13,11 +13,12 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
   const [flippedCard, setFlippedCard] = useState(null) // Track which card is flipped
   const [showFlower, setShowFlower] = useState(false) // Delay flower rendering
   const [showZoneModal, setShowZoneModal] = useState(false)
-  const allFlowers = getAllFlowers()
-  const stats = getCollectionStats()
-  const collectedIds = getCollectedFlowers().map(f => f.id)
-
   const exMode = isExhibitionMode()
+  const currentSource = exMode ? 'exhibition' : 'normal'
+  const allFlowers = getAllFlowers()
+  const stats = getCollectionStats(currentSource)
+  const collectedIds = getCollectedFlowers(currentSource).map(f => f.id)
+
   const exProgress = exMode ? getZoneProgress() : null
   const unlockedPools = exMode ? getUnlockedPools() : []
 
@@ -188,8 +189,8 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
       <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filteredFlowers.map((flower, index) => {
-            const collected = isFlowerCollected(flower.id)
-            const isFirstCollected = collected && !filteredFlowers.slice(0, index).some(f => isFlowerCollected(f.id))
+            const collected = isFlowerCollected(flower.id, currentSource)
+            const isFirstCollected = collected && !filteredFlowers.slice(0, index).some(f => isFlowerCollected(f.id, currentSource))
 
             return (
               <motion.div

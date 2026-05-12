@@ -118,11 +118,11 @@ function App() {
     if (isTutorial) {
       // 引導抽籤：存 localStorage（step 10 需要有卡片），但不上傳雲端
       // 記錄 flower.id，導覽結束後自動清除
-      saveCollectedFlower(flower)
+      saveCollectedFlower(flower, exMode ? 'exhibition' : 'normal')
       sessionStorage.setItem('chenghua_tutorial_flower', String(flower.id))
       logEvent(user?.id, 'draw', { source: 'tutorial', flower_id: flower.id, rarity: flower.rarity })
     } else {
-      saveCollectedFlower(flower)
+      saveCollectedFlower(flower, exMode ? 'exhibition' : 'normal')
       if (user) {
         saveFlowerToCloud(user.id, flower)
         checkAndNotifyCompletion(user).then(r => {
@@ -142,7 +142,7 @@ function App() {
     const flower = getRandomFlowerForExhibition(pools)
     setSelectedFlower(flower)
     setEmotionData(null)
-    saveCollectedFlower(flower)
+    saveCollectedFlower(flower, 'exhibition')
     if (user) {
       saveFlowerToCloud(user.id, flower)
       checkAndNotifyCompletion(user).then(r => {

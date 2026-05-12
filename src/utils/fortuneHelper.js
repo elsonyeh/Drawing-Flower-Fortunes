@@ -121,19 +121,27 @@ export const getCommonFlowers = () => {
 }
 
 /**
+ * Normalize a stored entry to { collectedAt, source }
+ * 相容舊格式（純 ISO string）→ source 預設 'normal'
+ */
+const normalizeEntry = (val, defaultSource = 'normal') =>
+  typeof val === 'string' ? { collectedAt: val, source: defaultSource } : val
+
+/**
  * Save collected flower to localStorage
  * @param {Object} flower - Flower object to save
+ * @param {'normal'|'exhibition'} source - Where the flower was drawn
  */
-export const saveCollectedFlower = (flower) => {
+export const saveCollectedFlower = (flower, source = 'normal') => {
   const map = getCollectedMap()
   if (!(flower.id in map)) {
-    map[flower.id] = new Date().toISOString()
+    map[flower.id] = { collectedAt: new Date().toISOString(), source }
     localStorage.setItem('collectedFlowers', JSON.stringify(map))
   }
 }
 
 /**
- * Get raw collected map from localStorage: { [flowerId]: collectedAt }
+ * Get raw collected map from localStorage: { [flowerId]: { collectedAt, source } }
  */
 export const getCollectedMap = () => {
   const stored = localStorage.getItem('collectedFlowers')
@@ -142,38 +150,51 @@ export const getCollectedMap = () => {
   // 相容舊格式（陣列）
   if (Array.isArray(parsed)) {
     const map = {}
-    parsed.forEach(f => { map[f.id] = f.collectedAt || new Date().toISOString() })
+    parsed.forEach(f => { map[f.id] = { collectedAt: f.collectedAt || new Date().toISOString(), source: 'normal' } })
     localStorage.setItem('collectedFlowers', JSON.stringify(map))
     return map
   }
-  return parsed
+  // 相容舊格式（value 為純 ISO string）
+  const normalized = {}
+  Object.entries(parsed).forEach(([id, val]) => { normalized[id] = normalizeEntry(val) })
+  return normalized
 }
 
 /**
  * Get all collected flowers from localStorage
- * @returns {Array} Array of {id, collectedAt}
+ * @param {string|null} source - 若指定，只回傳該 source 的花；null = 全部
+ * @returns {Array} Array of {id, collectedAt, source}
  */
-export const getCollectedFlowers = () => {
+export const getCollectedFlowers = (source = null) => {
   const map = getCollectedMap()
-  return Object.entries(map).map(([id, collectedAt]) => ({ id: Number(id), collectedAt }))
+  return Object.entries(map)
+    .filter(([, entry]) => !source || entry.source === source)
+    .map(([id, entry]) => ({ id: Number(id), collectedAt: entry.collectedAt, source: entry.source }))
 }
 
 /**
  * Check if a flower is collected
  * @param {number} flowerId - Flower ID to check
- * @returns {boolean} True if collected
+ * @param {string|null} source - 若指定，需 source 相符才算 collected
+ * @returns {boolean}
  */
-export const isFlowerCollected = (flowerId) => {
-  return flowerId in getCollectedMap()
+export const isFlowerCollected = (flowerId, source = null) => {
+  const map = getCollectedMap()
+  if (!(flowerId in map)) return false
+  if (!source) return true
+  return map[flowerId].source === source
 }
 
 /**
  * Get collection statistics
+ * @param {string|null} source - 若指定，只統計該 source；null = 全部
  * @returns {Object} Collection stats
  */
-export const getCollectionStats = () => {
+export const getCollectionStats = (source = null) => {
   const map = getCollectedMap()
-  const ids = Object.keys(map).map(Number)
+  const ids = Object.entries(map)
+    .filter(([, entry]) => !source || entry.source === source)
+    .map(([id]) => Number(id))
   const total = flowersData.length
   const ssrCollected = ids.filter(id => id > 100).length
   const commonCollected = ids.filter(id => id <= 100).length
@@ -224,10 +245,10 @@ export const isFlowerViewed = (flowerId) => {
  * Unlock all flowers (Admin function)
  * Adds all flowers to the collection
  */
-export const unlockAllFlowers = () => {
+export const unlockAllFlowers = (source = 'exhibition') => {
   const now = new Date().toISOString()
   const map = {}
-  flowersData.forEach(f => { map[f.id] = now })
+  flowersData.forEach(f => { map[f.id] = { collectedAt: now, source } })
   localStorage.setItem('collectedFlowers', JSON.stringify(map))
 }
 

@@ -95,7 +95,7 @@ export const syncLocalToCloud = async (userId) => {
   const rows = ids.map(id => ({
     user_id: userId,
     flower_id: Number(id),
-    collected_at: map[id],
+    collected_at: typeof map[id] === 'string' ? map[id] : map[id].collectedAt,
   }))
 
   const { error } = await supabase
@@ -139,9 +139,14 @@ export const loadCloudToLocal = async (userId) => {
   const cloudMap = await getCloudCollection(userId)
   if (Object.keys(cloudMap).length === 0) return
 
-  // 合併：雲端優先，本地補充
+  // 合併：本地 source tag 優先保留；雲端有但本地沒有的花 → 標記 'exhibition'
   const localMap = getCollectedMap()
-  const merged = { ...cloudMap, ...localMap }
+  const merged = { ...localMap }
+  Object.entries(cloudMap).forEach(([id, collectedAt]) => {
+    if (!(id in merged)) {
+      merged[id] = { collectedAt, source: 'exhibition' }
+    }
+  })
   localStorage.setItem('collectedFlowers', JSON.stringify(merged))
 }
 
