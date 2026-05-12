@@ -232,9 +232,8 @@ function PrizeResult({ result, onClose }) {
         🌸 恭喜集滿花語！
       </p>
       <p style={{ fontSize: 12, color: 'rgba(242,217,208,0.88)', textAlign: 'center', lineHeight: 1.9 }}>
-        全程限定 10 份好禮已全數送出，<br />
-        但你走過的每一件裝置、蒐集的每一朵花語，<br />
-        都是屬於你的完整旅程。
+        很遺憾，全程限定 10 份的隱藏好禮已全數送出。<br />
+        感謝你走遍鹽埕、蒐集每一朵花語。
       </p>
       <button onClick={onClose} style={btn}>關閉</button>
     </>
