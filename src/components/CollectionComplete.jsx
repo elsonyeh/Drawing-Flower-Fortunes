@@ -232,7 +232,9 @@ function PrizeResult({ result, onClose }) {
         🌸 恭喜集滿花語！
       </p>
       <p style={{ fontSize: 12, color: 'rgba(242,217,208,0.88)', textAlign: 'center', lineHeight: 1.9 }}>
-        很遺憾，本次活動獎品（共 10 份）<br />已全數兌換完畢。<br />感謝你的熱情參與！
+        全程限定 10 份好禮已全數送出，<br />
+        但你走過的每一件裝置、蒐集的每一朵花語，<br />
+        都是屬於你的完整旅程。
       </p>
       <button onClick={onClose} style={btn}>關閉</button>
     </>
@@ -244,7 +246,7 @@ function PrizeResult({ result, onClose }) {
         🎁 恭賀郵件已寄出！
       </p>
       <p style={{ fontSize: 12, color: 'rgba(242,217,208,0.92)', lineHeight: 1.9, marginBottom: 0 }}>
-        你是第 <strong style={{ color: '#f27e93', fontSize: 14 }}>{rank}</strong> 位蒐齊花語的旅人。<br />
+        全程僅限 10 份好禮，你是第 <strong style={{ color: '#f27e93', fontSize: 14 }}>{rank}</strong> 位幸運旅人。<br />
         請至信箱查看領獎說明，<br />
         依信中指示回覆預約時間即可。
       </p>
