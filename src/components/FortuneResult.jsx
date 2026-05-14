@@ -808,7 +808,9 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           data-tutorial="locations"
         >
           <div className="mb-4">
-            <p className="text-white/40 text-xs tracking-widest mb-1">推薦前往參觀的裝置藝術作品</p>
+            <p className="text-white/40 text-xs tracking-widest mb-1">
+              {zoneArtworks ? '推薦前往參觀的裝置藝術作品' : '鹽埕周邊景點推薦'}
+            </p>
             <h2 className="text-xl font-semibold text-primary-300 flex items-center gap-2">
               {zoneArtworks
                 ? (ZONE_THEME[exhibitionZone]?.name ?? exhibitionZone)
@@ -869,8 +871,8 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
           </div>
         </motion.div>
 
-        {/* Exhibition artwork recommendation — 隱藏於展覽模式（由上方展區藝術列表取代） */}
-        {flower.artwork && !isFromCollection && !inExhibition && (
+        {/* Exhibition artwork recommendation — 僅展覽模式顯示（普通模式已有景點列表） */}
+        {flower.artwork && !isFromCollection && inExhibition && (
           <motion.div
             variants={!isFromCollection ? itemVariants : undefined}
             className="bg-gradient-to-br from-night-800/60 to-night-900/60 backdrop-blur-md rounded-2xl p-6 mb-8 border"
