@@ -54,15 +54,6 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
   const fireflyControls = useAnimation()
   const fireflyPosRef = useRef({ x: 0, y: 0 })
 
-  // 非展覽模式下，已抽過就鎖定花朵
-  const hasDrawn = !exhibitionMode && (() => {
-    try {
-      const stored = localStorage.getItem('collectedFlowers')
-      if (!stored) return false
-      return Object.keys(JSON.parse(stored)).length > 0
-    } catch { return false }
-  })()
-
   const msLeft = useCountdown()
   const showCountdown = !exhibitionMode && msLeft > 0
 
@@ -117,7 +108,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
   }, [fireflyTarget, showFirefly, isTransforming, selectedIndex, fireflyControls, getFireflyTarget])
 
   const handleFlowerClick = (index) => {
-    if (isTransforming || hasDrawn) return
+    if (isTransforming) return
     if (exhibitionMode && !tutorialActive) return
     setSelectedIndex(index)
     setIsTransforming(true)
@@ -250,7 +241,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
           animate={{ opacity: 1, y: 0 }}
           className={`${isSmallScreen ? 'text-sm' : 'text-base md:text-xl'} text-gray-300`}
         >
-          {isTransforming ? '花語顯現中...' : hasDrawn ? '今夜的花語已為你綻放' : '選擇一枝花，開啟今夜的指引'}
+          {isTransforming ? '花語顯現中...' : '選擇一枝花，開啟今夜的指引'}
         </motion.p>
       </motion.div>
 
@@ -376,7 +367,7 @@ const LandingPage = ({ onPetalSelect, onOpenCollection, onEmotionScan, onOpenAut
       </div>
 
       {/* 提示文字：已抽過就隱藏 */}
-      {!isTransforming && !hasDrawn && (
+      {!isTransforming && (
         <div className={`flex flex-col items-center ${isSmallScreen ? 'mt-2' : 'mt-4'} relative z-10`}>
           <motion.p
             initial={{ opacity: 0, y: 10 }}

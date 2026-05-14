@@ -139,12 +139,12 @@ export const loadCloudToLocal = async (userId) => {
   const cloudMap = await getCloudCollection(userId)
   if (Object.keys(cloudMap).length === 0) return
 
-  // 合併：本地 source tag 優先保留；雲端有但本地沒有的花 → 標記 'exhibition'
+  // 合併：本地 source tag 優先保留；雲端有但本地沒有的花 → 標記 'normal'（活動前蒐集的花皆為普通模式）
   const localMap = getCollectedMap()
   const merged = { ...localMap }
   Object.entries(cloudMap).forEach(([id, collectedAt]) => {
     if (!(id in merged)) {
-      merged[id] = { collectedAt, source: 'exhibition' }
+      merged[id] = { collectedAt, source: 'normal' }
     }
   })
   localStorage.setItem('collectedFlowers', JSON.stringify(merged))
