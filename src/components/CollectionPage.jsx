@@ -607,12 +607,17 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                 </p>
               </div>
               {/* 體驗評分 */}
-              <div style={{ margin: '14px 0 6px', paddingTop: 14, borderTop: '1px solid rgba(242,190,92,0.15)', textAlign: 'center' }}>
-                <p style={{ margin: '0 0 8px', fontSize: 11, color: 'rgba(242,217,208,0.55)', letterSpacing: 1.5 }}>
-                  {zoneRating > 0 ? '謝謝你的回饋 🙏' : '這次體驗如何？'}
+              <div style={{ margin: '16px 0 8px', paddingTop: 16, borderTop: '1px solid rgba(242,190,92,0.15)', textAlign: 'center' }}>
+                <p style={{ margin: '0 0 2px', fontSize: 12, fontWeight: 700, color: 'rgba(242,217,208,0.75)', letterSpacing: 2 }}>
+                  {zoneRating > 0 ? '感謝你的回饋，旅人！' : '旅程評價'}
+                </p>
+                <p style={{ margin: '0 0 12px', fontSize: 11, color: 'rgba(242,217,208,0.42)', lineHeight: 1.6 }}>
+                  {zoneRating > 0
+                    ? '你的聲音是我們繼續前進的動力 🌿'
+                    : '這次鹽夏不夜埕花語旅程，你覺得如何？'}
                 </p>
                 {zoneRating === 0 ? (
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 20 }}>
                     {[1, 2, 3, 4, 5].map(i => (
                       <button key={i}
                         onClick={() => {
@@ -622,17 +627,27 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                         }}
                         onMouseEnter={() => setZoneRatingHover(i)}
                         onMouseLeave={() => setZoneRatingHover(0)}
-                        style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer',
-                          opacity: i <= (zoneRatingHover || 0) ? 1 : 0.28, transition: 'opacity 0.15s', padding: 2 }}>
+                        style={{ background: 'none', border: 'none', fontSize: 26, cursor: 'pointer',
+                          opacity: i <= (zoneRatingHover || 0) ? 1 : 0.25, transition: 'opacity 0.15s', padding: '2px 4px' }}>
                         🌸
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <a href="https://forms.gle/fNJTKrez1tX1M8X58" target="_blank" rel="noreferrer"
-                    style={{ fontSize: 12, color: '#f27e93', textDecoration: 'underline', display: 'block', marginBottom: 12 }}>
-                    想多說一點嗎？→
-                  </a>
+                  <div style={{ marginBottom: 14 }}>
+                    <p style={{ margin: '0 0 10px', fontSize: 12, color: 'rgba(242,217,208,0.55)', lineHeight: 1.7 }}>
+                      想和我們聊聊這次的展覽、互動體驗，<br />
+                      或是對整個活動有什麼想說的嗎？
+                    </p>
+                    <a href="https://forms.gle/fNJTKrez1tX1M8X58" target="_blank" rel="noreferrer"
+                      style={{ display: 'inline-block', fontSize: 13, fontWeight: 600,
+                        color: '#f27e93', textDecoration: 'none',
+                        padding: '7px 18px', borderRadius: 20,
+                        border: '1px solid rgba(242,126,147,0.35)',
+                        background: 'rgba(242,126,147,0.08)' }}>
+                      前往填寫完整回饋 →
+                    </a>
+                  </div>
                 )}
               </div>
               <button
