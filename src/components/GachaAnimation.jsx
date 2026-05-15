@@ -661,7 +661,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                   whileHover={stage === 'show_card' ? { scale: 1.04, y: -8 } : {}}
                   whileTap={stage === 'show_card' ? { scale: 0.96 } : {}}
                 >
-                  <div className="absolute inset-0 rounded-2xl">
+                  <div className="absolute inset-0 rounded-2xl overflow-hidden">
                     <CardBack flower={flower} />
                   </div>
                 </motion.div>
@@ -670,7 +670,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                 <div className="absolute inset-0"
                   style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                 >
-                <div className="absolute inset-0 rounded-2xl">
+                <div className="absolute inset-0 rounded-2xl overflow-hidden">
                   <div className="absolute inset-0" style={{
                     background: isSSR
                       ? `linear-gradient(135deg, ${flower.gradientColors?.[0]}, ${flower.gradientColors?.[1]}, ${flower.gradientColors?.[2]})`
