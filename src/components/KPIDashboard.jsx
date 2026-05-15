@@ -122,27 +122,48 @@ function KPIDashboard() {
     try {
       const since = new Date(Date.now() - daysRange * 24 * 60 * 60 * 1000).toISOString()
 
+      // 先取管理員 ID，所有統計數據排除管理員的測試行為
+      const { data: adminRows } = await supabase.from('admins').select('user_id')
+      const adminSet = new Set((adminRows || []).map(a => a.user_id))
+      const adminList = [...adminSet]
+
+      const withoutAdmins = (query, field = 'user_id') =>
+        adminList.length > 0 ? query.not(field, 'in', `(${adminList.join(',')})`) : query
+
       const [
         { count: userCount },
-        { data: drawEvents },
-        { data: faceEvents },
-        { data: qrEvents },
-        { count: tutorialCount },
-        { data: timeEvents },
+        { data: rawDrawEvents },
+        { data: rawFaceEvents },
+        { data: rawQrEvents },
+        { data: rawTutorialEvents },
+        { data: rawTimeEvents },
+        { data: rawRatingEvents },
       ] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        withoutAdmins(supabase.from('profiles').select('*', { count: 'exact', head: true }), 'id'),
         supabase.from('events').select('user_id, payload').eq('event_type', 'draw').limit(10000),
         supabase.from('events').select('user_id').eq('event_type', 'face_scan_complete').limit(5000),
         supabase.from('events').select('payload').eq('event_type', 'qr_scan').limit(10000),
-        supabase.from('events').select('*', { count: 'exact', head: true }).eq('event_type', 'tutorial_complete'),
-        // 時間序列：只撈選定日期範圍
+        supabase.from('events').select('user_id').eq('event_type', 'tutorial_complete').limit(5000),
         supabase.from('events')
-          .select('event_type, created_at')
+          .select('event_type, created_at, user_id')
           .gte('created_at', since)
           .in('event_type', ['draw', 'face_scan_complete', 'qr_scan'])
           .order('created_at', { ascending: true })
           .limit(10000),
+        supabase.from('events').select('user_id, payload').eq('event_type', 'rating').limit(5000),
       ])
+
+      // 過濾掉管理員的事件
+      const notAdmin = e => !adminSet.has(e.user_id)
+      const drawEvents     = (rawDrawEvents     || []).filter(notAdmin)
+      const faceEvents     = (rawFaceEvents     || []).filter(notAdmin)
+      const tutorialEvents = (rawTutorialEvents || []).filter(notAdmin)
+      const timeEvents     = (rawTimeEvents     || []).filter(notAdmin)
+      const ratingEvents   = (rawRatingEvents   || []).filter(notAdmin)
+      // qrEvents 的 user_id 不在 payload，先保留全部（QR 掃碼幾乎都是訪客）
+      const qrEvents = rawQrEvents || []
+
+      const tutorialCount = tutorialEvents.length
 
       // ── 抽卡統計 ──
       const drawLogin  = drawEvents?.filter(e => e.user_id) || []
@@ -204,6 +225,16 @@ function KPIDashboard() {
         })
       }
 
+      // ── 評分統計 ──
+      const ratingDist = [1, 2, 3, 4, 5].map(s => ({
+        score: s,
+        count: ratingEvents.filter(e => e.payload?.score === s).length,
+      }))
+      const ratingTotal = ratingEvents.length
+      const ratingAvg = ratingTotal > 0
+        ? (ratingEvents.reduce((sum, e) => sum + (e.payload?.score || 0), 0) / ratingTotal).toFixed(1)
+        : null
+
       const users = userCount || 0
       setKpi({
         userCount: users,
@@ -221,9 +252,12 @@ function KPIDashboard() {
         exhibitionDraws,
         zoneData,
         maxZone,
-        tutorialCount: tutorialCount || 0,
-        tutorialRate:  users > 0 ? Math.round((tutorialCount / users) * 100) : 0,
+        tutorialCount,
+        tutorialRate: users > 0 ? Math.round((tutorialCount / users) * 100) : 0,
         dailyData,
+        ratingDist,
+        ratingTotal,
+        ratingAvg,
       })
     } catch (e) {
       setError(e.message || '查詢失敗，請確認 Supabase RLS 設定')
@@ -263,6 +297,7 @@ function KPIDashboard() {
     zoneData, maxZone,
     tutorialCount, tutorialRate,
     dailyData,
+    ratingDist, ratingTotal, ratingAvg,
   } = kpi
 
   return (
@@ -332,6 +367,41 @@ function KPIDashboard() {
             <BarRow key={z.label} label={z.label} value={z.value} max={maxZone} color={z.color} />
           ))}
         </div>
+      </div>
+
+      {/* 體驗評分 */}
+      <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>體驗評分</p>
+          {ratingTotal > 0 && (
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(242,190,92,0.15)', color: '#F2BE5C' }}>
+              共 {ratingTotal} 份
+            </span>
+          )}
+        </div>
+        {ratingTotal === 0 ? (
+          <p className="text-xs text-center py-3" style={{ color: 'rgba(255,255,255,0.25)' }}>尚無評分資料</p>
+        ) : (
+          <>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-3xl font-bold tabular-nums" style={{ color: '#F2BE5C' }}>{ratingAvg}</span>
+              <div>
+                <div className="flex gap-0.5">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <span key={i} style={{ fontSize: 16, opacity: i <= Math.round(ratingAvg) ? 1 : 0.2 }}>🌸</span>
+                  ))}
+                </div>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>平均分數</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {[...ratingDist].reverse().map(({ score, count }) => (
+                <BarRow key={score} label={`${'🌸'.repeat(score)}`} value={count}
+                  max={Math.max(...ratingDist.map(r => r.count), 1)} color="#F2BE5C" />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="text-right pt-1">

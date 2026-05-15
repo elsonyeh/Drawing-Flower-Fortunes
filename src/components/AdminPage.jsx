@@ -531,7 +531,7 @@ function AdminPage({ onSimulateQRScan, onDirectDraw, onTestCompletion, onTestZon
 
             <div className="bg-white/5 rounded-xl p-4">
               <p className="text-sm font-bold mb-1">集滿成就動畫</p>
-              <p className="text-xs text-white/40 mb-3">測試集滿任務的全螢幕動畫效果（不實際寄信、不寫資料庫）</p>
+              <p className="text-xs text-white/40 mb-3">預覽全螢幕動畫與評分介面（不寄信、不寫資料庫）</p>
               <div className="flex gap-2">
                 <button
                   onClick={() => onTestCompletion?.(false)}

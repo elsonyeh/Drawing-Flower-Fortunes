@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { logEvent } from '../utils/analytics'
 
-export default function FirstFlowerToast({ onClose }) {
+export default function FirstFlowerToast({ onClose, user }) {
   const [rated, setRated] = useState(false)
   const [hover, setHover] = useState(0)
 
@@ -9,6 +10,7 @@ export default function FirstFlowerToast({ onClose }) {
     if (rated) return
     setRated(true)
     localStorage.setItem('chenghua_first_rating_seen', String(score))
+    logEvent(user?.id ?? null, 'rating', { score, source: 'first_flower' })
   }
 
   const handleClose = () => {

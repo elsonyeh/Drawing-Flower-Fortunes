@@ -353,7 +353,7 @@ function App() {
       {/* 第一朵花成就 Toast */}
       <AnimatePresence>
         {showFirstFlowerToast && stage === 'result' && (
-          <FirstFlowerToast onClose={() => setShowFirstFlowerToast(false)} />
+          <FirstFlowerToast onClose={() => setShowFirstFlowerToast(false)} user={user} />
         )}
       </AnimatePresence>
 
