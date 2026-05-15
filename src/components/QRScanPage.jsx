@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Html5Qrcode } from 'html5-qrcode'
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 
 export default function QRScanPage({ onScanSuccess, onBack }) {
   const [status, setStatus] = useState('init') // 'init', 'scanning', 'error'
@@ -31,22 +31,27 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
       container.innerHTML = ''
     }
 
-    const qr = new Html5Qrcode('qr-reader-container')
+    const qr = new Html5Qrcode('qr-reader-container', {
+      formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+    })
 
     const stopQR = () => {
-      try {
-        qr.stop()
-          .then(() => { try { qr.clear() } catch {} })
-          .catch(() => { try { qr.clear() } catch {} })
-      } catch {
-        try { qr.clear() } catch {}
-      }
+      const tryClear = () => { try { qr.clear() } catch { /* ignore */ } }
+      try { qr.stop().then(tryClear).catch(tryClear) } catch { tryClear() }
     }
 
     qr.start(
-      { facingMode: 'environment' },
       {
-        fps: 15,
+        facingMode: 'environment',
+        width: { min: 640, ideal: 1280, max: 1920 },
+        height: { min: 480, ideal: 720, max: 1080 },
+      },
+      {
+        fps: 25,
+        qrbox: (w, h) => {
+          const edge = Math.floor(Math.min(w, h) * 0.82)
+          return { width: edge, height: edge }
+        },
         experimentalFeatures: { useBarCodeDetectorIfSupported: true },
       },
       (decodedText) => {
