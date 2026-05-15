@@ -24,8 +24,14 @@ export default function CollectionComplete({ user, needsEmail, anonymous = false
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState(null)
+  const [confirmSkip, setConfirmSkip] = useState(false)
   const inputRef = useRef(null)
   const { signInWithGoogle, signInWithLine } = useAuth()
+
+  const handleAttemptClose = () => {
+    if (needsEmail && !result) { setConfirmSkip(true); return }
+    onClose()
+  }
 
   useEffect(() => {
     if (skipAnimation) { setPhase(5); return }
@@ -163,7 +169,10 @@ export default function CollectionComplete({ user, needsEmail, anonymous = false
                 setEmail={setEmail}
                 submitting={submitting}
                 onSubmit={handleSubmit}
-                onSkip={onClose}
+                confirmSkip={confirmSkip}
+                onSkip={() => setConfirmSkip(true)}
+                onConfirmSkip={onClose}
+                onCancelSkip={() => setConfirmSkip(false)}
               />
             ) : result ? (
               <PrizeResult result={result} onClose={onClose} />
@@ -180,7 +189,7 @@ export default function CollectionComplete({ user, needsEmail, anonymous = false
       {phase >= 5 && (
         <motion.button
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          onClick={onClose}
+          onClick={handleAttemptClose}
           style={{ position: 'absolute', top: 20, right: 20, fontSize: 26, color: 'rgba(242,217,208,0.22)',
             background: 'transparent', border: 'none', cursor: 'pointer', lineHeight: 1, zIndex: 10 }}
         >
@@ -228,7 +237,37 @@ function LoginPrompt({ signInWithGoogle, signInWithLine, onSkip }) {
   )
 }
 
-function EmailForm({ inputRef, email, setEmail, submitting, onSubmit, onSkip }) {
+function EmailForm({ inputRef, email, setEmail, submitting, onSubmit, confirmSkip, onSkip, onConfirmSkip, onCancelSkip }) {
+  if (confirmSkip) {
+    return (
+      <>
+        <p style={{ fontSize: 14, color: '#f2d9d0', textAlign: 'center', lineHeight: 1.85, marginBottom: 6, fontWeight: 600 }}>
+          確定要離開嗎？
+        </p>
+        <p style={{ fontSize: 12, color: 'rgba(242,217,208,0.75)', textAlign: 'center', lineHeight: 1.85, marginBottom: 18 }}>
+          填寫 Email 才能收到恭賀通知，<br />離開後將失去領取獎品的機會。
+        </p>
+        <button
+          onClick={onCancelSkip}
+          style={{
+            width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+            cursor: 'pointer', background: 'linear-gradient(135deg,#f27e93,#F2BE5C)',
+            color: '#0e142a', fontWeight: 700, fontSize: 14, letterSpacing: 1, marginBottom: 10,
+          }}
+        >
+          繼續填寫
+        </button>
+        <button
+          onClick={onConfirmSkip}
+          style={{ width: '100%', padding: 8, background: 'transparent', border: 'none',
+            color: 'rgba(242,217,208,0.50)', fontSize: 12, cursor: 'pointer' }}
+        >
+          確定放棄
+        </button>
+      </>
+    )
+  }
+
   return (
     <>
       <p style={{ fontSize: 13, color: 'rgba(242,217,208,0.92)', textAlign: 'center', lineHeight: 1.85, marginBottom: 14 }}>
