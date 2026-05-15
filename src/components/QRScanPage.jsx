@@ -96,16 +96,19 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
     }
 
     const start = async () => {
+      // focusMode: continuous 只在瀏覽器明確支援時才加，避免 iOS Safari 拋非預期錯誤
+      const supportedConstraints = navigator.mediaDevices.getSupportedConstraints?.() ?? {}
+      const baseConstraints = {
+        facingMode: 'environment',
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        ...(supportedConstraints.focusMode ? { focusMode: 'continuous' } : {}),
+      }
       try {
-        await startWithConstraints({
-          facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          advanced: [{ focusMode: 'continuous' }],
-        })
+        await startWithConstraints(baseConstraints)
       } catch (err) {
         if (cancelled) return
-        // 解析度或對焦約束不被支援時，改用無約束重試
+        // 解析度約束不被支援時，改用最小約束重試（iOS 舊版相容）
         if (err?.name === 'OverconstrainedError' || err?.name === 'NotFoundError') {
           try {
             await startWithConstraints({ facingMode: 'environment' })
