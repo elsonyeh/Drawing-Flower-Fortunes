@@ -12,7 +12,7 @@ const COMPLETION_FLOWER_MIN = 15
 const ALL_ARTWORK_IDS = ARTWORKS.map(a => a.id) // ['A1'…'C5']
 
 export const isCompletionMet = () => {
-  const stats = getCollectionStats()
+  const stats = getCollectionStats('exhibition')
   if (stats.total < COMPLETION_FLOWER_MIN) return false
   const visited = getExhibitionState()?.visited ?? []
   return ALL_ARTWORK_IDS.every(id => visited.includes(id))
@@ -55,7 +55,7 @@ export const saveFlowerToCloud = async (userId, flower, source = 'normal') => {
     .from('collections')
     .upsert(
       { user_id: userId, flower_id: flower.id, collected_at: new Date().toISOString(), source },
-      { onConflict: 'user_id,flower_id', ignoreDuplicates: true }
+      { onConflict: 'user_id,flower_id,source', ignoreDuplicates: true }
     )
 
   if (error) console.error('儲存花朵到雲端失敗:', error.message)
@@ -78,7 +78,10 @@ export const getCloudCollection = async (userId) => {
   }
 
   const map = {}
-  data.forEach(row => { map[row.flower_id] = { collectedAt: row.collected_at, source: row.source || 'normal' } })
+  data.forEach(row => {
+    const source = row.source || 'normal'
+    map[`${row.flower_id}:${source}`] = { collectedAt: row.collected_at }
+  })
   return map
 }
 
@@ -92,16 +95,19 @@ export const syncLocalToCloud = async (userId) => {
   const ids = Object.keys(map)
   if (ids.length === 0) return
 
-  const rows = ids.map(id => ({
-    user_id: userId,
-    flower_id: Number(id),
-    collected_at: typeof map[id] === 'string' ? map[id] : map[id].collectedAt,
-    source: typeof map[id] === 'string' ? 'normal' : (map[id].source || 'normal'),
-  }))
+  const rows = ids.map(id => {
+    const [flowerId, source] = id.split(':')
+    return {
+      user_id: userId,
+      flower_id: Number(flowerId),
+      collected_at: map[id].collectedAt,
+      source: source || 'normal',
+    }
+  })
 
   const { error } = await supabase
     .from('collections')
-    .upsert(rows, { onConflict: 'user_id,flower_id', ignoreDuplicates: true })
+    .upsert(rows, { onConflict: 'user_id,flower_id,source', ignoreDuplicates: true })
 
   if (error) {
     console.error('同步本地資料到雲端失敗:', error.message)
@@ -140,15 +146,13 @@ export const loadCloudToLocal = async (userId) => {
   const cloudMap = await getCloudCollection(userId)
   if (Object.keys(cloudMap).length === 0) return
 
-  // 合併：本地 source tag 優先保留；雲端有但本地沒有的花 → 用雲端 source
+  // 合併：key 格式 "${flowerId}:${source}"，雲端有但本地沒有的直接補入
   const localMap = getCollectedMap()
   const merged = { ...localMap }
-  Object.entries(cloudMap).forEach(([id, { collectedAt, source }]) => {
-    if (!(id in merged)) {
-      merged[id] = { collectedAt, source }
-    }
+  Object.entries(cloudMap).forEach(([key, { collectedAt }]) => {
+    if (!(key in merged)) merged[key] = { collectedAt }
   })
-  localStorage.setItem('collectedFlowers', JSON.stringify(merged))
+  localStorage.setItem('collectedFlowers_v2', JSON.stringify(merged))
 }
 
 /**

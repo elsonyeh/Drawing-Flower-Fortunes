@@ -21,9 +21,9 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
   const exMode = isExhibitionMode()
   const currentSource = exMode ? 'exhibition' : 'normal'
   const allFlowers = getAllFlowers()
-  // stats 依模式分開計算（展覽 vs 正常），但圖鑑畫廊顯示所有來源的花
   const stats = getCollectionStats(currentSource)
-  const collectedIds = getCollectedFlowers(null).map(f => f.id) // null = 全來源
+  // zone unlock 檢查用全來源；gallery 用 currentSource 過濾
+  const collectedIds = getCollectedFlowers(null).map(f => f.id)
 
   const exProgress = exMode ? getZoneProgress() : null
 
@@ -204,8 +204,8 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
       <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filteredFlowers.map((flower, index) => {
-            const collected = isFlowerCollected(flower.id) // 不過濾 source，所有來源的花都算已蒐集
-            const isFirstCollected = collected && !filteredFlowers.slice(0, index).some(f => isFlowerCollected(f.id))
+            const collected = isFlowerCollected(flower.id, currentSource)
+            const isFirstCollected = collected && !filteredFlowers.slice(0, index).some(f => isFlowerCollected(f.id, currentSource))
 
             return (
               <motion.div

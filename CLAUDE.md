@@ -64,9 +64,11 @@ src/
 5. **Auto-save** - Card saved to localStorage collection immediately
 
 ### Collection System
-- **localStorage**: Persistent collection tracking
-- **Statistics**: Total cards, SSR count, common count, completion %
-- **Gallery**: 2-5 column grid, locked/unlocked states, NEW badges
+- **localStorage key**: `collectedFlowers_v2`
+- **Key format**: `"${flowerId}:${source}"`（e.g. `"3:exhibition"`）— 同一花朵在不同 source 各自獨立記錄
+- **Gallery**: 按當前模式（`normal` / `exhibition`）過濾顯示，普通模式只顯示普通模式抽到的花，展覽模式同理；同花兩模式都抽過則兩邊皆解鎖
+- **Statistics**: 只計算當前模式的花；zone unlock / 集滿成就使用 `getCollectionStats('exhibition')`
+- **Grid**: 2-5 column grid, locked/unlocked states, NEW badges
 - **Filtering**: All / SSR / Common tabs
 
 ### Gacha Probability System
@@ -213,7 +215,7 @@ const flower3DConfigs = {
 `src/components/TutorialOverlay.jsx`
 
 ### 觸發條件
-localStorage `chenghua_tutorial_v1` 不存在時，首次進站自動顯示。完成或跳過後寫入此 key。
+localStorage `chenghua_tutorial_v2` 不存在時，首次進站自動顯示。完成或跳過後寫入此 key。
 同一 session 中斷後，透過 sessionStorage `chenghua_tutorial_step` 恢復進度。
 
 ### 16 步流程（步驟 0–15）
@@ -270,7 +272,7 @@ localStorage `chenghua_tutorial_v1` 不存在時，首次進站自動顯示。�
 - **`scrollBlock`（步驟旗標）**：控制 `scrollIntoView({ block })` 參數，預設 `'center'`。步驟 10 設為 `'start'`，使目標卡片滾至畫面頂部，避免被底部 tooltip 遮住。
 - **`onStepChange` prop**：`TutorialOverlay` 每次換步驟時呼叫 `onStepChange(step)`，讓 `App.jsx` 保有 `tutorialStep` state，用於驅動其他元件的 tutorial 連動行為（如 `AuthModal` 的 `tutorialLock`）。
 - **中斷防呆**：`STEP_STAGE_MAP` 定義每步驟預期的 app stage；中途返回主頁時自動跳回對應步驟（steps 2–7 → step 1，steps 9–11 → step 8）
-- **重置導覽**：清除 localStorage `chenghua_tutorial_v1`
+- **重置導覽**：清除 localStorage `chenghua_tutorial_v2`
 
 ### 引導抽籤暫存花朵
 步驟 1 引導用戶點花進入抽卡時，抽到的花會：
@@ -341,10 +343,10 @@ localStorage `chenghua_tutorial_v1` 不存在時，首次進站自動顯示。�
 
 ### 觸發條件
 同時滿足以下兩項，抽卡存檔時自動觸發。每台裝置僅顯示一次動畫（localStorage `chenghua_completion_seen`）：
-1. **花語 ≥ 15 種**（普通花即可達成，SSR 非必要）
+1. **展覽模式花語 ≥ 15 種**（透過 QR 掃碼抽到，`source='exhibition'`；SSR 非必要，普通花即可達成）
 2. **全部 15 件裝置藝術皆掃描過**（A1–A5、B1–B5、C1–C5 全在 `visited`）
 
-判斷由 `isCompletionMet()` 統一處理（`collectionSync.js`）。
+判斷由 `isCompletionMet()` 統一處理（`collectionSync.js`），內部呼叫 `getCollectionStats('exhibition')`。
 
 ### 流程
 
@@ -403,6 +405,40 @@ localStorage.removeItem('chenghua_completion_seen')
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS completion_notified boolean DEFAULT false;
 ```
+
+---
+
+## 資料庫 Schema
+
+### collections 表
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| `id` | uuid PK | |
+| `user_id` | uuid → profiles | |
+| `flower_id` | integer | 花朵 ID（1–15 common，101–105 SSR）|
+| `source` | text | `'normal'` \| `'exhibition'` |
+| `collected_at` | timestamptz | |
+
+**Constraints / Indexes**
+```sql
+-- 同一用戶、同一花、同一 source 只有一筆
+UNIQUE (user_id, flower_id, source)
+
+-- source 只允許合法值
+CHECK (source IN ('normal', 'exhibition'))
+
+-- 加速圖鑑按模式過濾
+CREATE INDEX idx_collections_user_source ON public.collections (user_id, source);
+```
+
+### localStorage Keys（前端）
+| Key | 格式 | 說明 |
+|-----|------|------|
+| `collectedFlowers_v2` | `{ "${id}:${source}": { collectedAt } }` | 花朵蒐集（主要） |
+| `viewedFlowers` | `[id, ...]` | 已查看詳情的花（NEW badge 用） |
+| `chenghua_tutorial_v2` | `'1'` | 導覽完成旗標 |
+| `chenghua_completion_seen` | `'1'` | 集滿成就動畫已播旗標 |
+| `chenghua_zone_unlock_seen` | `'1'` | 展區解鎖動畫已播旗標 |
 
 ### 檔案位置
 | 檔案 | 用途 |
