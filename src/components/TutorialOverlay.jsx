@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { logEvent } from '../utils/analytics'
 
-const TUTORIAL_KEY = 'chenghua_tutorial_v1'
+const TUTORIAL_KEY = 'chenghua_tutorial_v2'
 const SESSION_STEP_KEY = 'chenghua_tutorial_step'
 const PAD = 10
 

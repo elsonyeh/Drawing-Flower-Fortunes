@@ -567,7 +567,7 @@ function AdminPage({ onSimulateQRScan, onDirectDraw, onTestCompletion, onTestZon
               <p className="text-xs text-white/40 mb-3">清除完成記錄，返回首頁重新播放引導流程</p>
               <button
                 onClick={() => {
-                  localStorage.removeItem('chenghua_tutorial_v1')
+                  localStorage.removeItem('chenghua_tutorial_v2')
                   window.location.href = '/'
                 }}
                 className="w-full py-3 rounded-xl font-semibold text-white transition-all min-h-[44px]"
