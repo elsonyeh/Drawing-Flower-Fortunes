@@ -79,10 +79,10 @@ export const getRandomFlowerForExhibition = (unlockedPools) => {
   const ssrCards = eligible.filter(f => f.rarity === 'ssr')
   const commonCards = eligible.filter(f => f.rarity === 'common')
 
-  const random = Math.random() * 100
-  // SSR: ~1% per SSR card in pool
-  if (ssrCards.length > 0 && random < ssrCards.length) {
-    return ssrCards[Math.floor(random)]
+  // 固定 5% SSR 機率（無論解鎖幾個區），命中後從池內隨機選一隻
+  const ZONE_SSR_RATE = 5
+  if (ssrCards.length > 0 && Math.random() * 100 < ZONE_SSR_RATE) {
+    return ssrCards[Math.floor(Math.random() * ssrCards.length)]
   }
   return commonCards[Math.floor(Math.random() * commonCards.length)]
 }

@@ -216,8 +216,8 @@
     "gradientColors": ["#90B8E0", "#5B9BD8", "#3D7BC0"],
     "model": "blue_rose",
     "rarity": "ssr",
-    "exhibitionZone": "C",
-    "artwork": {"id": "C2", "name": "鹽晶．緣進", "location": "老房間（里長）"}
+    "exhibitionZone": "A",
+    "artwork": {"id": "A2", "name": "一瞬花綻", "location": "光榮國小陶壺後空地"}
   },
   {
     "id": 103,
