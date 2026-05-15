@@ -48,13 +48,13 @@ export const ensureProfile = async (user) => {
 /**
  * 儲存花朵到 Supabase（登入時使用）
  */
-export const saveFlowerToCloud = async (userId, flower) => {
+export const saveFlowerToCloud = async (userId, flower, source = 'normal') => {
   if (!isSupabaseEnabled || !userId) return
 
   const { error } = await supabase
     .from('collections')
     .upsert(
-      { user_id: userId, flower_id: flower.id, collected_at: new Date().toISOString() },
+      { user_id: userId, flower_id: flower.id, collected_at: new Date().toISOString(), source },
       { onConflict: 'user_id,flower_id', ignoreDuplicates: true }
     )
 
@@ -69,7 +69,7 @@ export const getCloudCollection = async (userId) => {
 
   const { data, error } = await supabase
     .from('collections')
-    .select('flower_id, collected_at')
+    .select('flower_id, collected_at, source')
     .eq('user_id', userId)
 
   if (error) {
@@ -78,7 +78,7 @@ export const getCloudCollection = async (userId) => {
   }
 
   const map = {}
-  data.forEach(row => { map[row.flower_id] = row.collected_at })
+  data.forEach(row => { map[row.flower_id] = { collectedAt: row.collected_at, source: row.source || 'normal' } })
   return map
 }
 
@@ -96,6 +96,7 @@ export const syncLocalToCloud = async (userId) => {
     user_id: userId,
     flower_id: Number(id),
     collected_at: typeof map[id] === 'string' ? map[id] : map[id].collectedAt,
+    source: typeof map[id] === 'string' ? 'normal' : (map[id].source || 'normal'),
   }))
 
   const { error } = await supabase
@@ -139,12 +140,12 @@ export const loadCloudToLocal = async (userId) => {
   const cloudMap = await getCloudCollection(userId)
   if (Object.keys(cloudMap).length === 0) return
 
-  // 合併：本地 source tag 優先保留；雲端有但本地沒有的花 → 標記 'normal'（活動前蒐集的花皆為普通模式）
+  // 合併：本地 source tag 優先保留；雲端有但本地沒有的花 → 用雲端 source
   const localMap = getCollectedMap()
   const merged = { ...localMap }
-  Object.entries(cloudMap).forEach(([id, collectedAt]) => {
+  Object.entries(cloudMap).forEach(([id, { collectedAt, source }]) => {
     if (!(id in merged)) {
-      merged[id] = { collectedAt, source: 'normal' }
+      merged[id] = { collectedAt, source }
     }
   })
   localStorage.setItem('collectedFlowers', JSON.stringify(merged))

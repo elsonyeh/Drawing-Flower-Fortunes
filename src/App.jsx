@@ -124,7 +124,7 @@ function App() {
     } else {
       saveCollectedFlower(flower, exMode ? 'exhibition' : 'normal')
       if (user) {
-        saveFlowerToCloud(user.id, flower)
+        saveFlowerToCloud(user.id, flower, exMode ? 'exhibition' : 'normal')
         checkAndNotifyCompletion(user).then(r => {
           if (r?.showAnimation) setCompletionData({ needsEmail: r.needsEmail })
         })
@@ -144,7 +144,7 @@ function App() {
     setEmotionData(null)
     saveCollectedFlower(flower, 'exhibition')
     if (user) {
-      saveFlowerToCloud(user.id, flower)
+      saveFlowerToCloud(user.id, flower, 'exhibition')
       checkAndNotifyCompletion(user).then(r => {
         if (r?.showAnimation) setCompletionData({ needsEmail: r.needsEmail })
       })
