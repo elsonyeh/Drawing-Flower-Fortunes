@@ -429,7 +429,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
 
             {/* 翻牌容器 */}
             {/* perspective 獨立放靜態 wrapper，不隨 scale/y 動畫一起重算，避免 Android 閃爍 */}
-            <div className="relative w-full max-w-[300px] mx-auto" style={{ height: 450, perspective: 1200 }}>
+            <div className="relative w-full max-w-[300px] mx-auto" style={{ height: 450, perspective: 1200, filter: 'drop-shadow(0 20px 60px rgba(0,0,0,0.5))' }}>
             {/* 外層：與光暈同頻的靜息脈動 + reveal 時隨光環震動 */}
             <motion.div
               className="absolute inset-0"
@@ -651,6 +651,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                   position: 'absolute', inset: 0,
                   transformStyle: 'preserve-3d',
                   WebkitTransformStyle: 'preserve-3d',
+                  willChange: 'transform',
                 }}
               >
                 {/* 卡背面 — backface 元素本身不加 rounded/overflow，避免 Safari preserve-3d 圓角裁切 bug */}
@@ -660,7 +661,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                   whileHover={stage === 'show_card' ? { scale: 1.04, y: -8 } : {}}
                   whileTap={stage === 'show_card' ? { scale: 0.96 } : {}}
                 >
-                  <div className="absolute inset-0 rounded-2xl shadow-2xl overflow-hidden">
+                  <div className="absolute inset-0 rounded-2xl">
                     <CardBack flower={flower} />
                   </div>
                 </motion.div>
@@ -669,7 +670,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                 <div className="absolute inset-0"
                   style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                 >
-                <div className="absolute inset-0 rounded-2xl shadow-2xl overflow-hidden">
+                <div className="absolute inset-0 rounded-2xl">
                   <div className="absolute inset-0" style={{
                     background: isSSR
                       ? `linear-gradient(135deg, ${flower.gradientColors?.[0]}, ${flower.gradientColors?.[1]}, ${flower.gradientColors?.[2]})`

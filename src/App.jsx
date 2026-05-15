@@ -12,13 +12,14 @@ const ExhibitionScanPage = lazy(() => import('./components/ExhibitionScanPage'))
 const QRScanPage = lazy(() => import('./components/QRScanPage'))
 const AuthModal = lazy(() => import('./components/AuthModal'))
 const CollectionComplete = lazy(() => import('./components/CollectionComplete'))
-import { getRandomFlower, saveCollectedFlower, removeCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
+import { getRandomFlower, saveCollectedFlower, removeCollectedFlower, getRandomFlowerForExhibition, getCollectionStats } from './utils/fortuneHelper'
 import { isExhibitionMode, getUnlockedPools, initAppMode, enterExhibitionMode } from './utils/exhibitionHelper'
 import { fetchGlobalMode, subscribeGlobalMode } from './utils/exhibitionSync'
 import { useAuth } from './hooks/useAuth'
 import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile, checkAndNotifyCompletion } from './utils/collectionSync'
 
 import { logEvent } from './utils/analytics'
+import FirstFlowerToast from './components/FirstFlowerToast'
 
 // 引入 FlowerBloom 觸發背景預載入其他模型
 import './components/FlowerBloom'
@@ -65,6 +66,7 @@ function App() {
   const [tutorialStep, setTutorialStep] = useState(0)
   const [completionData, setCompletionData] = useState(null) // null | { needsEmail: boolean }
   const [testZoneModal, setTestZoneModal] = useState(false)
+  const [showFirstFlowerToast, setShowFirstFlowerToast] = useState(false)
 
   const { user } = useAuth()
 
@@ -123,6 +125,9 @@ function App() {
       logEvent(user?.id, 'draw', { source: 'tutorial', flower_id: flower.id, rarity: flower.rarity })
     } else {
       saveCollectedFlower(flower, exMode ? 'exhibition' : 'normal')
+      if (!localStorage.getItem('chenghua_first_rating_seen') && getCollectionStats().total === 1) {
+        setShowFirstFlowerToast(true)
+      }
       if (user) {
         saveFlowerToCloud(user.id, flower, exMode ? 'exhibition' : 'normal')
         checkAndNotifyCompletion(user).then(r => {
@@ -143,6 +148,9 @@ function App() {
     setSelectedFlower(flower)
     setEmotionData(null)
     saveCollectedFlower(flower, 'exhibition')
+    if (!localStorage.getItem('chenghua_first_rating_seen') && getCollectionStats().total === 1) {
+      setShowFirstFlowerToast(true)
+    }
     if (user) {
       saveFlowerToCloud(user.id, flower, 'exhibition')
       checkAndNotifyCompletion(user).then(r => {
@@ -341,6 +349,13 @@ function App() {
       <Suspense fallback={null}>
         <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} tutorialLock={tutorialActive && tutorialStep === 13} />
       </Suspense>
+
+      {/* 第一朵花成就 Toast */}
+      <AnimatePresence>
+        {showFirstFlowerToast && stage === 'result' && (
+          <FirstFlowerToast onClose={() => setShowFirstFlowerToast(false)} />
+        )}
+      </AnimatePresence>
 
       {/* 集滿成就動畫 */}
       <Suspense fallback={null}>
