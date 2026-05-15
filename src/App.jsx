@@ -151,7 +151,7 @@ function App() {
         if (r?.showAnimation) setCompletionData({ needsEmail: r.needsEmail })
       })
     }
-    setScanParams(null)
+    // 保留 scanParams，等抽卡完成後才 log qr_scan（避免中途返回被計入）
     setGachaSkipFlowerPick(false) // 展覽模式需要選花環節
     setStage('gacha')
   }
@@ -162,8 +162,7 @@ function App() {
       enterExhibitionMode()
     }
 
-    logEvent(user?.id, 'qr_scan', { zone, work_id: workId })
-
+    // qr_scan 事件等抽卡完成後才記錄（handleGachaComplete），避免中途返回被計入
     // 顯示作品資訊頁（ExhibitionScanPage 會記錄拜訪並讓用戶點擊抽卡）
     setScanParams({ zone, workId, workName })
     setStage('exhibitionScan')
@@ -190,6 +189,11 @@ function App() {
   }
 
   const handleGachaComplete = () => {
+    // 展覽掃碼流程：抽卡完成才記錄 qr_scan，確保中途返回不被計入
+    if (scanParams) {
+      logEvent(user?.id, 'qr_scan', { zone: scanParams.zone, work_id: scanParams.workId })
+      setScanParams(null)
+    }
     setStage('result')
   }
 
