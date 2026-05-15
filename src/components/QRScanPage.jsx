@@ -40,54 +40,71 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
       try { qr.stop().then(tryClear).catch(tryClear) } catch { tryClear() }
     }
 
-    qr.start(
-      {
-        facingMode: 'environment',
-        width: { min: 640, ideal: 1280, max: 1920 },
-        height: { min: 480, ideal: 720, max: 1080 },
+    const scanConfig = {
+      fps: 25,
+      qrbox: (w, h) => {
+        const edge = Math.floor(Math.min(w, h) * 0.82)
+        return { width: edge, height: edge }
       },
-      {
-        fps: 25,
-        qrbox: (w, h) => {
-          const edge = Math.floor(Math.min(w, h) * 0.82)
-          return { width: edge, height: edge }
-        },
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-      },
-      (decodedText) => {
-        if (genRef.current !== gen || successFiredRef.current) return
-        const text = decodedText.trim()
-        // QR code 有時省略 https://，補上再解析
-        const urlText = /^https?:\/\//i.test(text) ? text : `https://${text}`
-        try {
-          const url = new URL(urlText)
-          const zone = url.searchParams.get('zone')
-          const work = url.searchParams.get('work')
-          const name = url.searchParams.get('name')
-          if (zone && work) {
-            successFiredRef.current = true
-            onScanSuccess({ zone, workId: work, workName: name ? decodeURIComponent(name) : work })
-          } else {
-            setErrorMsg(`不是展覽 QR Code（缺少 zone/work 參數）\n${text}`)
-            setStatus('error')
-          }
-        } catch {
-          setErrorMsg(`無法識別此 QR Code\n內容：${text}`)
+      experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+    }
+
+    const onScan = (decodedText) => {
+      if (genRef.current !== gen || successFiredRef.current) return
+      const text = decodedText.trim()
+      const urlText = /^https?:\/\//i.test(text) ? text : `https://${text}`
+      try {
+        const url = new URL(urlText)
+        const zone = url.searchParams.get('zone')
+        const work = url.searchParams.get('work')
+        const name = url.searchParams.get('name')
+        if (zone && work) {
+          successFiredRef.current = true
+          onScanSuccess({ zone, workId: work, workName: name ? decodeURIComponent(name) : work })
+        } else {
+          setErrorMsg(`不是展覽 QR Code（缺少 zone/work 參數）\n${text}`)
           setStatus('error')
         }
-      },
-      () => { /* ignore frame errors */ }
-    ).then(() => {
-      if (genRef.current !== gen) {
-        // 這個 scanner 已過期（StrictMode 第一次 mount），立刻停掉
-        stopQR()
-        return
-      }
-      setStatus('scanning')
-    }).catch(() => {
-      if (genRef.current === gen) {
+      } catch {
+        setErrorMsg(`無法識別此 QR Code\n內容：${text}`)
         setStatus('error')
-        setErrorMsg('無法開啟相機，請允許相機使用權限後重試')
+      }
+    }
+
+    const onFrameError = () => { /* ignore */ }
+
+    // 先嘗試高解析度（ideal 為建議值，不強制），失敗時 fallback 到無約束
+    qr.start(
+      { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+      scanConfig,
+      onScan,
+      onFrameError
+    ).then(() => {
+      if (genRef.current !== gen) { stopQR(); return }
+      setStatus('scanning')
+    }).catch((err) => {
+      if (genRef.current !== gen) return
+      // 若不是權限問題，嘗試不帶解析度約束重啟（相容性更好）
+      if (err?.name !== 'NotAllowedError' && err?.name !== 'SecurityError') {
+        qr.start({ facingMode: 'environment' }, scanConfig, onScan, onFrameError)
+          .then(() => {
+            if (genRef.current !== gen) { stopQR(); return }
+            setStatus('scanning')
+          })
+          .catch((err2) => {
+            if (genRef.current !== gen) return
+            setStatus('error')
+            if (err2?.name === 'NotAllowedError' || err2?.name === 'SecurityError') {
+              setErrorMsg('請允許瀏覽器使用相機，並重新整理頁面後再試')
+            } else if (err2?.name === 'NotReadableError') {
+              setErrorMsg('相機目前被其他程式使用中，請關閉後重試')
+            } else {
+              setErrorMsg(`無法開啟相機（${err2?.name ?? '未知錯誤'}），請重試`)
+            }
+          })
+      } else {
+        setStatus('error')
+        setErrorMsg('請允許瀏覽器使用相機，並重新整理頁面後再試')
       }
     })
 
