@@ -161,6 +161,16 @@ export const loadCloudToLocal = async (userId) => {
  * - showAnimation: true 代表本裝置尚未看過動畫，應觸發
  * - needsEmail: true 代表用戶無 email（僅 LINE 登入），需在動畫後補填
  */
+/**
+ * 未登入用戶的集滿判斷（不查雲端，只看 localStorage）
+ * 條件成立且本裝置未看過動畫 → 回傳 { showAnimation: true, needsEmail: true }
+ */
+export const checkAnonymousCompletion = () => {
+  if (!isCompletionMet()) return null
+  if (localStorage.getItem('chenghua_completion_seen')) return null
+  return { showAnimation: true, needsEmail: true }
+}
+
 export const checkAndNotifyCompletion = async (user) => {
   if (!isSupabaseEnabled || !user) return null
 
@@ -191,12 +201,12 @@ export const checkAndNotifyCompletion = async (user) => {
  * 回傳 { prizeClaimed: boolean, rank: number }
  */
 export const sendCompletionEmail = async (user, emailOverride = null) => {
-  if (!isSupabaseEnabled || !user) return { prizeClaimed: false, rank: 0 }
+  if (!isSupabaseEnabled) return { prizeClaimed: false, rank: 0 }
 
-  const email = emailOverride || user.email
+  const email = emailOverride || user?.email
   const displayName =
-    user.user_metadata?.full_name ||
-    user.user_metadata?.name ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
     (email ? email.split('@')[0] : '花語旅人')
 
   // 計算已獲獎人數，超過 10 人不寄信
@@ -220,11 +230,13 @@ export const sendCompletionEmail = async (user, emailOverride = null) => {
     }
   }
 
-  // 標記完成（無論是否有獎）
-  await supabase
-    .from('profiles')
-    .update({ completion_notified: true })
-    .eq('id', user.id)
+  // 標記完成（登入用戶寫雲端；匿名只靠 localStorage 防重複）
+  if (user) {
+    await supabase
+      .from('profiles')
+      .update({ completion_notified: true })
+      .eq('id', user.id)
+  }
 
   localStorage.setItem('chenghua_completion_seen', '1')
   return { prizeClaimed, rank }

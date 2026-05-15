@@ -16,7 +16,7 @@ import { getRandomFlower, saveCollectedFlower, removeCollectedFlower, getRandomF
 import { isExhibitionMode, getUnlockedPools, initAppMode, enterExhibitionMode } from './utils/exhibitionHelper'
 import { fetchGlobalMode, subscribeGlobalMode } from './utils/exhibitionSync'
 import { useAuth } from './hooks/useAuth'
-import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile, checkAndNotifyCompletion } from './utils/collectionSync'
+import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile, checkAndNotifyCompletion, checkAnonymousCompletion } from './utils/collectionSync'
 import { syncExhibitionUserId } from './utils/exhibitionSync'
 
 import { logEvent } from './utils/analytics'
@@ -132,6 +132,9 @@ function App() {
         checkAndNotifyCompletion(user).then(r => {
           if (r?.showAnimation) setCompletionData({ needsEmail: r.needsEmail })
         })
+      } else {
+        const r = checkAnonymousCompletion()
+        if (r?.showAnimation) setCompletionData({ needsEmail: true })
       }
       logEvent(user?.id, 'draw', {
         source: exMode ? 'exhibition' : 'normal',
@@ -152,6 +155,9 @@ function App() {
       checkAndNotifyCompletion(user).then(r => {
         if (r?.showAnimation) setCompletionData({ needsEmail: r.needsEmail })
       })
+    } else {
+      const r = checkAnonymousCompletion()
+      if (r?.showAnimation) setCompletionData({ needsEmail: true })
     }
     logEvent(user?.id, 'draw', { source: 'exhibition', flower_id: flower.id, rarity: flower.rarity })
     // 保留 scanParams，等抽卡完成後才 log qr_scan（避免中途返回被計入）
