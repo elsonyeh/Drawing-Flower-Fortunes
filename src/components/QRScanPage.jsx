@@ -1,133 +1,131 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { BrowserQRCodeReader } from '@zxing/browser'
-import { DecodeHintType } from '@zxing/library'
+import jsQR from 'jsqr'
+
+// 初始化原生 BarcodeDetector（Android Chrome 83+、iOS 17.4+ 支援）
+let nativeDetector = null
+if ('BarcodeDetector' in window) {
+  try { nativeDetector = new window.BarcodeDetector({ formats: ['qr_code'] }) } catch { /* ignore */ }
+}
 
 export default function QRScanPage({ onScanSuccess, onBack }) {
   const [status, setStatus] = useState('init') // 'init' | 'scanning' | 'error'
   const [errorMsg, setErrorMsg] = useState('')
   const [scanKey, setScanKey] = useState(0)
   const videoRef = useRef(null)
-  const controlsRef = useRef(null)
   const successFiredRef = useRef(false)
-  const genRef = useRef(0)
-
-  // 攔截 ZXing 內部 video.play() 在 StrictMode 下被中斷的 AbortError（無害雜訊）
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.reason?.name === 'AbortError') e.preventDefault()
-    }
-    window.addEventListener('unhandledrejection', handler)
-    return () => window.removeEventListener('unhandledrejection', handler)
-  }, [])
 
   useEffect(() => {
-    const gen = ++genRef.current
-    const video = videoRef.current   // 快照，供 cleanup 安全存取
+    let cancelled = false
+    let timerId = null
+    let stream = null
+    const videoEl = videoRef.current
+    // canvas 只有 jsQR fallback 才用，BarcodeDetector 直接給 video
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
 
-    const hints = new Map()
-    hints.set(DecodeHintType.TRY_HARDER, true)
-
-    const reader = new BrowserQRCodeReader(hints, { delayBetweenScanAttempts: 80 })
-
-    reader.decodeFromConstraints(
-      {
-        audio: false,
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          // 連續自動對焦（Android Chrome / Samsung Internet 支援）
-          advanced: [{ focusMode: 'continuous' }],
-        },
-      },
-      videoRef.current,
-      (result) => {
-        if (genRef.current !== gen || successFiredRef.current) return
-        if (!result) return
-        const text = result.getText().trim()
-        const urlText = /^https?:\/\//i.test(text) ? text : `https://${text}`
-        try {
-          const url = new URL(urlText)
-          const zone = url.searchParams.get('zone')
-          const work = url.searchParams.get('work')
-          const name = url.searchParams.get('name')
-          if (zone && work) {
-            successFiredRef.current = true
-            controlsRef.current?.stop()
-            onScanSuccess({ zone, workId: work, workName: name ? decodeURIComponent(name) : work })
-          } else {
-            setErrorMsg(`不是展覽 QR Code（缺少 zone/work 參數）\n${text}`)
-            setStatus('error')
-          }
-        } catch {
-          setErrorMsg(`無法識別此 QR Code\n內容：${text}`)
+    const handleText = (text) => {
+      if (cancelled || successFiredRef.current) return
+      const urlText = /^https?:\/\//i.test(text) ? text : `https://${text}`
+      try {
+        const url = new URL(urlText)
+        const zone = url.searchParams.get('zone')
+        const work = url.searchParams.get('work')
+        const name = url.searchParams.get('name')
+        if (zone && work) {
+          successFiredRef.current = true
+          onScanSuccess({ zone, workId: work, workName: name ? decodeURIComponent(name) : work })
+        } else {
+          setErrorMsg(`不是展覽 QR Code（缺少 zone/work 參數）\n${text}`)
           setStatus('error')
         }
+      } catch {
+        setErrorMsg(`無法識別此 QR Code\n內容：${text}`)
+        setStatus('error')
       }
-    ).then((controls) => {
-      if (genRef.current !== gen) { controls.stop(); return }
-      controlsRef.current = controls
+    }
+
+    const scanLoop = async () => {
+      if (cancelled || successFiredRef.current) return
+      try {
+        if (videoEl.readyState >= 2 && !videoEl.paused) {
+          let text = null
+          if (nativeDetector) {
+            // BarcodeDetector：直接給 video element，硬體加速
+            const codes = await nativeDetector.detect(videoEl)
+            text = codes[0]?.rawValue ?? null
+          } else {
+            // jsQR fallback：截 canvas frame
+            const w = videoEl.videoWidth
+            const h = videoEl.videoHeight
+            if (w > 0 && h > 0) {
+              canvas.width = w
+              canvas.height = h
+              ctx.drawImage(videoEl, 0, 0, w, h)
+              const imageData = ctx.getImageData(0, 0, w, h)
+              const code = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' })
+              text = code?.data ?? null
+            }
+          }
+          if (text) { handleText(text); return }
+        }
+      } catch { /* ignore per-frame errors */ }
+      if (!cancelled) timerId = setTimeout(scanLoop, 80)
+    }
+
+    const startWithConstraints = async (constraints) => {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: constraints })
+      if (cancelled) { stream.getTracks().forEach(t => t.stop()); return }
+      videoEl.srcObject = stream
+      await videoEl.play()
+      if (cancelled) return
       setStatus('scanning')
-    }).catch((err) => {
-      if (genRef.current !== gen) return
+      scanLoop()
+    }
+
+    const showError = (err) => {
+      if (cancelled) return
       if (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') {
         setErrorMsg('請允許瀏覽器使用相機，並重新整理頁面後再試')
       } else if (err?.name === 'NotReadableError') {
         setErrorMsg('相機目前被其他程式使用中，請關閉後重試')
-      } else if (err?.name === 'OverconstrainedError') {
-        // 解析度約束不被支援，以預設值重試
-        reader.decodeFromConstraints(
-          { audio: false, video: { facingMode: 'environment' } },
-          videoRef.current,
-          (result) => {
-            if (genRef.current !== gen || successFiredRef.current || !result) return
-            const text = result.getText().trim()
-            const urlText = /^https?:\/\//i.test(text) ? text : `https://${text}`
-            try {
-              const url = new URL(urlText)
-              const zone = url.searchParams.get('zone')
-              const work = url.searchParams.get('work')
-              const name = url.searchParams.get('name')
-              if (zone && work) {
-                successFiredRef.current = true
-                controlsRef.current?.stop()
-                onScanSuccess({ zone, workId: work, workName: name ? decodeURIComponent(name) : work })
-              }
-            } catch { /* ignore */ }
-          }
-        ).then((controls) => {
-          if (genRef.current !== gen) { controls.stop(); return }
-          controlsRef.current = controls
-          setStatus('scanning')
-        }).catch((err2) => {
-          if (genRef.current !== gen) return
-          setErrorMsg(`無法開啟相機（${err2?.name ?? '未知錯誤'}），請重試`)
-          setStatus('error')
-        })
-        return
       } else {
         setErrorMsg(`無法開啟相機（${err?.name ?? '未知錯誤'}），請重試`)
       }
       setStatus('error')
-    })
+    }
 
-    return () => {
-      // 讓所有 in-flight callback 失效（genRef 不是 DOM ref，直接 mutate 是安全的）
-      genRef.current++ // eslint-disable-line react-hooks/exhaustive-deps
-      // 停掉已拿到的 controls（若 promise 已 resolve）
-      controlsRef.current?.stop()
-      controlsRef.current = null
-      // 強制停 video stream：cleanup 跑時 promise 可能還沒 resolve，
-      // 此時 controls 為 null，需直接對 video element 手動停流，
-      // 否則 StrictMode 第二次 mount 的 play() 會打架產生 AbortError
-      if (video) {
-        video.pause()
-        if (video.srcObject) {
-          try { video.srcObject.getTracks().forEach(t => t.stop()) } catch { /* ignore */ }
-          video.srcObject = null
+    const start = async () => {
+      try {
+        await startWithConstraints({
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          advanced: [{ focusMode: 'continuous' }],
+        })
+      } catch (err) {
+        if (cancelled) return
+        // 解析度或對焦約束不被支援時，改用無約束重試
+        if (err?.name === 'OverconstrainedError' || err?.name === 'NotFoundError') {
+          try {
+            await startWithConstraints({ facingMode: 'environment' })
+          } catch (err2) {
+            showError(err2)
+          }
+        } else {
+          showError(err)
         }
       }
+    }
+
+    start()
+
+    return () => {
+      cancelled = true
+      clearTimeout(timerId)
+      // 我們自己持有 stream，cleanup 完全可控，不依賴任何 library lifecycle
+      if (stream) stream.getTracks().forEach(t => t.stop())
+      if (videoEl) { videoEl.pause(); videoEl.srcObject = null }
     }
   }, [scanKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -179,7 +177,6 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
             muted
             playsInline
           />
-          {/* Corner overlay */}
           {status === 'scanning' && (
             <div className="absolute inset-0 pointer-events-none">
               <motion.div
