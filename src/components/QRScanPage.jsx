@@ -12,8 +12,18 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
   const successFiredRef = useRef(false)
   const genRef = useRef(0)
 
+  // 攔截 ZXing 內部 video.play() 在 StrictMode 下被中斷的 AbortError（無害雜訊）
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.reason?.name === 'AbortError') e.preventDefault()
+    }
+    window.addEventListener('unhandledrejection', handler)
+    return () => window.removeEventListener('unhandledrejection', handler)
+  }, [])
+
   useEffect(() => {
     const gen = ++genRef.current
+    const video = videoRef.current   // 快照，供 cleanup 安全存取
 
     const hints = new Map()
     hints.set(DecodeHintType.TRY_HARDER, true)
@@ -103,8 +113,21 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
     })
 
     return () => {
+      // 讓所有 in-flight callback 失效（genRef 不是 DOM ref，直接 mutate 是安全的）
+      genRef.current++ // eslint-disable-line react-hooks/exhaustive-deps
+      // 停掉已拿到的 controls（若 promise 已 resolve）
       controlsRef.current?.stop()
       controlsRef.current = null
+      // 強制停 video stream：cleanup 跑時 promise 可能還沒 resolve，
+      // 此時 controls 為 null，需直接對 video element 手動停流，
+      // 否則 StrictMode 第二次 mount 的 play() 會打架產生 AbortError
+      if (video) {
+        video.pause()
+        if (video.srcObject) {
+          try { video.srcObject.getTracks().forEach(t => t.stop()) } catch { /* ignore */ }
+          video.srcObject = null
+        }
+      }
     }
   }, [scanKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
