@@ -152,10 +152,7 @@ export default function CollectionComplete({ user, needsEmail, onClose, isTest =
                 onSkip={onClose}
               />
             ) : result ? (
-              <>
-                <PrizeResult result={result} onClose={onClose} />
-                <QuickRating />
-              </>
+              <PrizeResult result={result} onClose={onClose} />
             ) : (
               <div style={{ textAlign: 'center', padding: '14px 0', color: 'rgba(242,217,208,0.88)', fontSize: 13 }}>
                 傳送恭賀信件中⋯⋯
@@ -218,41 +215,6 @@ function EmailForm({ inputRef, email, setEmail, submitting, onSubmit, onSkip }) 
         跳過
       </button>
     </>
-  )
-}
-
-function QuickRating() {
-  const [rated, setRated] = useState(false)
-  const [hover, setHover] = useState(0)
-  const handleRate = (score) => {
-    if (rated) return
-    setRated(true)
-    localStorage.setItem('chenghua_completion_rated', String(score))
-  }
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.6 }} style={{ marginTop: 18, textAlign: 'center' }}>
-      <p style={{ fontSize: 11, color: 'rgba(242,217,208,0.55)', letterSpacing: 1.5, marginBottom: 8 }}>
-        {rated ? '謝謝你的回饋 🙏' : '這次體驗如何？'}
-      </p>
-      {!rated ? (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
-          {[1, 2, 3, 4, 5].map(i => (
-            <button key={i} onClick={() => handleRate(i)}
-              onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(0)}
-              style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer',
-                opacity: i <= (hover || 0) ? 1 : 0.28, transition: 'opacity 0.15s', padding: 2 }}>
-              🌸
-            </button>
-          ))}
-        </div>
-      ) : (
-        <a href="https://forms.gle/fNJTKrez1tX1M8X58" target="_blank" rel="noreferrer"
-          style={{ fontSize: 12, color: '#f27e93', textDecoration: 'underline', letterSpacing: 0.5 }}>
-          想多說一點嗎？→
-        </a>
-      )}
-    </motion.div>
   )
 }
 
