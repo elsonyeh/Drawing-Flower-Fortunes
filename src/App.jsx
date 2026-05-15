@@ -151,6 +151,7 @@ function App() {
         if (r?.showAnimation) setCompletionData({ needsEmail: r.needsEmail })
       })
     }
+    logEvent(user?.id, 'draw', { source: 'exhibition', flower_id: flower.id, rarity: flower.rarity })
     // 保留 scanParams，等抽卡完成後才 log qr_scan（避免中途返回被計入）
     setGachaSkipFlowerPick(false) // 展覽模式需要選花環節
     setStage('gacha')
