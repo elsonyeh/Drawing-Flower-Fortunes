@@ -552,7 +552,7 @@ function AdminPage({ onSimulateQRScan, onDirectDraw, onTestCompletion, onTestZon
 
             <div className="bg-white/5 rounded-xl p-4">
               <p className="text-sm font-bold mb-1">區域解鎖動畫</p>
-              <p className="text-xs text-white/40 mb-3">測試各展區達成 ≥2 件時的恭喜彈窗（不寫 localStorage）</p>
+              <p className="text-xs text-white/40 mb-3">掃描任 1 件裝置藝術且擁有 1 朵花語時觸發（不寫 localStorage）</p>
               <button
                 onClick={() => onTestZoneUnlock?.()}
                 className="w-full py-3 rounded-xl font-semibold text-white transition-all min-h-[44px] text-sm"

@@ -142,7 +142,7 @@ function KPIDashboard() {
         withoutAdmins(supabase.from('profiles').select('*', { count: 'exact', head: true }), 'id'),
         supabase.from('events').select('user_id, payload').eq('event_type', 'draw').limit(10000),
         supabase.from('events').select('user_id').eq('event_type', 'face_scan_complete').limit(5000),
-        supabase.from('events').select('payload').eq('event_type', 'qr_scan').limit(10000),
+        supabase.from('events').select('user_id, payload').eq('event_type', 'qr_scan').limit(10000),
         supabase.from('events').select('user_id').eq('event_type', 'tutorial_complete').limit(5000),
         supabase.from('events')
           .select('event_type, created_at, user_id')
@@ -160,8 +160,7 @@ function KPIDashboard() {
       const tutorialEvents = (rawTutorialEvents || []).filter(notAdmin)
       const timeEvents     = (rawTimeEvents     || []).filter(notAdmin)
       const ratingEvents   = (rawRatingEvents   || []).filter(notAdmin)
-      // qrEvents 的 user_id 不在 payload，先保留全部（QR 掃碼幾乎都是訪客）
-      const qrEvents = rawQrEvents || []
+      const qrEvents = (rawQrEvents || []).filter(notAdmin)
 
       const tutorialCount = tutorialEvents.length
 

@@ -5,14 +5,19 @@ import { isExhibitionMode, getZoneProgress, getUnlockedPools } from '../utils/ex
 import { ZONE_THEME, ZONE_ARTWORKS } from '../utils/exhibitionConstants'
 import CardBack from './CardBack'
 import FlowerBloom from './FlowerBloom'
+import { useAuth } from '../hooks/useAuth'
+import { logEvent } from '../utils/analytics'
 
 const ZONE_UNLOCK_KEY = 'chenghua_zone_unlock_seen'
 
 const CollectionPage = ({ onClose, onSelectFlower }) => {
+  const { user } = useAuth()
   const [selectedTab, setSelectedTab] = useState('all') // 'all', 'ssr', 'common'
   const [flippedCard, setFlippedCard] = useState(null) // Track which card is flipped
   const [showFlower, setShowFlower] = useState(false) // Delay flower rendering
   const [showZoneModal, setShowZoneModal] = useState(false)
+  const [zoneRating, setZoneRating] = useState(0)
+  const [zoneRatingHover, setZoneRatingHover] = useState(0)
   const exMode = isExhibitionMode()
   const currentSource = exMode ? 'exhibition' : 'normal'
   const allFlowers = getAllFlowers()
@@ -600,6 +605,35 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                   前往服務台出示圖鑑頁面<br />
                   即可兌換 <strong style={{ color: '#F2BE5C' }}>活動限定角色集章貼紙</strong> 🌸
                 </p>
+              </div>
+              {/* 體驗評分 */}
+              <div style={{ margin: '14px 0 6px', paddingTop: 14, borderTop: '1px solid rgba(242,190,92,0.15)', textAlign: 'center' }}>
+                <p style={{ margin: '0 0 8px', fontSize: 11, color: 'rgba(242,217,208,0.55)', letterSpacing: 1.5 }}>
+                  {zoneRating > 0 ? '謝謝你的回饋 🙏' : '這次體驗如何？'}
+                </p>
+                {zoneRating === 0 ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <button key={i}
+                        onClick={() => {
+                          setZoneRating(i)
+                          logEvent(user?.id ?? null, 'rating', { score: i, source: 'zone_unlock' })
+                          localStorage.setItem('chenghua_zone_rating_seen', String(i))
+                        }}
+                        onMouseEnter={() => setZoneRatingHover(i)}
+                        onMouseLeave={() => setZoneRatingHover(0)}
+                        style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer',
+                          opacity: i <= (zoneRatingHover || 0) ? 1 : 0.28, transition: 'opacity 0.15s', padding: 2 }}>
+                        🌸
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <a href="https://forms.gle/fNJTKrez1tX1M8X58" target="_blank" rel="noreferrer"
+                    style={{ fontSize: 12, color: '#f27e93', textDecoration: 'underline', display: 'block', marginBottom: 12 }}>
+                    想多說一點嗎？→
+                  </a>
+                )}
               </div>
               <button
                 onClick={closeZoneModal}
