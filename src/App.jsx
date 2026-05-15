@@ -101,6 +101,14 @@ function App() {
         }
         syncLocalToCloud(user.id).then(() => loadCloudToLocal(user.id))
         syncExhibitionUserId(user.id)
+
+        // 未登入時達成集滿，登入後補跑通知（跳過動畫直接顯示 content card）
+        if (localStorage.getItem('chenghua_completion_pending')) {
+          localStorage.removeItem('chenghua_completion_pending')
+          checkAndNotifyCompletion(user).then(r => {
+            if (r?.showAnimation) setCompletionData({ needsEmail: r.needsEmail, skipAnimation: true })
+          })
+        }
       })
     }
   }, [user])
@@ -134,7 +142,7 @@ function App() {
         })
       } else {
         const r = checkAnonymousCompletion()
-        if (r?.showAnimation) setCompletionData({ needsEmail: true })
+        if (r?.showAnimation) setCompletionData({ anonymous: true })
       }
       logEvent(user?.id, 'draw', {
         source: exMode ? 'exhibition' : 'normal',
@@ -157,7 +165,7 @@ function App() {
       })
     } else {
       const r = checkAnonymousCompletion()
-      if (r?.showAnimation) setCompletionData({ needsEmail: true })
+      if (r?.showAnimation) setCompletionData({ anonymous: true })
     }
     logEvent(user?.id, 'draw', { source: 'exhibition', flower_id: flower.id, rarity: flower.rarity })
     // 保留 scanParams，等抽卡完成後才 log qr_scan（避免中途返回被計入）
@@ -363,6 +371,8 @@ function App() {
           <CollectionComplete
             user={user}
             needsEmail={completionData.needsEmail}
+            anonymous={completionData.anonymous ?? false}
+            skipAnimation={completionData.skipAnimation ?? false}
             isTest={completionData.isTest ?? false}
             onClose={() => setCompletionData(null)}
           />

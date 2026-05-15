@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { sendCompletionEmail } from '../utils/collectionSync'
+import { useAuth } from '../hooks/useAuth'
 
 // 52 particles burst radially from center
 const PARTICLES = Array.from({ length: 52 }, (_, i) => {
@@ -18,14 +19,16 @@ const PARTICLES = Array.from({ length: 52 }, (_, i) => {
   }
 })
 
-export default function CollectionComplete({ user, needsEmail, onClose, isTest = false }) {
+export default function CollectionComplete({ user, needsEmail, anonymous = false, skipAnimation = false, onClose, isTest = false }) {
   const [phase, setPhase] = useState(0)
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState(null)
   const inputRef = useRef(null)
+  const { signInWithGoogle, signInWithLine } = useAuth()
 
   useEffect(() => {
+    if (skipAnimation) { setPhase(5); return }
     const t = [
       setTimeout(() => setPhase(1), 300),   // particles burst
       setTimeout(() => setPhase(2), 1000),  // 埕花 title
@@ -34,14 +37,14 @@ export default function CollectionComplete({ user, needsEmail, onClose, isTest =
       setTimeout(() => setPhase(5), 3700),  // content card
     ]
     return () => t.forEach(clearTimeout)
-  }, [])
+  }, [skipAnimation])
 
-  // Users with email: auto-send when card appears (skip in test mode)
+  // Users with email: auto-send when card appears (skip in test mode, skip for anonymous)
   useEffect(() => {
-    if (phase < 5 || needsEmail || result) return
+    if (phase < 5 || needsEmail || result || anonymous || !user) return
     if (isTest) { setResult({ prizeClaimed: true, rank: 1 }); return }
     sendCompletionEmail(user).then(setResult)
-  }, [phase, needsEmail, result, user, isTest])
+  }, [phase, needsEmail, result, user, anonymous, isTest])
 
   // Focus email input for LINE users
   useEffect(() => {
@@ -151,7 +154,9 @@ export default function CollectionComplete({ user, needsEmail, onClose, isTest =
                 }}>🧪 測試模式 — 不寄信、不寫資料庫</span>
               </div>
             )}
-            {needsEmail && !result ? (
+            {anonymous && !user ? (
+              <LoginPrompt signInWithGoogle={signInWithGoogle} signInWithLine={signInWithLine} onSkip={onClose} />
+            ) : needsEmail && !result ? (
               <EmailForm
                 inputRef={inputRef}
                 email={email}
@@ -186,6 +191,43 @@ export default function CollectionComplete({ user, needsEmail, onClose, isTest =
         </motion.button>
       )}
     </motion.div>
+  )
+}
+
+function LoginPrompt({ signInWithGoogle, signInWithLine, onSkip }) {
+  return (
+    <>
+      <p style={{ fontSize: 13, color: 'rgba(242,217,208,0.92)', textAlign: 'center', lineHeight: 1.85, marginBottom: 18 }}>
+        登入以接收隱藏成就恭賀通知，<br />並保存你的花語蒐集進度
+      </p>
+      <button
+        onClick={signInWithLine}
+        style={{
+          width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+          cursor: 'pointer', background: '#06C755',
+          color: '#fff', fontWeight: 700, fontSize: 14, letterSpacing: 1, marginBottom: 10,
+        }}
+      >
+        以 LINE 登入
+      </button>
+      <button
+        onClick={signInWithGoogle}
+        style={{
+          width: '100%', padding: '11px', borderRadius: 10, border: '1px solid rgba(242,126,147,0.35)',
+          cursor: 'pointer', background: 'rgba(255,255,255,0.07)',
+          color: '#f2d9d0', fontWeight: 700, fontSize: 14, letterSpacing: 1, marginBottom: 8,
+        }}
+      >
+        以 Google 登入
+      </button>
+      <button
+        onClick={onSkip}
+        style={{ width: '100%', marginTop: 4, padding: 8, background: 'transparent', border: 'none',
+          color: 'rgba(242,217,208,0.70)', fontSize: 12, cursor: 'pointer' }}
+      >
+        跳過
+      </button>
+    </>
   )
 }
 

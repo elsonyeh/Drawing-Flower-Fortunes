@@ -168,7 +168,9 @@ export const loadCloudToLocal = async (userId) => {
 export const checkAnonymousCompletion = () => {
   if (!isCompletionMet()) return null
   if (localStorage.getItem('chenghua_completion_seen')) return null
-  return { showAnimation: true, needsEmail: true }
+  if (localStorage.getItem('chenghua_completion_pending')) return null
+  localStorage.setItem('chenghua_completion_pending', '1')
+  return { showAnimation: true }
 }
 
 export const checkAndNotifyCompletion = async (user) => {
