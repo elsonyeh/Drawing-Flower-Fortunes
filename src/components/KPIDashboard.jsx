@@ -153,7 +153,7 @@ function KPIDashboard() {
           .in('event_type', ['draw', 'face_scan_complete', 'qr_scan'])
           .order('created_at', { ascending: true })
           .limit(10000),
-        supabase.from('events').select('user_id, payload').eq('event_type', 'rating').limit(5000),
+        supabase.from('events').select('user_id, payload, created_at').eq('event_type', 'rating').order('created_at', { ascending: false }).limit(5000),
         withoutAdmins(
           supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('completion_notified', true),
           'id'
@@ -267,6 +267,19 @@ function KPIDashboard() {
         ? (ratingEvents.reduce((sum, e) => sum + (e.payload?.score || 0), 0) / ratingTotal).toFixed(1)
         : null
 
+      // ── 評分用戶明細 ──
+      const raterIds = [...new Set(ratingEvents.filter(e => e.user_id).map(e => e.user_id))]
+      let raterProfiles = {}
+      if (raterIds.length > 0) {
+        const { data: profiles } = await supabase.from('profiles').select('id, display_name, email').in('id', raterIds)
+        ;(profiles || []).forEach(p => { raterProfiles[p.id] = p.display_name || p.email || p.id.slice(0, 8) })
+      }
+      const ratingList = ratingEvents.map(e => ({
+        score: e.payload?.score ?? '?',
+        name: e.user_id ? (raterProfiles[e.user_id] || e.user_id.slice(0, 8)) : '訪客',
+        time: e.created_at ? new Date(e.created_at).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '',
+      }))
+
       const users = userCount || 0
       setKpi({
         userCount: users,
@@ -290,6 +303,7 @@ function KPIDashboard() {
         ratingDist,
         ratingTotal,
         ratingAvg,
+        ratingList,
         completionCount: completionCount || 0,
         exhibitionFlowerBuckets,
         exhibitionUserCount,
@@ -334,7 +348,7 @@ function KPIDashboard() {
     zoneData, maxZone,
     tutorialCount, tutorialRate,
     dailyData,
-    ratingDist, ratingTotal, ratingAvg,
+    ratingDist, ratingTotal, ratingAvg, ratingList,
     completionCount, exhibitionFlowerBuckets, exhibitionUserCount,
     ssrDraws, zoneUnlockCount,
   } = kpi
@@ -465,6 +479,24 @@ function KPIDashboard() {
                 <BarRow key={score} label={`${'🌸'.repeat(score)}`} value={count}
                   max={Math.max(...ratingDist.map(r => r.count), 1)} color="#F2BE5C" />
               ))}
+            </div>
+
+            {/* 評分明細列表 */}
+            <div className="mt-4 pt-3 border-t border-white/5">
+              <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>評分明細</p>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                {ratingList.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs">
+                    <span style={{ color: 'rgba(255,255,255,0.55)' }}>{r.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span style={{ color: 'rgba(255,255,255,0.3)' }}>{r.time}</span>
+                      <span style={{ minWidth: 40, textAlign: 'right' }}>
+                        {'🌸'.repeat(r.score)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </>
         )}
