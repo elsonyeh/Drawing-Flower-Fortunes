@@ -166,10 +166,7 @@ export default function CollectionComplete({ user, needsEmail, anonymous = false
                 onSkip={onClose}
               />
             ) : result ? (
-              <>
-                <PrizeResult result={result} onClose={onClose} />
-                {isTest && <TestQuickRating />}
-              </>
+              <PrizeResult result={result} onClose={onClose} />
             ) : (
               <div style={{ textAlign: 'center', padding: '14px 0', color: 'rgba(242,217,208,0.88)', fontSize: 13 }}>
                 傳送恭賀信件中⋯⋯
@@ -269,40 +266,6 @@ function EmailForm({ inputRef, email, setEmail, submitting, onSubmit, onSkip }) 
         跳過
       </button>
     </>
-  )
-}
-
-function TestQuickRating() {
-  const [rated, setRated] = useState(false)
-  const [hover, setHover] = useState(0)
-  const handleRate = (score) => {
-    if (rated) return
-    setRated(true)
-    // 測試模式：只記在 console，不寫 DB
-    console.log('[TEST] rating score:', score)
-  }
-  return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5 }} style={{ marginTop: 18, paddingTop: 14,
-        borderTop: '1px solid rgba(242,126,147,0.15)', textAlign: 'center' }}>
-      <p style={{ fontSize: 11, color: 'rgba(242,217,208,0.5)', letterSpacing: 1.5, marginBottom: 8 }}>
-        {rated ? '（測試評分已記錄）' : '體驗評分（測試）'}
-      </p>
-      {!rated ? (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
-          {[1, 2, 3, 4, 5].map(i => (
-            <button key={i} onClick={() => handleRate(i)}
-              onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(0)}
-              style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer',
-                opacity: i <= (hover || 0) ? 1 : 0.28, transition: 'opacity 0.15s', padding: 2 }}>
-              🌸
-            </button>
-          ))}
-        </div>
-      ) : (
-        <p style={{ fontSize: 12, color: '#F2BE5C' }}>謝謝！（測試模式不儲存）</p>
-      )}
-    </motion.div>
   )
 }
 
