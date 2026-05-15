@@ -137,7 +137,10 @@ export function AuthProvider({ children }) {
     if (!isSupabaseEnabled) return
     const { error } = await supabase.auth.signOut()
     if (error) console.error('登出失敗:', error.message)
-    else localStorage.removeItem('collectedFlowers_v2')
+    else {
+      localStorage.removeItem('collectedFlowers_v2')
+      localStorage.removeItem('viewedFlowers')
+    }
   }
 
   return (

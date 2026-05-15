@@ -138,6 +138,8 @@ function KPIDashboard() {
         { data: rawTutorialEvents },
         { data: rawTimeEvents },
         { data: rawRatingEvents },
+        { count: completionCount },
+        { data: rawExhibitionCols },
       ] = await Promise.all([
         withoutAdmins(supabase.from('profiles').select('*', { count: 'exact', head: true }), 'id'),
         supabase.from('events').select('user_id, payload').eq('event_type', 'draw').limit(10000),
@@ -151,6 +153,11 @@ function KPIDashboard() {
           .order('created_at', { ascending: true })
           .limit(10000),
         supabase.from('events').select('user_id, payload').eq('event_type', 'rating').limit(5000),
+        withoutAdmins(
+          supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('completion_notified', true),
+          'id'
+        ),
+        supabase.from('collections').select('user_id, flower_id').eq('source', 'exhibition').limit(50000),
       ])
 
       // 過濾掉管理員的事件
@@ -224,6 +231,22 @@ function KPIDashboard() {
         })
       }
 
+      // ── 展覽蒐集花種分布（登入用戶，雲端資料）──
+      const exhibitionCols = (rawExhibitionCols || []).filter(r => !adminSet.has(r.user_id))
+      const perUserFlowers = {}
+      exhibitionCols.forEach(r => {
+        if (!perUserFlowers[r.user_id]) perUserFlowers[r.user_id] = new Set()
+        perUserFlowers[r.user_id].add(r.flower_id)
+      })
+      const flowerCounts = Object.values(perUserFlowers).map(s => s.size)
+      const exhibitionFlowerBuckets = [
+        { label: '1–5 種',  count: flowerCounts.filter(n => n >= 1  && n <= 5).length },
+        { label: '6–10 種', count: flowerCounts.filter(n => n >= 6  && n <= 10).length },
+        { label: '11–14 種',count: flowerCounts.filter(n => n >= 11 && n <= 14).length },
+        { label: '15 種 ✦', count: flowerCounts.filter(n => n >= 15).length },
+      ]
+      const exhibitionUserCount = flowerCounts.length
+
       // ── 評分統計 ──
       const ratingDist = [1, 2, 3, 4, 5].map(s => ({
         score: s,
@@ -257,6 +280,9 @@ function KPIDashboard() {
         ratingDist,
         ratingTotal,
         ratingAvg,
+        completionCount: completionCount || 0,
+        exhibitionFlowerBuckets,
+        exhibitionUserCount,
       })
     } catch (e) {
       setError(e.message || '查詢失敗，請確認 Supabase RLS 設定')
@@ -297,17 +323,19 @@ function KPIDashboard() {
     tutorialCount, tutorialRate,
     dailyData,
     ratingDist, ratingTotal, ratingAvg,
+    completionCount, exhibitionFlowerBuckets, exhibitionUserCount,
   } = kpi
 
   return (
     <div className="space-y-5">
       {/* 總覽卡片 */}
       <div className="grid grid-cols-2 gap-3">
-        <StatCard label="累計用戶數"   value={userCount}     color="#a8c4e0" />
-        <StatCard label="累計抽卡次數" value={totalDraws}    sub={`登入 ${loginDraws} ／ 匿名 ${anonDraws}`} color="#F27E93" />
-        <StatCard label="普通模式抽卡" value={normalDraws}   sub={`展覽模式 ${exhibitionDraws} 次`}           color="#F2BE5C" />
-        <StatCard label="面相掃描次數" value={faceTotal}     sub={`登入 ${faceLogin} ／ 匿名 ${faceAnon}`}   color="#c4b5fd" />
-        <StatCard label="引導完成次數" value={tutorialCount} sub={`${tutorialRate}% 完成率`}                  color="#6ee7b7" />
+        <StatCard label="累計用戶數"   value={userCount}        color="#a8c4e0" />
+        <StatCard label="累計抽卡次數" value={totalDraws}       sub={`登入 ${loginDraws} ／ 匿名 ${anonDraws}`} color="#F27E93" />
+        <StatCard label="普通模式抽卡" value={normalDraws}      sub={`展覽模式 ${exhibitionDraws} 次`}          color="#F2BE5C" />
+        <StatCard label="面相掃描次數" value={faceTotal}        sub={`登入 ${faceLogin} ／ 匿名 ${faceAnon}`}  color="#c4b5fd" />
+        <StatCard label="引導完成次數" value={tutorialCount}    sub={`${tutorialRate}% 完成率`}                 color="#6ee7b7" />
+        <StatCard label="集滿成就達成" value={completionCount}  sub="走遍鹽埕 + 15 種展覽花語"                  color="#F2BE5C" />
       </div>
 
       {/* 每日事件趨勢 */}
@@ -366,6 +394,25 @@ function KPIDashboard() {
             <BarRow key={z.label} label={z.label} value={z.value} max={maxZone} color={z.color} />
           ))}
         </div>
+      </div>
+
+      {/* 展覽蒐集花種分布 */}
+      <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <p className="text-sm font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>展覽蒐集花種分布</p>
+        <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          登入用戶 {exhibitionUserCount} 人（雲端資料，未登入不計）
+        </p>
+        {exhibitionUserCount === 0 ? (
+          <p className="text-xs text-center py-3" style={{ color: 'rgba(255,255,255,0.25)' }}>尚無展覽蒐集資料</p>
+        ) : (
+          <div className="space-y-2.5">
+            {exhibitionFlowerBuckets.map((b, i) => (
+              <BarRow key={b.label} label={b.label} value={b.count}
+                max={Math.max(...exhibitionFlowerBuckets.map(x => x.count), 1)}
+                color={['#a8c4e0', '#6ee7b7', '#F2BE5C', '#F27E93'][i]} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 體驗評分 */}
