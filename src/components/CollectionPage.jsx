@@ -609,7 +609,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
               {/* 體驗評分 */}
               <div style={{ margin: '16px 0 8px', paddingTop: 16, borderTop: '1px solid rgba(242,190,92,0.15)', textAlign: 'center' }}>
                 <p style={{ margin: '0 0 2px', fontSize: 12, fontWeight: 700, color: 'rgba(242,217,208,0.75)', letterSpacing: 2 }}>
-                  {zoneRating > 0 ? '感謝你的回饋，旅人！' : '旅程評價'}
+                  {zoneRating > 0 ? '感謝你的回饋！' : '旅程評價'}
                 </p>
                 <p style={{ margin: '0 0 12px', fontSize: 11, color: 'rgba(242,217,208,0.42)', lineHeight: 1.6 }}>
                   {zoneRating > 0
