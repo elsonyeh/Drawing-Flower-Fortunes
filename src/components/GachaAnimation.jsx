@@ -428,9 +428,11 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
             ))}
 
             {/* 翻牌容器 */}
+            {/* perspective 獨立放靜態 wrapper，不隨 scale/y 動畫一起重算，避免 Android 閃爍 */}
+            <div className="relative w-full max-w-[300px] mx-auto" style={{ height: 450, perspective: 1200 }}>
             {/* 外層：與光暈同頻的靜息脈動 + reveal 時隨光環震動 */}
             <motion.div
-              className="relative w-full max-w-[300px] mx-auto"
+              className="absolute inset-0"
               style={{ height: 450 }}
               animate={
                 stage === 'show_card' && !cardPulse
@@ -588,9 +590,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                     transition={{ duration: 0.45, ease: 'easeOut' }}
                   />
                   {/* 從卡片中心射出的光線 */}
-                  {[...Array(8)].map((_, i) => {
-                    const angle = (i / 8) * Math.PI * 2
-                    return (
+                  {[...Array(8)].map((_, i) => (
                       <motion.div key={`ray-${i}`} className="absolute pointer-events-none"
                         style={{
                           left: '50%', top: '50%',
@@ -605,8 +605,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                         animate={{ scaleY: [0, 1, 0], opacity: [0.8, 0.9, 0] }}
                         transition={{ duration: 0.5, ease: 'easeOut', delay: 0.05 }}
                       />
-                    )
-                  })}
+                  ))}
                 </>
               )}
 
@@ -652,23 +651,25 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                   position: 'absolute', inset: 0,
                   transformStyle: 'preserve-3d',
                   WebkitTransformStyle: 'preserve-3d',
-                  perspective: 1200,
                 }}
               >
-                {/* 卡背面 */}
+                {/* 卡背面 — backface 元素本身不加 rounded/overflow，避免 Safari preserve-3d 圓角裁切 bug */}
                 <motion.div
-                  className="absolute inset-0 rounded-2xl shadow-2xl cursor-pointer"
-                  style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', overflow: 'hidden' }}
+                  className="absolute inset-0 cursor-pointer"
+                  style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
                   whileHover={stage === 'show_card' ? { scale: 1.04, y: -8 } : {}}
                   whileTap={stage === 'show_card' ? { scale: 0.96 } : {}}
                 >
-                  <CardBack flower={flower} />
+                  <div className="absolute inset-0 rounded-2xl shadow-2xl overflow-hidden">
+                    <CardBack flower={flower} />
+                  </div>
                 </motion.div>
 
-                {/* 卡正面 */}
-                <div className="absolute inset-0 rounded-2xl shadow-2xl"
-                  style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', overflow: 'hidden' }}
+                {/* 卡正面 — 同理，rounded/overflow/shadow 移至內層 */}
+                <div className="absolute inset-0"
+                  style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                 >
+                <div className="absolute inset-0 rounded-2xl shadow-2xl overflow-hidden">
                   <div className="absolute inset-0" style={{
                     background: isSSR
                       ? `linear-gradient(135deg, ${flower.gradientColors?.[0]}, ${flower.gradientColors?.[1]}, ${flower.gradientColors?.[2]})`
@@ -725,7 +726,8 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                       )}
                     </>
                   )}
-                </div>
+                </div>{/* inner rounded wrapper */}
+                </div>{/* outer backface wrapper */}
               </motion.div>
 
               {/* reveal：粒子噴泉 */}
@@ -742,6 +744,8 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                 />
               ))}
             </motion.div>
+            </motion.div>
+            </div>{/* perspective static wrapper */}
 
             {/* reveal：光環三段加速——慢（pulse 1）→ 中（pulse 2）→ 快（pulse 3 花出現前） */}
             {stage === 'reveal' && (() => {
@@ -787,7 +791,6 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                 </div>
               )
             })()}
-          </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
