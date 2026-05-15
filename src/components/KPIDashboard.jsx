@@ -159,7 +159,7 @@ function KPIDashboard() {
           'id'
         ),
         supabase.from('collections').select('user_id, flower_id').eq('source', 'exhibition').limit(50000),
-        supabase.from('exhibition_sessions').select('visitor_id, visited').limit(10000),
+        supabase.from('exhibition_sessions').select('visitor_id, visited, user_id').limit(10000),
       ])
 
       // 過濾掉管理員的事件
@@ -236,8 +236,10 @@ function KPIDashboard() {
       // ── SSR 抽中次數 ──
       const ssrDraws = drawEvents.filter(e => e.payload?.rarity === 'ssr').length
 
-      // ── 貼紙兌換資格（掃過任一裝置藝術的訪客，含匿名）──
-      const zoneUnlockCount = (rawExhibitionSessions || []).filter(s => (s.visited?.length ?? 0) >= 1).length
+      // ── 貼紙兌換資格（掃過任一裝置藝術，排除管理員）──
+      const zoneUnlockCount = (rawExhibitionSessions || [])
+        .filter(s => (s.visited?.length ?? 0) >= 1 && !adminSet.has(s.user_id))
+        .length
 
       // ── 展覽蒐集花種分布（登入用戶，雲端資料）──
       const exhibitionCols = (rawExhibitionCols || []).filter(r => !adminSet.has(r.user_id))
@@ -352,7 +354,7 @@ function KPIDashboard() {
       <div className="grid grid-cols-2 gap-3">
         <StatCard label="面相掃描次數"  value={faceTotal}       sub={`登入 ${faceLogin} ／ 匿名 ${faceAnon}`}  color="#c4b5fd" />
         <StatCard label="引導完成次數"  value={tutorialCount}   sub={`${tutorialRate}% 完成率`}                 color="#6ee7b7" />
-        <StatCard label="貼紙兌換資格"  value={zoneUnlockCount} sub="掃過任一裝置藝術（含匿名）"                color="#34d399" />
+        <StatCard label="貼紙兌換資格"  value={zoneUnlockCount} sub="掃過任一裝置藝術，排除管理員"               color="#34d399" />
         <StatCard label="集滿成就達成"  value={completionCount} sub="走遍鹽埕 + 15 種展覽花語"                  color="#fbbf24" />
       </div>
 

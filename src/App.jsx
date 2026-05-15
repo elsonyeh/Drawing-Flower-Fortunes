@@ -17,6 +17,7 @@ import { isExhibitionMode, getUnlockedPools, initAppMode, enterExhibitionMode } 
 import { fetchGlobalMode, subscribeGlobalMode } from './utils/exhibitionSync'
 import { useAuth } from './hooks/useAuth'
 import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile, checkAndNotifyCompletion } from './utils/collectionSync'
+import { syncExhibitionUserId } from './utils/exhibitionSync'
 
 import { logEvent } from './utils/analytics'
 
@@ -99,6 +100,7 @@ function App() {
           await linkLineToProfile(user.id, linkLineUserId)
         }
         syncLocalToCloud(user.id).then(() => loadCloudToLocal(user.id))
+        syncExhibitionUserId(user.id)
       })
     }
   }, [user])

@@ -119,6 +119,19 @@ export const subscribeGlobalMode = (onChange) => {
   return () => supabase.removeChannel(channel)
 }
 
+/**
+ * 登入後將 user_id 寫回當前訪客的 exhibition_session
+ * 讓 KPI 可以排除管理員的測試訪問
+ */
+export const syncExhibitionUserId = async (userId) => {
+  if (!isSupabaseEnabled || !userId) return
+  const visitorId = getOrCreateVisitorId()
+  await supabase
+    .from('exhibition_sessions')
+    .update({ user_id: userId })
+    .eq('visitor_id', visitorId)
+}
+
 // ── 個人進度同步 ─────────────────────────────────────────
 
 /**
