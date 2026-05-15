@@ -8,6 +8,7 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
   const [scanKey, setScanKey] = useState(0) // 遞增 key 強制 scanner 重新 mount
   const successFiredRef = useRef(false)
   const genRef = useRef(0) // generation counter，解決 StrictMode 雙重 mount 競爭
+  const qrRef = useRef(null) // 追蹤當前 Html5Qrcode instance，供 fallback cleanup 用
 
   // 攔截 html5-qrcode 內部 video.play() 在 StrictMode 下被中斷的 AbortError
   useEffect(() => {
@@ -31,14 +32,20 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
       container.innerHTML = ''
     }
 
-    const qr = new Html5Qrcode('qr-reader-container', {
+    const makeQR = () => new Html5Qrcode('qr-reader-container', {
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
     })
 
-    const stopQR = () => {
-      const tryClear = () => { try { qr.clear() } catch { /* ignore */ } }
-      try { qr.stop().then(tryClear).catch(tryClear) } catch { tryClear() }
+    // html5-qrcode instance 不可重用；用 ref 追蹤當前 instance 以便 cleanup
+    let qr = makeQR()
+    qrRef.current = qr
+
+    const stopInstance = (instance) => {
+      const tryClear = () => { try { instance.clear() } catch { /* ignore */ } }
+      try { instance.stop().then(tryClear).catch(tryClear) } catch { tryClear() }
     }
+
+    const stopQR = () => stopInstance(qrRef.current)
 
     const scanConfig = {
       fps: 25,
@@ -73,7 +80,18 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
 
     const onFrameError = () => { /* ignore */ }
 
-    // 先嘗試高解析度（ideal 為建議值，不強制），失敗時 fallback 到無約束
+    const showError = (err) => {
+      if (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') {
+        setErrorMsg('請允許瀏覽器使用相機，並重新整理頁面後再試')
+      } else if (err?.name === 'NotReadableError') {
+        setErrorMsg('相機目前被其他程式使用中，請關閉後重試')
+      } else {
+        setErrorMsg(`無法開啟相機（${err?.name ?? '未知錯誤'}），請重試`)
+      }
+      setStatus('error')
+    }
+
+    // 先嘗試含 ideal 解析度；失敗且非權限問題時，建新 instance fallback
     qr.start(
       { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
       scanConfig,
@@ -84,28 +102,24 @@ export default function QRScanPage({ onScanSuccess, onBack }) {
       setStatus('scanning')
     }).catch((err) => {
       if (genRef.current !== gen) return
-      // 若不是權限問題，嘗試不帶解析度約束重啟（相容性更好）
-      if (err?.name !== 'NotAllowedError' && err?.name !== 'SecurityError') {
-        qr.start({ facingMode: 'environment' }, scanConfig, onScan, onFrameError)
-          .then(() => {
-            if (genRef.current !== gen) { stopQR(); return }
-            setStatus('scanning')
-          })
-          .catch((err2) => {
-            if (genRef.current !== gen) return
-            setStatus('error')
-            if (err2?.name === 'NotAllowedError' || err2?.name === 'SecurityError') {
-              setErrorMsg('請允許瀏覽器使用相機，並重新整理頁面後再試')
-            } else if (err2?.name === 'NotReadableError') {
-              setErrorMsg('相機目前被其他程式使用中，請關閉後重試')
-            } else {
-              setErrorMsg(`無法開啟相機（${err2?.name ?? '未知錯誤'}），請重試`)
-            }
-          })
-      } else {
-        setStatus('error')
-        setErrorMsg('請允許瀏覽器使用相機，並重新整理頁面後再試')
+      if (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') {
+        showError(err); return
       }
+      // 舊 instance 已損壞，必須建新的才能再次 start
+      stopInstance(qr)
+      const container = document.getElementById('qr-reader-container')
+      if (container) container.innerHTML = ''
+      qr = makeQR()
+      qrRef.current = qr
+      qr.start({ facingMode: 'environment' }, scanConfig, onScan, onFrameError)
+        .then(() => {
+          if (genRef.current !== gen) { stopQR(); return }
+          setStatus('scanning')
+        })
+        .catch((err2) => {
+          if (genRef.current !== gen) return
+          showError(err2)
+        })
     })
 
     return () => {
