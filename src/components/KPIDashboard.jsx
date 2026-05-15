@@ -140,6 +140,7 @@ function KPIDashboard() {
         { data: rawRatingEvents },
         { count: completionCount },
         { data: rawExhibitionCols },
+        { data: rawExhibitionSessions },
       ] = await Promise.all([
         withoutAdmins(supabase.from('profiles').select('*', { count: 'exact', head: true }), 'id'),
         supabase.from('events').select('user_id, payload').eq('event_type', 'draw').limit(10000),
@@ -158,6 +159,7 @@ function KPIDashboard() {
           'id'
         ),
         supabase.from('collections').select('user_id, flower_id').eq('source', 'exhibition').limit(50000),
+        supabase.from('exhibition_sessions').select('visitor_id, visited').limit(10000),
       ])
 
       // 過濾掉管理員的事件
@@ -231,6 +233,12 @@ function KPIDashboard() {
         })
       }
 
+      // ── SSR 抽中次數 ──
+      const ssrDraws = drawEvents.filter(e => e.payload?.rarity === 'ssr').length
+
+      // ── 貼紙兌換資格（掃過任一裝置藝術的訪客，含匿名）──
+      const zoneUnlockCount = (rawExhibitionSessions || []).filter(s => (s.visited?.length ?? 0) >= 1).length
+
       // ── 展覽蒐集花種分布（登入用戶，雲端資料）──
       const exhibitionCols = (rawExhibitionCols || []).filter(r => !adminSet.has(r.user_id))
       const perUserFlowers = {}
@@ -283,6 +291,8 @@ function KPIDashboard() {
         completionCount: completionCount || 0,
         exhibitionFlowerBuckets,
         exhibitionUserCount,
+        ssrDraws,
+        zoneUnlockCount,
       })
     } catch (e) {
       setError(e.message || '查詢失敗，請確認 Supabase RLS 設定')
@@ -324,18 +334,26 @@ function KPIDashboard() {
     dailyData,
     ratingDist, ratingTotal, ratingAvg,
     completionCount, exhibitionFlowerBuckets, exhibitionUserCount,
+    ssrDraws, zoneUnlockCount,
   } = kpi
 
   return (
     <div className="space-y-5">
       {/* 總覽卡片 */}
       <div className="grid grid-cols-2 gap-3">
-        <StatCard label="累計用戶數"   value={userCount}        color="#a8c4e0" />
-        <StatCard label="累計抽卡次數" value={totalDraws}       sub={`登入 ${loginDraws} ／ 匿名 ${anonDraws}`} color="#F27E93" />
-        <StatCard label="普通模式抽卡" value={normalDraws}      sub={`展覽模式 ${exhibitionDraws} 次`}          color="#F2BE5C" />
-        <StatCard label="面相掃描次數" value={faceTotal}        sub={`登入 ${faceLogin} ／ 匿名 ${faceAnon}`}  color="#c4b5fd" />
-        <StatCard label="引導完成次數" value={tutorialCount}    sub={`${tutorialRate}% 完成率`}                 color="#6ee7b7" />
-        <StatCard label="集滿成就達成" value={completionCount}  sub="走遍鹽埕 + 15 種展覽花語"                  color="#F2BE5C" />
+        <StatCard label="累計用戶數"    value={userCount}       color="#a8c4e0" />
+        <StatCard label="累計抽卡次數"  value={totalDraws}      sub={`登入 ${loginDraws} ／ 匿名 ${anonDraws}`} color="#F27E93" />
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="普通模式抽卡"  value={normalDraws}     color="#F2BE5C" />
+        <StatCard label="展覽模式抽卡"  value={exhibitionDraws} color="#a78bfa" />
+        <StatCard label="SSR 抽中次數"  value={ssrDraws}        sub={`${totalDraws > 0 ? ((ssrDraws / totalDraws) * 100).toFixed(1) : 0}%`} color="#F2BE5C" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <StatCard label="面相掃描次數"  value={faceTotal}       sub={`登入 ${faceLogin} ／ 匿名 ${faceAnon}`}  color="#c4b5fd" />
+        <StatCard label="引導完成次數"  value={tutorialCount}   sub={`${tutorialRate}% 完成率`}                 color="#6ee7b7" />
+        <StatCard label="貼紙兌換資格"  value={zoneUnlockCount} sub="掃過任一裝置藝術（含匿名）"                color="#34d399" />
+        <StatCard label="集滿成就達成"  value={completionCount} sub="走遍鹽埕 + 15 種展覽花語"                  color="#fbbf24" />
       </div>
 
       {/* 每日事件趨勢 */}
