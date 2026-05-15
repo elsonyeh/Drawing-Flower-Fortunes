@@ -190,9 +190,9 @@ function App() {
   }
 
   // 面相解讀完成：flower 由 faceReader 決定，data 包含 archetype 等面相資料
+  // flower 不寫入 selectedFlower（只有合法抽卡才寫），改包在 emotionData 裡傳給 FortuneResult
   const handleEmotionComplete = (flower, data) => {
-    setSelectedFlower(flower)
-    setEmotionData(data)
+    setEmotionData({ ...data, flower })
     // 相由花緣的結果不記錄到圖鑑，僅供當次欣賞
     setGachaSkipFlowerPick(true)
     setGachaTransitionFlash(true)
@@ -325,7 +325,7 @@ function App() {
         {stage === 'gacha' && (
           <GachaAnimation
             key="gacha"
-            flower={selectedFlower}
+            flower={emotionData?.flower || selectedFlower}
             onComplete={handleGachaComplete}
             skipFlowerPick={gachaSkipFlowerPick}
           />
@@ -334,7 +334,7 @@ function App() {
         {stage === 'result' && (
           <FortuneResult
             key="result"
-            flower={viewingFlower || selectedFlower}
+            flower={viewingFlower || emotionData?.flower || selectedFlower}
             onReset={handleReset}
             isFromCollection={!!viewingFlower}
             emotionData={emotionData}
