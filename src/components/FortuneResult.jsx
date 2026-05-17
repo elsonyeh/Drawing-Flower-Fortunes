@@ -1056,7 +1056,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
                       background: 'linear-gradient(135deg,#f27e93,#F2BE5C)',
                       color: '#0e142a', fontWeight: 700, fontSize: 14, cursor: 'pointer', marginBottom: 10,
                     }}
-                  >前往填寫完整回饋（約 2 分鐘）</button>
+                  >前往填寫完整回饋（約 3 分鐘）</button>
                   <button
                     onClick={() => setShowRating(false)}
                     style={{ background: 'none', border: 'none', color: 'rgba(242,217,208,0.38)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
