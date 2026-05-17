@@ -512,7 +512,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
   const [showShare, setShowShare] = useState(false)
   const [flowerSnapshot, setFlowerSnapshot] = useState(null)
   const [showRating, setShowRating] = useState(false)
-  const [rating, setRating] = useState(3)
+  const [rating, setRating] = useState(5)
   const [ratingHover, setRatingHover] = useState(0)
   const [ratingSubmitted, setRatingSubmitted] = useState(false)
   const isSSR = flower?.rarity === 'ssr'
