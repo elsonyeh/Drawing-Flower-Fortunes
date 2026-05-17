@@ -551,7 +551,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
   useEffect(() => {
     if (isFromCollection) return
     if (localStorage.getItem(RATING_KEY)) return
-    const t = setTimeout(() => setShowRating(true), 3000)
+    const t = setTimeout(() => setShowRating(true), 2000)
     return () => clearTimeout(t)
   }, [isFromCollection])
 
@@ -991,52 +991,48 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
               className="w-full mx-4 rounded-2xl px-6 py-6 text-center"
               style={{ background: 'linear-gradient(160deg,#1a1030,#0e1a30)', border: '1px solid rgba(242,190,92,0.3)', maxWidth: 360 }}
             >
-              {rating === 0 ? (
-                <>
-                  <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: 'rgba(242,217,208,0.95)', letterSpacing: 1 }}>
-                    這次旅程，你覺得如何？
-                  </p>
-                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'rgba(242,217,208,0.42)' }}>選完後按確認送出</p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 20 }}>
-                    {[1, 2, 3, 4, 5].map(i => (
-                      <button key={i}
-                        onClick={() => setRating(i)}
-                        onMouseEnter={() => setRatingHover(i)}
-                        onMouseLeave={() => setRatingHover(0)}
-                        style={{
-                          background: 'none', border: 'none', fontSize: 36, cursor: 'pointer',
-                          lineHeight: 1, padding: '0 3px',
-                          opacity: i <= (ratingHover || rating) ? 1 : 0.3,
-                          transform: i <= (ratingHover || rating) ? 'scale(1.2)' : 'scale(1)',
-                          transition: 'opacity 0.15s, transform 0.15s',
-                        }}>🌸</button>
-                    ))}
-                  </div>
-                  <button
-                    disabled={rating === 0}
-                    onClick={() => {
-                      logEvent(user?.id ?? null, 'rating', { score: rating, source: 'fortune_result' })
-                      localStorage.setItem(RATING_KEY, String(rating))
-                      window.open('https://forms.gle/fNJTKrez1tX1M8X58', '_blank', 'noreferrer')
-                      setShowRating(false)
-                    }}
+              <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: 'rgba(242,217,208,0.95)', letterSpacing: 1 }}>
+                這次旅程，你覺得如何？
+              </p>
+              <p style={{ margin: '0 0 16px', fontSize: 12, color: 'rgba(242,217,208,0.42)' }}>選完後按確認送出</p>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 20 }}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <button key={i}
+                    onClick={() => setRating(i)}
+                    onMouseEnter={() => setRatingHover(i)}
+                    onMouseLeave={() => setRatingHover(0)}
                     style={{
-                      width: '100%', padding: '11px', borderRadius: 10, border: 'none',
-                      background: rating > 0 ? 'linear-gradient(135deg,#f27e93,#F2BE5C)' : 'rgba(255,255,255,0.1)',
-                      color: rating > 0 ? '#0e142a' : 'rgba(242,217,208,0.3)',
-                      fontWeight: 700, fontSize: 14, cursor: rating > 0 ? 'pointer' : 'default',
-                      marginBottom: 10, transition: 'background 0.2s, color 0.2s',
-                    }}
-                  >確認送出</button>
-                  <button
-                    onClick={() => {
-                      localStorage.setItem(RATING_KEY, 'skip')
-                      setShowRating(false)
-                    }}
-                    style={{ background: 'none', border: 'none', color: 'rgba(242,217,208,0.32)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
-                  >跳過</button>
-                </>
-              ) : null}
+                      background: 'none', border: 'none', fontSize: 36, cursor: 'pointer',
+                      lineHeight: 1, padding: '0 3px',
+                      opacity: i <= (ratingHover || rating) ? 1 : 0.3,
+                      transform: i <= (ratingHover || rating) ? 'scale(1.2)' : 'scale(1)',
+                      transition: 'opacity 0.15s, transform 0.15s',
+                    }}>🌸</button>
+                ))}
+              </div>
+              <button
+                disabled={rating === 0}
+                onClick={() => {
+                  logEvent(user?.id ?? null, 'rating', { score: rating, source: 'fortune_result' })
+                  localStorage.setItem(RATING_KEY, String(rating))
+                  window.open('https://forms.gle/fNJTKrez1tX1M8X58', '_blank', 'noreferrer')
+                  setShowRating(false)
+                }}
+                style={{
+                  width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+                  background: rating > 0 ? 'linear-gradient(135deg,#f27e93,#F2BE5C)' : 'rgba(255,255,255,0.1)',
+                  color: rating > 0 ? '#0e142a' : 'rgba(242,217,208,0.3)',
+                  fontWeight: 700, fontSize: 14, cursor: rating > 0 ? 'pointer' : 'default',
+                  marginBottom: 10, transition: 'background 0.2s, color 0.2s',
+                }}
+              >確認送出</button>
+              <button
+                onClick={() => {
+                  localStorage.setItem(RATING_KEY, 'skip')
+                  setShowRating(false)
+                }}
+                style={{ background: 'none', border: 'none', color: 'rgba(242,217,208,0.32)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
+              >跳過</button>
             </motion.div>
           </motion.div>
         )}
