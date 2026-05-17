@@ -3,17 +3,14 @@
  * 將 localStorage 的蒐集資料同步到 Supabase
  */
 import { supabase, isSupabaseEnabled } from '../lib/supabase'
-import { getCollectedMap, getCollectionStats } from './fortuneHelper'
+import { getCollectedMap } from './fortuneHelper'
 import { getExhibitionState } from './exhibitionHelper'
 import { ARTWORKS } from './exhibitionConstants'
 
-// 集滿條件：≥15 種花 + 全部 15 件裝置藝術掃過
-const COMPLETION_FLOWER_MIN = 15
+// 集滿條件：全部 15 件裝置藝術皆掃過
 const ALL_ARTWORK_IDS = ARTWORKS.map(a => a.id) // ['A1'…'C5']
 
 export const isCompletionMet = () => {
-  const stats = getCollectionStats('exhibition')
-  if (stats.total < COMPLETION_FLOWER_MIN) return false
   const visited = getExhibitionState()?.visited ?? []
   return ALL_ARTWORK_IDS.every(id => visited.includes(id))
 }
