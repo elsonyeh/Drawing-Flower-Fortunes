@@ -505,7 +505,7 @@ function ShareModal({ flower, emotionData, flowerImageUrl, onClose }) {
 
 const RATING_KEY = 'chenghua_rating_seen'
 
-const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData = null }) => {
+const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData = null, isTutorial = false }) => {
   const { user } = useAuth()
   const containerRef = useRef(null)
   const flowerRef = useRef(null)
@@ -551,10 +551,11 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
   // 第一次抽卡結果頁，5 秒後顯示評分彈窗（每台裝置只問一次）
   useEffect(() => {
     if (isFromCollection) return
+    if (isTutorial) return
     if (localStorage.getItem(RATING_KEY)) return
     const t = setTimeout(() => setShowRating(true), 2000)
     return () => clearTimeout(t)
-  }, [isFromCollection])
+  }, [isFromCollection, isTutorial])
 
   if (!flower) return null
 

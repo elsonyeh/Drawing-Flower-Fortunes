@@ -350,6 +350,7 @@ function App() {
             onReset={handleReset}
             isFromCollection={!!viewingFlower}
             emotionData={emotionData}
+            isTutorial={tutorialActive}
           />
         )}
 
