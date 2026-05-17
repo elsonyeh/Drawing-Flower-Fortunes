@@ -12,8 +12,8 @@ const ExhibitionScanPage = lazy(() => import('./components/ExhibitionScanPage'))
 const QRScanPage = lazy(() => import('./components/QRScanPage'))
 const AuthModal = lazy(() => import('./components/AuthModal'))
 const CollectionComplete = lazy(() => import('./components/CollectionComplete'))
-import { getRandomFlower, saveCollectedFlower, removeCollectedFlower, getRandomFlowerForExhibition } from './utils/fortuneHelper'
-import { isExhibitionMode, getUnlockedPools, initAppMode, enterExhibitionMode } from './utils/exhibitionHelper'
+import { getRandomFlower, saveCollectedFlower, removeCollectedFlower, getRandomFlowerForExhibition, getCollectedFlowers } from './utils/fortuneHelper'
+import { isExhibitionMode, getUnlockedPools, initAppMode, enterExhibitionMode, getZoneProgress } from './utils/exhibitionHelper'
 import { fetchGlobalMode, subscribeGlobalMode } from './utils/exhibitionSync'
 import { useAuth } from './hooks/useAuth'
 import { saveFlowerToCloud, syncLocalToCloud, loadCloudToLocal, ensureProfile, linkLineToProfile, checkAndNotifyCompletion, checkAnonymousCompletion } from './utils/collectionSync'
@@ -68,8 +68,20 @@ function App() {
   const [testZoneModal, setTestZoneModal] = useState(false)
   const [testZoneRating, setTestZoneRating] = useState(0)
   const [testZoneHover, setTestZoneHover] = useState(0)
+  const [showZoneModal, setShowZoneModal] = useState(false)
 
   const { user } = useAuth()
+
+  // 回到首頁時，檢查是否觸發區域解鎖彈窗
+  useEffect(() => {
+    if (stage !== 'landing') return
+    if (!isExhibitionMode()) return
+    if (localStorage.getItem('chenghua_zone_unlock_seen')) return
+    const exProgress = getZoneProgress()
+    const anyArtworkScanned = ['A', 'B', 'C'].some(z => (exProgress[z] || []).length >= 1)
+    const hasFlower = getCollectedFlowers(null).length >= 1
+    if (anyArtworkScanned && hasFlower) setShowZoneModal(true)
+  }, [stage])
 
   // 引導結束或跳過後，清除 tutorial 暫存花
   useEffect(() => {
@@ -380,6 +392,52 @@ function App() {
       </Suspense>
 
       {/* 區域解鎖動畫（管理員測試用） */}
+      {/* 區域解鎖彈窗（回到首頁時觸發） */}
+      <AnimatePresence>
+        {showZoneModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.78)' }}
+          >
+            <motion.div
+              initial={{ scale: 0.82, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', damping: 18, stiffness: 260 }}
+              className="mx-6 rounded-2xl px-6 py-7 text-center"
+              style={{ background: 'linear-gradient(160deg,#1a1030,#0e1a30)', border: '1px solid rgba(242,190,92,0.35)', maxWidth: 340 }}
+            >
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
+              <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#F2BE5C', letterSpacing: 1 }}>
+                任務達成！
+              </h2>
+              <p style={{ margin: '0 0 6px', fontSize: 13, lineHeight: 1.85, color: 'rgba(242,217,208,0.95)' }}>
+                你已掃描裝置藝術並解鎖花語，任務完成！
+              </p>
+              <div style={{ margin: '12px 0', padding: '12px 16px', borderRadius: 12,
+                background: 'rgba(242,190,92,0.08)', border: '1px solid rgba(242,190,92,0.2)' }}>
+                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.9, color: 'rgba(242,217,208,0.92)' }}>
+                  前往服務台出示圖鑑頁面<br />
+                  即可兌換 <strong style={{ color: '#F2BE5C' }}>活動限定角色集章貼紙</strong> 🌸
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  localStorage.setItem('chenghua_zone_unlock_seen', '1')
+                  setShowZoneModal(false)
+                }}
+                style={{
+                  width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+                  background: 'linear-gradient(135deg,#F2BE5C,#f27e93)',
+                  color: '#0e142a', fontWeight: 700, fontSize: 14, cursor: 'pointer', letterSpacing: 0.5,
+                }}
+              >知道了！</button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {testZoneModal && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

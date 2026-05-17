@@ -1,38 +1,23 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
-import { getAllFlowers, getCollectedFlowers, getCollectionStats, isFlowerCollected, isFlowerViewed, markFlowerAsViewed } from '../utils/fortuneHelper'
+import { getAllFlowers, getCollectionStats, isFlowerCollected, isFlowerViewed, markFlowerAsViewed } from '../utils/fortuneHelper'
 import { isExhibitionMode, getZoneProgress } from '../utils/exhibitionHelper'
 import { ZONE_THEME, ZONE_ARTWORKS } from '../utils/exhibitionConstants'
 import CardBack from './CardBack'
 import FlowerBloom from './FlowerBloom'
 import { useAuth } from '../hooks/useAuth'
 
-const ZONE_UNLOCK_KEY = 'chenghua_zone_unlock_seen'
-
 const CollectionPage = ({ onClose, onSelectFlower }) => {
   const { user } = useAuth()
   const [selectedTab, setSelectedTab] = useState('all') // 'all', 'ssr', 'common'
   const [flippedCard, setFlippedCard] = useState(null) // Track which card is flipped
   const [showFlower, setShowFlower] = useState(false) // Delay flower rendering
-  const [showZoneModal, setShowZoneModal] = useState(false)
   const exMode = isExhibitionMode()
   const currentSource = exMode ? 'exhibition' : 'normal'
   const allFlowers = getAllFlowers()
   const stats = getCollectionStats(currentSource)
-  // zone unlock 檢查用全來源；gallery 用 currentSource 過濾
-  const collectedIds = getCollectedFlowers(null).map(f => f.id)
 
   const exProgress = exMode ? getZoneProgress() : null
-
-  // 任意掃描 1 件裝置藝術且擁有 1 朵花時，顯示一次恭喜動畫
-  useEffect(() => {
-    if (!exMode || !exProgress) return
-    const anyArtworkScanned = ['A', 'B', 'C'].some(z => (exProgress[z] || []).length >= 1)
-    const hasFlower = collectedIds.length >= 1
-    if (anyArtworkScanned && hasFlower && !localStorage.getItem(ZONE_UNLOCK_KEY)) {
-      setShowZoneModal(true)
-    }
-  }, [exMode, exProgress, collectedIds])
 
   const filteredFlowers = allFlowers.filter(flower => {
     if (selectedTab === 'ssr') return flower.rarity === 'ssr'
@@ -52,11 +37,6 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
       setShowFlower(false)
     }
   }, [flippedCard])
-
-  const closeZoneModal = () => {
-    localStorage.setItem(ZONE_UNLOCK_KEY, '1')
-    setShowZoneModal(false)
-  }
 
   return (
     <motion.div
@@ -567,56 +547,6 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
         }
       `}</style>
 
-      {/* Zone unlock modal */}
-      <AnimatePresence>
-        {showZoneModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: 'rgba(0,0,0,0.78)' }}
-            onClick={closeZoneModal}
-          >
-            <motion.div
-              initial={{ scale: 0.82, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: 'spring', damping: 18, stiffness: 260 }}
-              className="mx-6 rounded-2xl px-6 py-7 text-center"
-              style={{ background: 'linear-gradient(160deg,#1a1030,#0e1a30)', border: '1px solid rgba(242,190,92,0.35)', maxWidth: 340 }}
-              onClick={e => e.stopPropagation()}
-            >
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
-              <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#F2BE5C', letterSpacing: 1 }}>
-                任務達成！
-              </h2>
-              <p style={{ margin: '0 0 6px', fontSize: 13, lineHeight: 1.85, color: 'rgba(242,217,208,0.95)' }}>
-                你已掃描裝置藝術並解鎖花語，任務完成！
-              </p>
-              <div
-                style={{ margin: '12px 0', padding: '12px 16px', borderRadius: 12,
-                  background: 'rgba(242,190,92,0.08)', border: '1px solid rgba(242,190,92,0.2)' }}
-              >
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.9, color: 'rgba(242,217,208,0.92)' }}>
-                  前往服務台出示圖鑑頁面<br />
-                  即可兌換 <strong style={{ color: '#F2BE5C' }}>活動限定角色集章貼紙</strong> 🌸
-                </p>
-              </div>
-              <button
-                onClick={closeZoneModal}
-                style={{
-                  width: '100%', padding: '11px', borderRadius: 10, border: 'none',
-                  background: 'linear-gradient(135deg,#F2BE5C,#f27e93)',
-                  color: '#0e142a', fontWeight: 700, fontSize: 14, cursor: 'pointer', letterSpacing: 0.5,
-                }}
-              >
-                知道了！
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   )
 }
