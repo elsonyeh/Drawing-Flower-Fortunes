@@ -551,7 +551,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
   useEffect(() => {
     if (isFromCollection) return
     if (localStorage.getItem(RATING_KEY)) return
-    const t = setTimeout(() => setShowRating(true), 5000)
+    const t = setTimeout(() => setShowRating(true), 3000)
     return () => clearTimeout(t)
   }, [isFromCollection])
 
@@ -973,7 +973,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
         )}
       </AnimatePresence>
 
-      {/* 體驗評分彈窗（第一次抽卡後 5 秒） */}
+      {/* 體驗評分彈窗（第一次抽卡後 3 秒） */}
       <AnimatePresence>
         {showRating && (
           <motion.div
@@ -982,10 +982,6 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center"
             style={{ background: 'rgba(0,0,0,0.55)' }}
-            onClick={() => {
-              localStorage.setItem(RATING_KEY, 'skip')
-              setShowRating(false)
-            }}
           >
             <motion.div
               initial={{ scale: 0.88, opacity: 0 }}
@@ -994,33 +990,44 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
               className="w-full mx-4 rounded-2xl px-6 py-6 text-center"
               style={{ background: 'linear-gradient(160deg,#1a1030,#0e1a30)', border: '1px solid rgba(242,190,92,0.3)', maxWidth: 360 }}
-              onClick={e => e.stopPropagation()}
             >
               {rating === 0 ? (
                 <>
                   <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: 'rgba(242,217,208,0.95)', letterSpacing: 1 }}>
                     這次旅程，你覺得如何？
                   </p>
-                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'rgba(242,217,208,0.42)' }}>點一下即可</p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 18 }}>
+                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'rgba(242,217,208,0.42)' }}>選完後按確認送出</p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 20 }}>
                     {[1, 2, 3, 4, 5].map(i => (
                       <button key={i}
-                        onClick={() => {
-                          setRating(i)
-                          logEvent(user?.id ?? null, 'rating', { score: i, source: 'fortune_result' })
-                          localStorage.setItem(RATING_KEY, String(i))
-                        }}
+                        onClick={() => setRating(i)}
                         onMouseEnter={() => setRatingHover(i)}
                         onMouseLeave={() => setRatingHover(0)}
                         style={{
                           background: 'none', border: 'none', fontSize: 36, cursor: 'pointer',
-                          color: '#F2BE5C', lineHeight: 1, padding: '0 3px',
-                          opacity: i <= (ratingHover || 0) ? 1 : 0.4,
-                          transform: i <= (ratingHover || 0) ? 'scale(1.2)' : 'scale(1)',
+                          lineHeight: 1, padding: '0 3px',
+                          opacity: i <= (ratingHover || rating) ? 1 : 0.3,
+                          transform: i <= (ratingHover || rating) ? 'scale(1.2)' : 'scale(1)',
                           transition: 'opacity 0.15s, transform 0.15s',
-                        }}>★</button>
+                        }}>🌸</button>
                     ))}
                   </div>
+                  <button
+                    disabled={rating === 0}
+                    onClick={() => {
+                      logEvent(user?.id ?? null, 'rating', { score: rating, source: 'fortune_result' })
+                      localStorage.setItem(RATING_KEY, String(rating))
+                      window.open('https://forms.gle/fNJTKrez1tX1M8X58', '_blank', 'noreferrer')
+                      setShowRating(false)
+                    }}
+                    style={{
+                      width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+                      background: rating > 0 ? 'linear-gradient(135deg,#f27e93,#F2BE5C)' : 'rgba(255,255,255,0.1)',
+                      color: rating > 0 ? '#0e142a' : 'rgba(242,217,208,0.3)',
+                      fontWeight: 700, fontSize: 14, cursor: rating > 0 ? 'pointer' : 'default',
+                      marginBottom: 10, transition: 'background 0.2s, color 0.2s',
+                    }}
+                  >確認送出</button>
                   <button
                     onClick={() => {
                       localStorage.setItem(RATING_KEY, 'skip')
@@ -1029,27 +1036,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
                     style={{ background: 'none', border: 'none', color: 'rgba(242,217,208,0.32)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
                   >跳過</button>
                 </>
-              ) : (
-                <>
-                  <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: '#F2BE5C' }}>感謝你的回饋！</p>
-                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'rgba(242,217,208,0.55)', lineHeight: 1.7 }}>
-                    想聊聊這次的展覽或互動體驗嗎？
-                  </p>
-                  <a href="https://forms.gle/fNJTKrez1tX1M8X58" target="_blank" rel="noreferrer"
-                    style={{ display: 'inline-block', fontSize: 13, fontWeight: 600,
-                      color: '#f27e93', textDecoration: 'none',
-                      padding: '7px 20px', borderRadius: 20,
-                      border: '1px solid rgba(242,126,147,0.35)',
-                      background: 'rgba(242,126,147,0.08)', marginBottom: 14 }}>
-                    前往填寫完整回饋 →
-                  </a>
-                  <br />
-                  <button
-                    onClick={() => setShowRating(false)}
-                    style={{ background: 'none', border: 'none', color: 'rgba(242,217,208,0.38)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
-                  >關閉</button>
-                </>
-              )}
+              ) : null}
             </motion.div>
           </motion.div>
         )}
