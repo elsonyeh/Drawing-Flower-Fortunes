@@ -6,7 +6,6 @@ import { ZONE_THEME, ZONE_ARTWORKS } from '../utils/exhibitionConstants'
 import CardBack from './CardBack'
 import FlowerBloom from './FlowerBloom'
 import { useAuth } from '../hooks/useAuth'
-import { logEvent } from '../utils/analytics'
 
 const ZONE_UNLOCK_KEY = 'chenghua_zone_unlock_seen'
 
@@ -16,8 +15,6 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
   const [flippedCard, setFlippedCard] = useState(null) // Track which card is flipped
   const [showFlower, setShowFlower] = useState(false) // Delay flower rendering
   const [showZoneModal, setShowZoneModal] = useState(false)
-  const [zoneRating, setZoneRating] = useState(0)
-  const [zoneRatingHover, setZoneRatingHover] = useState(0)
   const exMode = isExhibitionMode()
   const currentSource = exMode ? 'exhibition' : 'normal'
   const allFlowers = getAllFlowers()
@@ -605,50 +602,6 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                   前往服務台出示圖鑑頁面<br />
                   即可兌換 <strong style={{ color: '#F2BE5C' }}>活動限定角色集章貼紙</strong> 🌸
                 </p>
-              </div>
-              {/* 體驗評分 */}
-              <div style={{ margin: '16px 0 8px', paddingTop: 16, borderTop: '1px solid rgba(242,190,92,0.15)', textAlign: 'center' }}>
-                <p style={{ margin: '0 0 2px', fontSize: 12, fontWeight: 700, color: 'rgba(242,217,208,0.75)', letterSpacing: 2 }}>
-                  {zoneRating > 0 ? '感謝你的回饋！' : '旅程評價'}
-                </p>
-                <p style={{ margin: '0 0 12px', fontSize: 11, color: 'rgba(242,217,208,0.42)', lineHeight: 1.6 }}>
-                  {zoneRating > 0
-                    ? '你的聲音是我們繼續前進的動力 🌿'
-                    : '這次鹽夏不夜埕花語旅程，你覺得如何？'}
-                </p>
-                {zoneRating === 0 ? (
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 20 }}>
-                    {[1, 2, 3, 4, 5].map(i => (
-                      <button key={i}
-                        onClick={() => {
-                          setZoneRating(i)
-                          logEvent(user?.id ?? null, 'rating', { score: i, source: 'zone_unlock' })
-                          localStorage.setItem('chenghua_zone_rating_seen', String(i))
-                        }}
-                        onMouseEnter={() => setZoneRatingHover(i)}
-                        onMouseLeave={() => setZoneRatingHover(0)}
-                        style={{ background: 'none', border: 'none', fontSize: 26, cursor: 'pointer',
-                          opacity: i <= (zoneRatingHover || 0) ? 1 : 0.25, transition: 'opacity 0.15s', padding: '2px 4px' }}>
-                        🌸
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ marginBottom: 14 }}>
-                    <p style={{ margin: '0 0 10px', fontSize: 12, color: 'rgba(242,217,208,0.55)', lineHeight: 1.7 }}>
-                      想和我們聊聊這次的展覽、互動體驗，<br />
-                      或是對整個活動有什麼想說的嗎？
-                    </p>
-                    <a href="https://forms.gle/fNJTKrez1tX1M8X58" target="_blank" rel="noreferrer"
-                      style={{ display: 'inline-block', fontSize: 13, fontWeight: 600,
-                        color: '#f27e93', textDecoration: 'none',
-                        padding: '7px 18px', borderRadius: 20,
-                        border: '1px solid rgba(242,126,147,0.35)',
-                        background: 'rgba(242,126,147,0.08)' }}>
-                      前往填寫完整回饋 →
-                    </a>
-                  </div>
-                )}
               </div>
               <button
                 onClick={closeZoneModal}
