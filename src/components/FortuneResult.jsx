@@ -1036,7 +1036,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
                 <>
                   <p style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 700, color: '#F2BE5C' }}>感謝你的回饋！</p>
                   <p style={{ margin: '0 0 8px', fontSize: 13, color: 'rgba(242,217,208,0.88)', lineHeight: 1.8 }}>
-                    想分享對鹽夏不夜埕的整體感受嗎？<br />活動體驗、裝置展覽都歡迎告訴我們，<br />填寫約需 3 分鐘。
+                    你對這次鹽夏不夜埕有什麼想說的？<br />不管是展覽、互動還是整體氛圍，<br />都歡迎告訴我們（約需 3 分鐘）。
                   </p>
                   <p style={{ margin: '0 0 18px', fontSize: 12, color: 'rgba(242,217,208,0.72)', lineHeight: 1.7 }}>
                     你的每一則回饋，都是我們繼續前進的動力
