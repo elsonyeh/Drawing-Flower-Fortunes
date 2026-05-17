@@ -236,7 +236,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
                 </motion.button>
 
                 {/* NEW badge for recently collected and not yet viewed */}
-                {collected && !isFlowerViewed(flower.id) && collectedIds.indexOf(flower.id) >= collectedIds.length - 3 && (
+                {collected && !isFlowerViewed(flower.id) && (
                   <motion.div
                     initial={{ scale: 0, rotate: -20 }}
                     animate={{ scale: 1, rotate: 0 }}
