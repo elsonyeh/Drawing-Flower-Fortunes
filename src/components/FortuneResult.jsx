@@ -980,7 +980,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center"
+            className="fixed inset-0 z-50 flex items-center justify-center"
             style={{ background: 'rgba(0,0,0,0.55)' }}
             onClick={() => {
               localStorage.setItem(RATING_KEY, 'skip')
@@ -988,11 +988,11 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
             }}
           >
             <motion.div
-              initial={{ y: 80, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 80, opacity: 0 }}
-              transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-              className="w-full mx-4 mb-8 rounded-2xl px-6 py-6 text-center"
+              initial={{ scale: 0.88, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.88, opacity: 0 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              className="w-full mx-4 rounded-2xl px-6 py-6 text-center"
               style={{ background: 'linear-gradient(160deg,#1a1030,#0e1a30)', border: '1px solid rgba(242,190,92,0.3)', maxWidth: 360 }}
               onClick={e => e.stopPropagation()}
             >
