@@ -288,7 +288,7 @@ const CollectionPage = ({ onClose, onSelectFlower }) => {
             💡 點擊已收集的卡片即可翻轉查看花語詳情
           </p>
           <p className="text-xs text-center" style={{ color: '#F2BE5C', opacity: 0.75 }}>
-            ✦ 傳說中藏有五種極稀有的 SSR 吉祥物，展覽模式每次抽卡有 5% 機率邂逅
+            ✦ 傳說中藏有五種極稀有的 SSR 花語，展覽模式每次抽卡有 5% 機率邂逅
           </p>
           <p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.28)' }}>
             那朵屬於你的花，或許正在等待有緣人⋯⋯

@@ -6,8 +6,8 @@ import { BOUQUET_FLOWERS, FLOWER_POSITIONS, SingleFlower, BambooBasket } from '.
 
 // 白光消退橋接用的柔光粒子（靜態預算，與花色無關）
 // 分兩層：大型光暈球 + 細小閃爍星點
-const GLOW_ORBS = Array.from({ length: 12 }, (_, i) => {
-  const angle = (i / 12) * Math.PI * 2
+const GLOW_ORBS = Array.from({ length: 8 }, (_, i) => {
+  const angle = (i / 8) * Math.PI * 2
   const dist  = 60 + (i % 4) * 28
   return {
     id: i,
@@ -15,13 +15,13 @@ const GLOW_ORBS = Array.from({ length: 12 }, (_, i) => {
     dy: Math.sin(angle) * dist - 40,   // 整體偏上
     size: 80 + (i % 3) * 40,           // 大：80/120/160px
     blur: 10 + (i % 3) * 5,            // 輕度模糊，保持可見：10/15/20px
-    delay: i * 0.055,
-    dur: 1.9 + (i % 3) * 0.2,
+    delay: i * 0.045,
+    dur: 1.2 + (i % 3) * 0.15,
     colorIdx: i % 3,                   // 0=白 1=花色 2=金
   }
 })
-const SPARKLE_POINTS = Array.from({ length: 14 }, (_, i) => {
-  const angle = (i / 14) * Math.PI * 2 + 0.22
+const SPARKLE_POINTS = Array.from({ length: 9 }, (_, i) => {
+  const angle = (i / 9) * Math.PI * 2 + 0.22
   const dist  = 30 + (i % 5) * 22
   return {
     id: i,
@@ -29,8 +29,8 @@ const SPARKLE_POINTS = Array.from({ length: 14 }, (_, i) => {
     dy: Math.sin(angle) * dist - 20,
     size: 5 + (i % 4) * 3,            // 小：5/8/11/14px
     blur: 2 + (i % 3),
-    delay: 0.05 + i * 0.04,
-    dur: 1.4 + (i % 3) * 0.25,
+    delay: 0.04 + i * 0.035,
+    dur: 0.9 + (i % 3) * 0.15,
     colorIdx: i % 2,                   // 0=白 1=金
   }
 })
@@ -89,8 +89,8 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
       setBurstActive(true)
       setTransitionFlash(true)
     }, 80)
-    const t2 = setTimeout(() => setTransitionGlow(true), 660)
-    const t3 = setTimeout(() => setStage('show_card'), 1350)
+    const t2 = setTimeout(() => setTransitionGlow(true), 440)
+    const t3 = setTimeout(() => setStage('show_card'), 900)
     return () => [t1, t2, t3].forEach(clearTimeout)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -113,8 +113,8 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
       setBurstActive(true)                             // t=100ms：光圈才爆發
       setTransitionFlash(true)
     }, 100)
-    setTimeout(() => setTransitionGlow(true), 680)
-    setTimeout(() => setStage('show_card'), 1350)
+    setTimeout(() => setTransitionGlow(true), 440)
+    setTimeout(() => setStage('show_card'), 900)
   }
 
   const handleCardClick = () => {
@@ -130,10 +130,10 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
         setTimeout(() => setMidFlipFlash(false), 2850),
         // 翻牌完成切 reveal（4.5s + 緩衝）
         setTimeout(() => setStage('reveal'), 4700),
-        // 光環先慢後快，花在 3.1s 後出現（節奏稍放慢）
-        setTimeout(() => setPreFlowerFlash(true), 7400), // 花出現前 400ms 亮光
-        setTimeout(() => setShowFlower(true), 7800),
-        setTimeout(() => onCompleteRef.current?.(), 14000),
+        // 光環先慢後快，花在 2.3s 後出現
+        setTimeout(() => setPreFlowerFlash(true), 6600), // 花出現前 400ms 亮光
+        setTimeout(() => setShowFlower(true), 7000),
+        setTimeout(() => onCompleteRef.current?.(), 11500),
       ]
     }, 500)
   }
@@ -246,7 +246,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
           }}
           initial={{ scale: 1, opacity: 0.95 }}
           animate={{ scale: 45, opacity: [0.95, 1, 0] }}
-          transition={{ duration: 1.8, times: [0, 0.13, 1], ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1.1, times: [0, 0.13, 1], ease: [0.16, 1, 0.3, 1] }}
         />
       )}
 
@@ -559,7 +559,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                       />
                     )
                   })}
-                  {[0, 1, 2].map(i => (
+                  {[0, 1].map(i => (
                     <motion.div key={`cr-${i}`} className="absolute rounded-full pointer-events-none"
                       style={{
                         left: '50%', top: '50%',
@@ -569,7 +569,7 @@ const GachaAnimation = ({ flower, onComplete, skipFlowerPick = false }) => {
                       }}
                       initial={{ scale: 0.3, opacity: 1 }}
                       animate={{ scale: 5.5 + i * 1.5, opacity: 0 }}
-                      transition={{ duration: 1.1 + i * 0.2, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 }}
+                      transition={{ duration: 0.7 + i * 0.2, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 }}
                     />
                   ))}
                 </>
