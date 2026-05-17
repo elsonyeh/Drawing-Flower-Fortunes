@@ -989,18 +989,15 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.88, opacity: 0 }}
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-              className="w-full mx-4 rounded-2xl px-6 py-6 text-center"
+              className="w-full mx-4 rounded-2xl px-6 py-8 text-center"
               style={{ background: 'linear-gradient(160deg,#1a1030,#0e1a30)', border: '1px solid rgba(242,190,92,0.3)', maxWidth: 360 }}
             >
               {!ratingSubmitted ? (
                 <>
-                  <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: 'rgba(242,217,208,0.95)', letterSpacing: 1 }}>
+                  <p style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: 'rgba(242,217,208,0.95)', letterSpacing: 1 }}>
                     這次旅程，你覺得如何？
                   </p>
-                  <p style={{ margin: '0 0 4px', fontSize: 12, color: 'rgba(242,217,208,0.42)' }}>
-                    {['', '還有很多可以改善', '差強人意，有些遺憾', '還不錯，值得一試', '很棒，會想再來！', '超讚！給五星好評 🌸'][ratingHover || rating]}
-                  </p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
                     {[1, 2, 3, 4, 5].map(i => (
                       <button key={i}
                         onClick={() => setRating(i)}
@@ -1015,7 +1012,9 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
                         }}>🌸</button>
                     ))}
                   </div>
-                  <p style={{ margin: '0 0 16px', fontSize: 11, color: 'rgba(242,217,208,0.28)' }}>選完後按確認送出</p>
+                  <p style={{ margin: '0 0 20px', fontSize: 14, fontWeight: 600, color: 'rgba(242,217,208,0.85)', minHeight: '1.4em' }}>
+                    {['', '還有很多可以改善', '差強人意，有些遺憾', '還不錯，值得一試', '很棒，會想再來！', '超讚！給五星好評 🌸'][ratingHover || rating]}
+                  </p>
                   <button
                     onClick={() => {
                       logEvent(user?.id ?? null, 'rating', { score: rating, source: 'fortune_result' })
@@ -1023,10 +1022,10 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
                       setRatingSubmitted(true)
                     }}
                     style={{
-                      width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+                      width: '100%', padding: '13px', borderRadius: 10, border: 'none',
                       background: 'linear-gradient(135deg,#f27e93,#F2BE5C)',
-                      color: '#0e142a', fontWeight: 700, fontSize: 14, cursor: 'pointer',
-                      marginBottom: 10,
+                      color: '#0e142a', fontWeight: 700, fontSize: 15, cursor: 'pointer',
+                      marginBottom: 10, letterSpacing: 0.5,
                     }}
                   >確認送出</button>
                   <button
