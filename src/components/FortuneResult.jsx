@@ -1039,9 +1039,12 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
                 </>
               ) : (
                 <>
-                  <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: '#F2BE5C' }}>感謝你的回饋！</p>
-                  <p style={{ margin: '0 0 18px', fontSize: 12, color: 'rgba(242,217,208,0.55)', lineHeight: 1.7 }}>
-                    還想聊聊這次的展覽體驗嗎？<br />你的想法對我們很有幫助 🌿
+                  <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: '#F2BE5C' }}>感謝你的回饋！</p>
+                  <p style={{ margin: '0 0 6px', fontSize: 13, color: 'rgba(242,217,208,0.88)', lineHeight: 1.75 }}>
+                    只需 2 分鐘，填寫完整回饋表單，<br />讓我們知道這趟旅程帶給你什麼。
+                  </p>
+                  <p style={{ margin: '0 0 18px', fontSize: 12, color: 'rgba(242,217,208,0.45)', lineHeight: 1.7 }}>
+                    你的每一條留言，都是我們<br />繼續做下去的動力 🌿
                   </p>
                   <button
                     onClick={() => {
@@ -1053,7 +1056,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
                       background: 'linear-gradient(135deg,#f27e93,#F2BE5C)',
                       color: '#0e142a', fontWeight: 700, fontSize: 14, cursor: 'pointer', marginBottom: 10,
                     }}
-                  >前往填寫完整回饋</button>
+                  >前往填寫完整回饋（約 2 分鐘）</button>
                   <button
                     onClick={() => setShowRating(false)}
                     style={{ background: 'none', border: 'none', color: 'rgba(242,217,208,0.38)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
