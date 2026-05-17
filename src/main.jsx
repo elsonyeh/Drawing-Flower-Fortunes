@@ -137,6 +137,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 // 最多等 10 秒（從 3 秒延長：確保大模型 + Draco 下載都有足夠時間）
 // 正常情況下：fetch 完成 + parse 完成後會提早退出
 Promise.race([
-  preloadFirstModel(),
+  preloadFirstModel().catch(() => {}),
   new Promise(resolve => setTimeout(resolve, 10000))
 ]).then(hideLoadingScreen)
