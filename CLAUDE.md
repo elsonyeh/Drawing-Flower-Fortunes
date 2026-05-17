@@ -72,10 +72,23 @@ src/
 - **Filtering**: All / SSR / Common tabs
 
 ### Gacha Probability System
+
+#### 普通模式（normal）
 - **SSR (5 cards)**: 1% each = **5% total**
   - ID 101-105: 曇花, 藍色妖姬, 鳳凰花, 彼岸花, 虞美人
 - **Common (15 cards)**: 95% total ≈ 6.3% each
   - ID 1-15: Regular flowers
+
+#### 展覽模式（exhibition）`getRandomFlowerForExhibition`
+各展區固定 **5% SSR 機率**（無論該區有幾隻 SSR），命中後從區內 SSR 隨機選一隻：
+
+| 展區 | SSR 花朵 | 各花機率 |
+|------|---------|---------|
+| A 區 | 101 曇花、102 藍色妖姬 | 各 2.5% |
+| B 區 | 103 鳳凰花、105 虞美人 | 各 2.5% |
+| C 區 | 104 彼岸花 | 5% |
+
+Common 花朵：從該區 common 池隨機抽（95% 機率）。
 
 ### Face Reading System（面相解讀）`src/utils/faceReader.js`
 
@@ -290,6 +303,14 @@ localStorage `chenghua_tutorial_v2` 不存在時，首次進站自動顯示。�
 ### GachaAnimation 注意事項
 從主頁點花進入抽卡（`skipFlowerPick=true`）時，`pick_flower` 階段不渲染，避免花盆在白光消退時短暫顯現。展覽掃碼流程（`skipFlowerPick=false`）仍正常顯示選花階段。
 
+### EmotionScan 花朵傳遞方式
+面相掃描結果花朵**不走** `selectedFlower` state，改為嵌入 `emotionData.flower`：
+- `handleEmotionComplete(flower, data)` → `setEmotionData({ ...data, flower })`（不呼叫 `setSelectedFlower`）
+- `GachaAnimation` 使用 `flower={emotionData?.flower || selectedFlower}`
+- `FortuneResult` 使用 `flower={viewingFlower || emotionData?.flower || selectedFlower}`
+
+這樣 `selectedFlower` 只有合法抽卡才會設定，避免面相解讀結果意外存入圖鑑。
+
 ---
 
 ## SSR 吉祥物 GLB 模型
@@ -328,7 +349,8 @@ localStorage `chenghua_tutorial_v2` 不存在時，首次進站自動顯示。�
 **觸發條件**：任意一件裝置藝術已掃描（A / B / C 任一展區 ≥ 1 件）且已抽到至少一朵花語，第一次同時滿足時觸發全螢幕恭喜彈窗。
 
 - localStorage key：`chenghua_zone_unlock_seen`（寫入後不再重複觸發）
-- 彈窗位置：`CollectionPage.jsx`（`showZoneModal` state）；App 層級亦可透過 `testZoneModal` 獨立觸發
+- 彈窗位置：**`App.jsx`**（`showZoneModal` state）— 當 `stage` 切換回 `'landing'` 時檢查，不依賴 CollectionPage 是否開啟
+- 背景不可點擊關閉，只有「知道了！」按鈕才關閉
 - 兌換說明文字：已掃描裝置藝術並解鎖花語 → 服務台出示圖鑑頁面換貼紙；走遍全部 + 集 15 種花語 → 隱藏好禮
 
 ### Admin 測試：區域解鎖動畫
@@ -439,6 +461,8 @@ CREATE INDEX idx_collections_user_source ON public.collections (user_id, source)
 | `chenghua_tutorial_v2` | `'1'` | 導覽完成旗標 |
 | `chenghua_completion_seen` | `'1'` | 集滿成就動畫已播旗標 |
 | `chenghua_zone_unlock_seen` | `'1'` | 展區解鎖動畫已播旗標 |
+| `chenghua_rating_seen` | `'1'–'5'` \| `'skip'` | 體驗評分已送出旗標（防止重複） |
+| `chenghua_completion_pending` | `'1'` | 匿名用戶集滿後待登入處理的暫存旗標 |
 
 ### 檔案位置
 | 檔案 | 用途 |
@@ -457,6 +481,45 @@ CREATE INDEX idx_collections_user_source ON public.collections (user_id, source)
 觸發方式：`onTestCompletion(needsEmail)` → App `setCompletionData({ needsEmail, isTest: true })`
 
 ### 重置測試方式（詳見上方「獎品順序」）
+
+### 匿名用戶集滿流程（Approach C）
+匿名用戶（未登入）達成集滿條件時：
+1. `checkAnonymousCompletion()` 寫入 `chenghua_completion_pending = '1'`，回傳 `{ showAnimation: true }`
+2. App 設 `completionData = { anonymous: true }`，`CollectionComplete` 顯示動畫 + 登入按鈕
+3. 用戶登入後，App 的 login useEffect 偵測 `chenghua_completion_pending` → 清除旗標 → 呼叫 `checkAndNotifyCompletion(user)`
+4. 回傳 `{ showAnimation: true, skipAnimation: true, needsEmail: ... }`，直接跳至 content card（省略動畫重播）
+
+---
+
+## 體驗評分系統
+
+### 觸發條件
+- 元件：`FortuneResult.jsx`
+- 條件：`isFromCollection === false`（實際抽卡，非從圖鑑查看）且 localStorage `chenghua_rating_seen` 不存在
+- 延遲：進入花朵詳細頁後 **2 秒**自動彈出
+
+### UI 流程
+1. **評分畫面**：5 朵 🌸 花，預設選中 3 顆（中性起點），hover / 點選即時顯示對應文字
+2. 點「確認送出」→ `logEvent` 記錄分數、寫 `chenghua_rating_seen`
+3. **感謝畫面**：詢問是否填寫完整回饋（Google Form），用戶自行選擇，不強制跳轉
+4. 背景不可點擊關閉
+
+### 各分數文字
+| 顆數 | 文字 |
+|------|------|
+| 1 🌸 | 還有很多可以改善 |
+| 2 🌸 | 差強人意，有些遺憾 |
+| 3 🌸 | 還不錯，值得一試 |
+| 4 🌸 | 印象深刻，很喜歡！ |
+| 5 🌸 | 太棒了，完全超乎預期！ |
+
+### Google Form
+`https://forms.gle/fNJTKrez1tX1M8X58`（約 3 分鐘）
+
+### 重置方式
+```javascript
+localStorage.removeItem('chenghua_rating_seen')
+```
 
 ---
 
