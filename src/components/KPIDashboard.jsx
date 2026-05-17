@@ -173,12 +173,13 @@ function KPIDashboard() {
 
       const tutorialCount = tutorialEvents.length
 
-      // ── 抽卡統計 ──
-      const drawLogin  = drawEvents?.filter(e => e.user_id) || []
-      const drawAnon   = drawEvents?.filter(e => !e.user_id) || []
-      const totalDraws = (drawEvents?.length) || 0
-      const normalDraws     = drawEvents?.filter(e => e.payload?.source === 'normal').length || 0
-      const exhibitionDraws = drawEvents?.filter(e => e.payload?.source === 'exhibition').length || 0
+      // ── 抽卡統計（排除導覽引導抽卡）──
+      const realDrawEvents  = drawEvents?.filter(e => e.payload?.source !== 'tutorial') || []
+      const drawLogin  = realDrawEvents.filter(e => e.user_id)
+      const drawAnon   = realDrawEvents.filter(e => !e.user_id)
+      const totalDraws = realDrawEvents.length
+      const normalDraws     = realDrawEvents.filter(e => e.payload?.source === 'normal').length
+      const exhibitionDraws = realDrawEvents.filter(e => e.payload?.source === 'exhibition').length
 
       const perUser = {}
       drawLogin.forEach(e => { perUser[e.user_id] = (perUser[e.user_id] || 0) + 1 })
@@ -234,7 +235,7 @@ function KPIDashboard() {
       }
 
       // ── SSR 抽中次數 ──
-      const ssrDraws = drawEvents.filter(e => e.payload?.rarity === 'ssr').length
+      const ssrDraws = realDrawEvents.filter(e => e.payload?.rarity === 'ssr').length
 
       // ── 貼紙兌換資格（掃過任一裝置藝術，排除管理員）──
       const zoneUnlockCount = (rawExhibitionSessions || [])
