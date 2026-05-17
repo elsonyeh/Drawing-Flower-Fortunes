@@ -994,10 +994,13 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
             >
               {!ratingSubmitted ? (
                 <>
-                  <p style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: 'rgba(242,217,208,0.95)', letterSpacing: 1 }}>
+                  <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: 'rgba(242,217,208,0.95)', letterSpacing: 1 }}>
                     這次花語體驗，你覺得如何？
                   </p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
+                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'rgba(242,217,208,0.45)' }}>
+                    點擊花朵進行評分
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 26 }}>
                     {[1, 2, 3, 4, 5].map(i => (
                       <button key={i}
                         onClick={() => setRating(i)}
@@ -1031,12 +1034,12 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
                 </>
               ) : (
                 <>
-                  <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: '#F2BE5C' }}>感謝你的回饋！</p>
-                  <p style={{ margin: '0 0 6px', fontSize: 13, color: 'rgba(242,217,208,0.88)', lineHeight: 1.75 }}>
-                    只需 2 分鐘，填寫完整回饋表單，<br />讓我們知道這趟旅程帶給你什麼。
+                  <p style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 700, color: '#F2BE5C' }}>感謝你的回饋！</p>
+                  <p style={{ margin: '0 0 8px', fontSize: 13, color: 'rgba(242,217,208,0.88)', lineHeight: 1.8 }}>
+                    想分享對鹽夏不夜埕的整體感受嗎？<br />活動體驗、裝置展覽都歡迎告訴我們，<br />填寫約需 3 分鐘。
                   </p>
-                  <p style={{ margin: '0 0 18px', fontSize: 12, color: 'rgba(242,217,208,0.45)', lineHeight: 1.7 }}>
-                    你的每一條留言，都是我們<br />繼續做下去的動力 🌿
+                  <p style={{ margin: '0 0 18px', fontSize: 12, color: 'rgba(242,217,208,0.72)', lineHeight: 1.7 }}>
+                    你的每一則回饋，都是我們繼續前進的動力
                   </p>
                   <button
                     onClick={() => {
