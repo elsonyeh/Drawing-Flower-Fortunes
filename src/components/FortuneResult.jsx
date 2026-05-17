@@ -512,7 +512,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
   const [showShare, setShowShare] = useState(false)
   const [flowerSnapshot, setFlowerSnapshot] = useState(null)
   const [showRating, setShowRating] = useState(false)
-  const [rating, setRating] = useState(1)
+  const [rating, setRating] = useState(3)
   const [ratingHover, setRatingHover] = useState(0)
   const [ratingSubmitted, setRatingSubmitted] = useState(false)
   const isSSR = flower?.rarity === 'ssr'
@@ -995,7 +995,7 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
               {!ratingSubmitted ? (
                 <>
                   <p style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: 'rgba(242,217,208,0.95)', letterSpacing: 1 }}>
-                    這次旅程，你覺得如何？
+                    這次花語體驗，你覺得如何？
                   </p>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
                     {[1, 2, 3, 4, 5].map(i => (
@@ -1012,8 +1012,8 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
                         }}>🌸</button>
                     ))}
                   </div>
-                  <p style={{ margin: '0 0 20px', fontSize: 14, fontWeight: 600, color: 'rgba(242,217,208,0.85)', minHeight: '1.4em' }}>
-                    {['', '還有很多可以改善', '差強人意，有些遺憾', '還不錯，值得一試', '很棒，會想再來！', '超讚！給五星好評 🌸'][ratingHover || rating]}
+                  <p style={{ margin: '0 0 24px', fontSize: 14, fontWeight: 600, color: 'rgba(242,217,208,0.85)', minHeight: '1.4em' }}>
+                    {['', '還有很多可以改善', '差強人意，有些遺憾', '還不錯，值得一試', '印象深刻，很喜歡！', '太棒了，完全超乎預期！'][ratingHover || rating]}
                   </p>
                   <button
                     onClick={() => {
@@ -1028,13 +1028,6 @@ const FortuneResult = ({ flower, onReset, isFromCollection = false, emotionData 
                       marginBottom: 10, letterSpacing: 0.5,
                     }}
                   >確認送出</button>
-                  <button
-                    onClick={() => {
-                      localStorage.setItem(RATING_KEY, 'skip')
-                      setShowRating(false)
-                    }}
-                    style={{ background: 'none', border: 'none', color: 'rgba(242,217,208,0.32)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
-                  >跳過</button>
                 </>
               ) : (
                 <>
