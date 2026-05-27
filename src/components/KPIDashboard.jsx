@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase, isSupabaseEnabled } from '../lib/supabase'
-import { ZONE_THEME } from '../utils/exhibitionConstants'
+import { ZONE_THEME, ZONE_ARTWORKS, ARTWORKS } from '../utils/exhibitionConstants'
+
+const VALID_ARTWORK_IDS = new Set(Object.values(ZONE_ARTWORKS).flat()) // A1–A5, B1–B5, C1–C5
 
 // ── 子元件 ───────────────────────────────────────────────
 
@@ -46,8 +48,6 @@ function SplitBar({ loggedIn, anon, color }) {
   )
 }
 
-// 每日堆疊長條圖
-const CHART_H = 80
 const SERIES = [
   { key: 'draw', color: '#F27E93', label: '抽卡' },
   { key: 'face', color: '#c4b5fd', label: '面相' },
@@ -60,39 +60,50 @@ function DailyChart({ days }) {
 
   return (
     <div>
-      <div className="overflow-x-auto">
-        <div
-          className="flex gap-0.5 items-end"
-          style={{ minWidth: `${Math.max(days.length * 24, 200)}px`, paddingBottom: 4 }}
-        >
-          {days.map(day => {
-            // 從底部堆疊各系列
-            let bottom = 0
-            const segs = SERIES.map(({ key, color }) => {
-              const h = Math.max(Math.round((day[key] / maxTotal) * CHART_H), day[key] > 0 ? 2 : 0)
-              const seg = { key, color, h, bottom }
-              if (day[key] > 0) bottom += h
-              return seg
-            }).filter(s => s.h > 0)
+      <div className="space-y-1.5">
+        {days.map(day => {
+          const total = day.draw + day.face + day.qr
+          let left = 0
+          const segs = SERIES.map(({ key, color }) => {
+            const w = (day[key] / maxTotal) * 100
+            const seg = { key, color, w, left, count: day[key] }
+            if (day[key] > 0) left += w
+            return seg
+          }).filter(s => s.count > 0)
 
-            return (
-              <div key={day.date} className="flex-1 flex flex-col items-center" style={{ minWidth: 22 }}>
-                <div className="relative w-full" style={{ height: CHART_H }}>
-                  {segs.map(({ key, color, h, bottom: b }) => (
+          return (
+            <div key={day.date} className="flex items-center gap-2">
+              <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', minWidth: 30, textAlign: 'right', flexShrink: 0 }}>
+                {day.label}
+              </span>
+              <div className="relative flex-1" style={{ height: 18, background: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
+                {segs.map((s, idx) => {
+                  const first = idx === 0
+                  const last  = idx === segs.length - 1
+                  return (
                     <div
-                      key={key}
-                      className="absolute left-0 right-0 transition-all duration-500"
-                      style={{ bottom: b, height: h, background: color, borderRadius: b === 0 ? '2px 2px 0 0' : 0 }}
-                    />
-                  ))}
-                </div>
-                <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', marginTop: 3, textAlign: 'center', whiteSpace: 'nowrap' }}>
-                  {day.label}
-                </p>
+                      key={s.key}
+                      className="absolute top-0 bottom-0 flex items-center justify-center overflow-hidden transition-all duration-500"
+                      style={{
+                        left: `${s.left}%`,
+                        width: `${s.w}%`,
+                        background: s.color,
+                        borderRadius: `${first ? 4 : 0}px ${last ? 4 : 0}px ${last ? 4 : 0}px ${first ? 4 : 0}px`,
+                      }}
+                    >
+                      <span style={{ fontSize: 7, color: 'rgba(0,0,0,0.65)', fontWeight: 700, lineHeight: 1 }}>
+                        {s.count}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
-        </div>
+              <span style={{ fontSize: 9, minWidth: 20, flexShrink: 0, color: total > 0 ? 'rgba(255,255,255,0.4)' : 'transparent' }}>
+                {total || ''}
+              </span>
+            </div>
+          )
+        })}
       </div>
 
       {/* 圖例 */}
@@ -130,66 +141,64 @@ function KPIDashboard() {
       const withoutAdmins = (query, field = 'user_id') =>
         adminList.length > 0 ? query.not(field, 'in', `(${adminList.join(',')})`) : query
 
+      // events 的 user_id 可為 null（匿名），要保留；只排管理員
+      const withoutAdminsEvents = (query) =>
+        adminList.length > 0
+          ? query.or(`user_id.is.null,user_id.not.in.(${adminList.join(',')})`)
+          : query
+
       const [
         { count: userCount },
-        { data: rawDrawEvents },
+        { data: drawDistRaw },
         { data: rawFaceEvents },
-        { data: rawQrEvents },
+        { data: rawQrRows },
         { data: rawTutorialEvents },
-        { data: rawTimeEvents },
+        { data: rawDailyRows },
         { data: rawRatingEvents },
-        { count: completionCount },
+        ,                          // profiles.completion_notified — 未使用，completionCount 來自 sessions
         { data: rawExhibitionCols },
         { data: rawExhibitionSessions },
+        { data: drawStatsRaw },
       ] = await Promise.all([
         withoutAdmins(supabase.from('profiles').select('*', { count: 'exact', head: true }), 'id'),
-        supabase.from('events').select('user_id, payload').eq('event_type', 'draw').limit(10000),
-        supabase.from('events').select('user_id').eq('event_type', 'face_scan_complete').limit(5000),
-        supabase.from('events').select('user_id, payload').eq('event_type', 'qr_scan').limit(10000),
-        supabase.from('events').select('user_id').eq('event_type', 'tutorial_complete').limit(5000),
-        supabase.from('events')
-          .select('event_type, created_at, user_id')
-          .gte('created_at', since)
-          .in('event_type', ['draw', 'face_scan_complete', 'qr_scan'])
-          .order('created_at', { ascending: true })
-          .limit(10000),
+        supabase.rpc('get_draw_distribution_for_admin'),
+        withoutAdminsEvents(supabase.from('events').select('user_id').eq('event_type', 'face_scan_complete').order('created_at', { ascending: false })).limit(5000),
+        supabase.rpc('get_qr_stats_for_admin'),
+        withoutAdminsEvents(supabase.from('events').select('user_id').eq('event_type', 'tutorial_complete').order('created_at', { ascending: false })).limit(5000),
+        supabase.rpc('get_daily_events_for_admin', { since_ts: since }),
         supabase.from('events').select('user_id, payload, created_at').eq('event_type', 'rating').order('created_at', { ascending: false }).limit(5000),
-        withoutAdmins(
-          supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('completion_notified', true),
-          'id'
-        ),
-        supabase.from('collections').select('user_id, flower_id').eq('source', 'exhibition').limit(50000),
+        withoutAdmins(supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('completion_notified', true), 'id'),
+        supabase.rpc('get_exhibition_collections_for_admin'),
         supabase.from('exhibition_sessions').select('visitor_id, visited, user_id').limit(10000),
+        supabase.rpc('get_draw_stats_for_admin'),
       ])
 
-      // 過濾掉管理員的事件
+      // 過濾掉管理員的事件（僅剩 PostgREST 查詢需要）
       const notAdmin = e => !adminSet.has(e.user_id)
-      const drawEvents     = (rawDrawEvents     || []).filter(notAdmin)
       const faceEvents     = (rawFaceEvents     || []).filter(notAdmin)
       const tutorialEvents = (rawTutorialEvents || []).filter(notAdmin)
-      const timeEvents     = (rawTimeEvents     || []).filter(notAdmin)
       const ratingEvents   = (rawRatingEvents   || []).filter(notAdmin)
-      const qrEvents = (rawQrEvents || []).filter(notAdmin)
 
       const tutorialCount = tutorialEvents.length
 
-      // ── 抽卡統計（排除導覽引導抽卡）──
-      const realDrawEvents  = drawEvents?.filter(e => e.payload?.source !== 'tutorial') || []
-      const drawLogin  = realDrawEvents.filter(e => e.user_id)
-      const drawAnon   = realDrawEvents.filter(e => !e.user_id)
-      const totalDraws = realDrawEvents.length
-      const normalDraws     = realDrawEvents.filter(e => e.payload?.source === 'normal').length
-      const exhibitionDraws = realDrawEvents.filter(e => e.payload?.source === 'exhibition').length
+      // ── 抽卡統計（精確數字來自 SQL 函式）──
+      const drawStats      = drawStatsRaw || {}
+      const totalDraws     = Number(drawStats.total      || 0)
+      const loginDraws     = Number(drawStats.login      || 0)
+      const anonDraws      = Number(drawStats.anon       || 0)
+      const normalDraws    = Number(drawStats.normal     || 0)
+      const exhibitionDraws= Number(drawStats.exhibition || 0)
+      const ssrDraws       = Number(drawStats.ssr        || 0)
 
-      const perUser = {}
-      drawLogin.forEach(e => { perUser[e.user_id] = (perUser[e.user_id] || 0) + 1 })
-      const counts = Object.values(perUser)
-      const avgDraws = counts.length > 0 ? (counts.reduce((s, n) => s + n, 0) / counts.length).toFixed(1) : '0'
-      const drawBuckets = [
-        { label: '1–2 次', count: counts.filter(n => n <= 2).length },
-        { label: '3–5 次', count: counts.filter(n => n >= 3 && n <= 5).length },
-        { label: '6–10 次', count: counts.filter(n => n >= 6 && n <= 10).length },
-        { label: '11+ 次', count: counts.filter(n => n > 10).length },
+      // ── 抽卡次數分布（完整資料，來自 SQL 函式）──
+      const drawDist       = drawDistRaw || {}
+      const loggedInUserCount = Number(drawDist.total_users || 0)
+      const avgDraws       = drawDist.avg_draws != null ? String(drawDist.avg_draws) : '0'
+      const drawBuckets    = [
+        { label: '1–2 次',  count: Number(drawDist.bucket_1_2  || 0) },
+        { label: '3–5 次',  count: Number(drawDist.bucket_3_5  || 0) },
+        { label: '6–10 次', count: Number(drawDist.bucket_6_10 || 0) },
+        { label: '11+ 次',  count: Number(drawDist.bucket_11p  || 0) },
       ]
       const maxBucket = Math.max(...drawBuckets.map(b => b.count), 1)
 
@@ -198,48 +207,47 @@ function KPIDashboard() {
       const faceLogin = faceEvents?.filter(e => e.user_id).length || 0
       const faceAnon  = faceTotal - faceLogin
 
-      // ── QR 展區統計 ──
+      // ── QR 展區統計（完整資料，來自 SQL 函式，僅合法 ID）──
       const zoneCounts = { A: 0, B: 0, C: 0 }
-      qrEvents?.forEach(e => {
-        const z = e.payload?.zone
-        if (z && zoneCounts[z] !== undefined) zoneCounts[z]++
+      const workCounts = {}
+      ;(rawQrRows || []).forEach(r => {
+        if (r.work_id) workCounts[r.work_id] = Number(r.cnt)
+        if (r.zone && zoneCounts[r.zone] !== undefined) zoneCounts[r.zone] += Number(r.cnt)
       })
       const zoneData = ['A', 'B', 'C'].map(z => ({
         label: `${z} ${ZONE_THEME[z].name}`,
         value: zoneCounts[z],
         color: ZONE_THEME[z].color,
+        artworks: ZONE_ARTWORKS[z].map(id => ({
+          id,
+          name: ARTWORKS.find(a => a.id === id)?.name || id,
+          count: workCounts[id] || 0,
+        })),
       }))
       const maxZone = Math.max(...zoneData.map(z => z.value), 1)
 
-      // ── 每日時間序列（本地時區）──
-      const dailyMap = {}
-      timeEvents?.forEach(e => {
-        const d   = new Date(e.created_at)
-        const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-        if (!dailyMap[day]) dailyMap[day] = { draw: 0, face: 0, qr: 0 }
-        if (e.event_type === 'draw')               dailyMap[day].draw++
-        else if (e.event_type === 'face_scan_complete') dailyMap[day].face++
-        else if (e.event_type === 'qr_scan')       dailyMap[day].qr++
+      // ── 每日時間序列（從 SQL 函式取得，Asia/Taipei 時區）──
+      const dailyRpcMap = {}
+      ;(rawDailyRows || []).forEach(r => {
+        dailyRpcMap[r.day] = { draw: Number(r.draw_cnt), face: Number(r.face_cnt), qr: Number(r.qr_cnt) }
       })
 
-      const now = new Date()
+      const nowTaipei = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }))
       const dailyData = []
       for (let i = daysRange - 1; i >= 0; i--) {
-        const d   = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-        const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        const d = new Date(nowTaipei.getTime() - i * 24 * 60 * 60 * 1000)
+        const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
         dailyData.push({
-          date:  day,
+          date:  dayKey,
           label: `${d.getMonth() + 1}/${d.getDate()}`,
-          ...(dailyMap[day] || { draw: 0, face: 0, qr: 0 }),
+          ...(dailyRpcMap[dayKey] || { draw: 0, face: 0, qr: 0 }),
         })
       }
 
-      // ── SSR 抽中次數 ──
-      const ssrDraws = realDrawEvents.filter(e => e.payload?.rarity === 'ssr').length
-
-      // ── 貼紙兌換資格（掃過任一裝置藝術，排除管理員）──
+      // ── 貼紙兌換資格 & 集滿成就：只計合法展品 ID，排除無效測試掃描 ──
+      const validVisited = s => (s.visited || []).filter(id => VALID_ARTWORK_IDS.has(id)).length
       const zoneUnlockCount = (rawExhibitionSessions || [])
-        .filter(s => (s.visited?.length ?? 0) >= 1 && !adminSet.has(s.user_id))
+        .filter(s => validVisited(s) >= 1 && !adminSet.has(s.user_id))
         .length
 
       // ── 展覽蒐集花種分布（登入用戶，雲端資料）──
@@ -285,9 +293,9 @@ function KPIDashboard() {
       setKpi({
         userCount: users,
         totalDraws,
-        loginDraws: drawLogin.length,
-        anonDraws:  drawAnon.length,
-        loggedInUserCount: counts.length,
+        loginDraws,
+        anonDraws,
+        loggedInUserCount,
         avgDraws,
         drawBuckets,
         maxBucket,
@@ -305,7 +313,7 @@ function KPIDashboard() {
         ratingTotal,
         ratingAvg,
         ratingList,
-        completionCount: completionCount || 0,
+        completionCount: (rawExhibitionSessions || []).filter(s => validVisited(s) >= 15 && !adminSet.has(s.user_id)).length,
         exhibitionFlowerBuckets,
         exhibitionUserCount,
         ssrDraws,
@@ -370,7 +378,7 @@ function KPIDashboard() {
         <StatCard label="面相掃描次數"  value={faceTotal}       sub={`登入 ${faceLogin} ／ 匿名 ${faceAnon}`}  color="#c4b5fd" />
         <StatCard label="引導完成次數"  value={tutorialCount}   sub={`${tutorialRate}% 完成率`}                 color="#6ee7b7" />
         <StatCard label="貼紙兌換資格"  value={zoneUnlockCount} sub="掃過任一裝置藝術，排除管理員"               color="#34d399" />
-        <StatCard label="集滿成就達成"  value={completionCount} sub="走遍鹽埕 + 15 種展覽花語"                  color="#fbbf24" />
+        <StatCard label="集滿成就達成"  value={completionCount} sub="掃完全部 15 件裝置藝術"                    color="#fbbf24" />
       </div>
 
       {/* 每日事件趨勢 */}
@@ -400,7 +408,7 @@ function KPIDashboard() {
       <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <p className="text-sm font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>抽卡次數分布</p>
         <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          登入用戶 {loggedInUserCount} 人，平均 {avgDraws} 次
+          {userCount} 位登入用戶中，有 {loggedInUserCount} 人曾抽卡，平均 {avgDraws} 次
         </p>
         <div className="space-y-2.5">
           {drawBuckets.map((b, i) => (
@@ -408,7 +416,10 @@ function KPIDashboard() {
               color={['#F27E93', '#F2BE5C', '#a8c4e0', '#c4b5fd'][i]} />
           ))}
         </div>
-        <SplitBar loggedIn={loginDraws} anon={anonDraws} color="#F27E93" />
+        <div className="mt-4 pt-3 border-t border-white/5">
+          <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>全部抽卡次數（累計，含匿名）</p>
+          <SplitBar loggedIn={loginDraws} anon={anonDraws} color="#F27E93" />
+        </div>
         <div className="mt-4 pt-3 border-t border-white/5 space-y-2">
           <BarRow label="普通模式" value={normalDraws}     max={totalDraws || 1} color="#F2BE5C" />
           <BarRow label="展覽模式" value={exhibitionDraws} max={totalDraws || 1} color="#a78bfa" />
@@ -424,9 +435,23 @@ function KPIDashboard() {
       {/* 展區 QR 掃描 */}
       <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <p className="text-sm font-semibold mb-4" style={{ color: 'rgba(255,255,255,0.7)' }}>各展區 QR 掃描次數</p>
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {zoneData.map(z => (
-            <BarRow key={z.label} label={z.label} value={z.value} max={maxZone} color={z.color} />
+            <div key={z.label}>
+              <BarRow label={z.label} value={z.value} max={maxZone} color={z.color} />
+              <div className="mt-1 space-y-0.5" style={{ paddingLeft: '5rem', paddingRight: '2.5rem' }}>
+                {z.artworks.map(a => (
+                  <div key={a.id} className="flex items-center gap-1.5">
+                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', width: 18, flexShrink: 0 }}>{a.id}</span>
+                    <div className="flex-1 rounded-full overflow-hidden" style={{ height: 4, background: 'rgba(255,255,255,0.05)' }}>
+                      <div className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${z.value > 0 ? (a.count / z.value) * 100 : 0}%`, background: z.color + '70' }} />
+                    </div>
+                    <span style={{ fontSize: 9, width: 22, textAlign: 'right', flexShrink: 0, color: a.count > 0 ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.15)' }}>{a.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -435,7 +460,7 @@ function KPIDashboard() {
       <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <p className="text-sm font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>展覽蒐集花種分布</p>
         <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          登入用戶 {exhibitionUserCount} 人（雲端資料，未登入不計）
+          有展覽蒐集記錄的登入用戶 {exhibitionUserCount} 人（全部用戶 {userCount} 人，未抽展覽或未登入不計）
         </p>
         {exhibitionUserCount === 0 ? (
           <p className="text-xs text-center py-3" style={{ color: 'rgba(255,255,255,0.25)' }}>尚無展覽蒐集資料</p>
