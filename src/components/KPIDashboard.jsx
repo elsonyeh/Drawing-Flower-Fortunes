@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase, isSupabaseEnabled } from '../lib/supabase'
 import { ZONE_THEME, ZONE_ARTWORKS, ARTWORKS } from '../utils/exhibitionConstants'
 
@@ -126,6 +126,31 @@ function KPIDashboard() {
   const [error, setError]       = useState(null)
   const [kpi, setKpi]           = useState(null)
   const [daysRange, setDaysRange] = useState(14)
+  const [exporting, setExporting] = useState(false)
+  const dashboardRef = useRef(null)
+
+  const handleExport = async () => {
+    if (!dashboardRef.current || exporting) return
+    setExporting(true)
+    try {
+      const html2canvas = (await import('html2canvas')).default
+      const canvas = await html2canvas(dashboardRef.current, {
+        backgroundColor: '#0f0f18',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      })
+      const link = document.createElement('a')
+      const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '')
+      link.download = `埕花KPI_${today}.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    } catch (e) {
+      console.error('Export failed:', e)
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const load = async () => {
     setLoading(true)
@@ -363,7 +388,7 @@ function KPIDashboard() {
   } = kpi
 
   return (
-    <div className="space-y-5">
+    <div ref={dashboardRef} className="space-y-5" style={{ padding: '1rem', background: '#0f0f18' }}>
       {/* 總覽卡片 */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard label="累計用戶數"    value={userCount}       color="#a8c4e0" />
@@ -528,7 +553,17 @@ function KPIDashboard() {
         )}
       </div>
 
-      <div className="text-right pt-1">
+      <div className="flex justify-end gap-4 pt-1">
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="text-xs transition-colors"
+          style={{ color: exporting ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.25)' }}
+          onMouseEnter={e => { if (!exporting) e.currentTarget.style.color = 'rgba(255,255,255,0.5)' }}
+          onMouseLeave={e => { if (!exporting) e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
+        >
+          {exporting ? '⏳ 匯出中…' : '↓ 匯出圖片'}
+        </button>
         <button
           onClick={load}
           className="text-xs transition-colors"
